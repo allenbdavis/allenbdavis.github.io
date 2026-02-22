@@ -2108,7 +2108,6 @@ input, select, textarea {
 			float: left;
 			margin: 0 2em 2em 0;
 			top: 0.25em;
-			max-width: 250px;
 		}
 
 		.image.right {
@@ -3669,6 +3668,11 @@ input, select, textarea {
 			text-transform: uppercase;
 		}
 
+		.banner-tagline {
+			margin: 0;
+			line-height: 1.8em;
+		}
+
 			#banner p a {
 				color: inherit;
 			}
@@ -3752,8 +3756,9 @@ input, select, textarea {
 					font-size: 1.25em;
 				}
 
-				#banner br {
-					display: none;
+				#banner p {
+					letter-spacing: 0.1em;
+					white-space: nowrap;
 				}
 
 				#banner .more {
