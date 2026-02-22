@@ -2108,6 +2108,7 @@ input, select, textarea {
 			float: left;
 			margin: 0 2em 2em 0;
 			top: 0.25em;
+			max-width: 250px;
 		}
 
 		.image.right {
@@ -2122,6 +2123,11 @@ input, select, textarea {
 
 			.image.left img, .image.right img {
 				width: 100%;
+				height: auto;
+			}
+
+			.image.left img {
+				max-width: 250px;
 			}
 
 		@media screen and (max-width: 736px) {
@@ -2130,6 +2136,9 @@ input, select, textarea {
 				max-width: 180px;
 				margin: 0 auto 1.5em auto;
 				display: block;
+			}
+			.image.left img {
+				height: auto !important;
 			}
 		}
 
