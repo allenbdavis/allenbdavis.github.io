@@ -3752,9 +3752,8 @@ input, select, textarea {
 					font-size: 1.25em;
 				}
 
-				#banner p {
-					letter-spacing: 0.1em;
-					white-space: nowrap;
+				#banner br {
+					display: none;
 				}
 
 				#banner .more {
