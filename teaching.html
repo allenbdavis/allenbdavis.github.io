@@ -55,6 +55,65 @@
 
 								<p><strong>Astronomy Club</strong> meets weekly during lunch, where students discuss current events in space science, ask bold questions about the universe, and occassionally chat with invited professional astrophysicists from the Boston area. A few times each year we meet in the evening to observe the planets and the brightest deep sky objects with an 8" telescope. In 2024, we took a field trip to Texas to see the total solar eclipse.</p>
 
+								<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 2em 0;">
+									<div style="display: flex; flex-direction: column; gap: 12px;">
+										<figure style="margin: 0;">
+											<img src="images/allen_prism.jpg" alt="Allen looking through a prism with a rainbow spectrum projected on the wall behind him" style="width: 100%; height: 260px; object-fit: cover; object-position: center; border-radius: 4px; display: block; cursor: pointer; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'" onclick="document.getElementById('lightbox-img').src=this.src; document.getElementById('lightbox-img').alt=this.alt; document.getElementById('lightbox-caption').textContent=this.closest('figure').querySelector('figcaption').textContent; document.getElementById('lightbox').style.display='flex';" />
+											<figcaption style="font-size: 0.8em; color: #888; margin-top: 6px; text-align: center; font-style: italic;">Prism demo</figcaption>
+										</figure>
+										<figure style="margin: 0;">
+											<img src="images/astronomy_club_at_night.jpeg" alt="Astronomy club students observing at night with a telescope" style="width: 100%; height: 260px; object-fit: cover; object-position: center; border-radius: 4px; display: block; cursor: pointer; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'" onclick="document.getElementById('lightbox-img').src=this.src; document.getElementById('lightbox-img').alt=this.alt; document.getElementById('lightbox-caption').textContent=this.closest('figure').querySelector('figcaption').textContent; document.getElementById('lightbox').style.display='flex';" />
+											<figcaption style="font-size: 0.8em; color: #888; margin-top: 6px; text-align: center; font-style: italic;">Astronomy Club evening observing session</figcaption>
+										</figure>
+									</div>
+									<figure style="margin: 0; display: flex; flex-direction: column;">
+										<img src="images/allen_projects_sun_small.jpg" data-fullres="images/allen_projects_sun.jpeg" alt="Allen projecting an image of the sun with a telescope outdoors" style="width: 100%; height: 572px; object-fit: cover; object-position: center top; border-radius: 4px; display: block; cursor: pointer; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'" onclick="document.getElementById('lightbox-img').src=this.dataset.fullres||this.src; document.getElementById('lightbox-img').alt=this.alt; document.getElementById('lightbox-caption').textContent=this.closest('figure').querySelector('figcaption').textContent; document.getElementById('lightbox').style.display='flex';" />
+										<figcaption style="font-size: 0.8em; color: #888; margin-top: 6px; text-align: center; font-style: italic;">Solar projection</figcaption>
+									</figure>
+								</div>
+
+								<!-- Lightbox -->
+								<div id="lightbox" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; justify-content: center; align-items: center; cursor: pointer;">
+									<span id="lightbox-close" style="position: fixed; top: 20px; right: 30px; font-size: 2em; color: #fff; cursor: pointer;">&times;</span>
+									<img id="lightbox-img" src="" alt="" style="max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 4px;" />
+									<div id="lightbox-caption" style="position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); color: #ccc; font-style: italic; font-size: 0.9em;"></div>
+								</div>
+
+								<script>
+								(function() {
+									var lightbox = document.getElementById('lightbox');
+									var lbImg    = document.getElementById('lightbox-img');
+									var lbCap    = document.getElementById('lightbox-caption');
+									var lbClose  = document.getElementById('lightbox-close');
+
+									document.querySelectorAll('figure img').forEach(function(img) {
+										img.addEventListener('click', function() {
+											lbImg.src = img.dataset.fullres || img.src;
+											lbImg.alt = img.alt;
+											lbCap.textContent = img.closest('figure').querySelector('figcaption').textContent;
+											lightbox.style.display = 'flex';
+										});
+									});
+
+									lightbox.addEventListener('click', function(e) {
+										if (e.target !== lbImg) {
+											lightbox.style.display = 'none';
+											lbImg.src = '';
+										}
+									});
+									lbClose.addEventListener('click', function() {
+										lightbox.style.display = 'none';
+										lbImg.src = '';
+									});
+									document.addEventListener('keydown', function(e) {
+										if (e.key === 'Escape') {
+											lightbox.style.display = 'none';
+											lbImg.src = '';
+										}
+									});
+								})();
+								</script>
+
 								<!-- <ul>
 									<li>11th &amp; 12th grade IB Physics, Standard and Higher Level (SY2020–present)</li>
 									<li>10th grade MYP Physics (SY2020–present)</li>
