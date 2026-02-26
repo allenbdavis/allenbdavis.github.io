@@ -53,12 +53,12 @@
 
 								<p>Eclipse photography is a discipline unto itself. The corona spans an enormous dynamic range — the inner corona near the limb is far brighter than the delicate streamers extending millions of kilometers into space — and totality lasts only a few minutes, leaving little room for error. During my thesis work at Williams, I learned to program cameras to capture the corona across multiple exposures, so that they can be processed into beautiful and scientifically informative images that trace the fine structure of the corona.</p>
 
-								<p>I've been chasing eclipses since 2008. Below are all the annular and total solar eclipses I've witnessed in person. You can also view my full eclipse log — including partial eclipses — at <a href="https://www.eclipse-chaser-log.com/eclipse-log/1121">Eclipse Chaser Log</a>.</p>
+								<p>Below are all some of the highlights of the solar eclipses I've seen. You can also view my full eclipse log at <a href="https://www.eclipse-chaser-log.com/eclipse-log/1121">Eclipse Chaser Log</a>.</p>
 
 								<hr />
 
 								<h3>May 20, 2012 — New Mexico, USA (Annular)</h3>
-								<p>My first annular eclipse, observed from the Karl G. Jansky Very Large Array in the high desert of New Mexico. The VLA is one of the world's premier radio observatories, consisting of 27 large dish antennas arranged in a Y-shaped configuration across the Plains of San Agustin. The site's remote location and high altitude make it an exceptional observing platform for radio astronomy — and, as it turned out, for eclipse watching. I witnessed 2 minutes and 21 seconds of annularity, the "ring of fire" effect that occurs when the Moon is near apogee and its apparent diameter is too small to fully cover the Sun.</p>
+								<p>My first annular eclipse, observed from the Karl G. Jansky Very Large Array in the high desert of New Mexico. The VLA is one of the world's premier radio observatories, consisting of 27 large dish antennas arranged in a Y-shaped configuration covering tens of kilometers. I witnessed 2 minutes and 21 seconds of annularity, the "ring of fire" effect that occurs when the Moon is near apogee and its apparent diameter is too small to fully cover the Sun.</p>
 
 								<style>
 									.eclipse-photos {
@@ -374,4 +374,13 @@
 				});
 
 				// Close on Escape key
-				document.addEventListener('keydown', function
+				document.addEventListener('keydown', function(e) {
+					if (e.key === 'Escape') {
+						lightbox.classList.remove('active');
+						lbImg.src = '';
+					}
+				});
+			})();
+		</script>
+	</body>
+</html>
