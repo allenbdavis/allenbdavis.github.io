@@ -519,7 +519,7 @@
     </div>
     <div class="weight-toggle-row">
       <label class="switch">
-        <input type="checkbox" id="equalWeightToggle" onchange="calculate()">
+        <input type="checkbox" id="equalWeightToggle" onchange="updateSubtitleWeights(currentLevel); calculate()">
         <span class="slider"></span>
       </label>
       <div class="weight-toggle-label">
@@ -541,7 +541,7 @@
           </div>
           <div class="field small">
             <label>Out of</label>
-            <input type="number" id="p1a_max" min="1" placeholder="40" value="40">
+            <input type="number" id="p1a_max" min="1" placeholder="40" value="40" oninput="updateSubtitleWeights(currentLevel)">
           </div>
         </div>
       </div>
@@ -554,7 +554,7 @@
           </div>
           <div class="field small">
             <label>Out of</label>
-            <input type="number" id="p1b_max" min="1" placeholder="20" value="20">
+            <input type="number" id="p1b_max" min="1" placeholder="20" value="20" oninput="updateSubtitleWeights(currentLevel)">
           </div>
         </div>
       </div>
@@ -631,25 +631,42 @@
     }
   };
 
-  // Both HL and SL: Paper 1 = 45% (1A = 2/3, 1B = 1/3), Paper 2 = 55%
+  // HL: Paper 1 = 45% (1A = 2/3, 1B = 1/3) → 30% + 15%; Paper 2 = 55%
+  // SL: Paper 1 = 45% (1A = 5/9, 1B = 4/9) → 25% + 20%; Paper 2 = 55%
   const WEIGHTS = {
-    HL: { p1a: 0.30, p1b: 0.15, p2: 0.55 },
-    SL: { p1a: 0.30, p1b: 0.15, p2: 0.55 }
+    HL: { p1a: 0.30,        p1b: 0.15,        p2: 0.55 },
+    SL: { p1a: 5/9 * 0.45,  p1b: 4/9 * 0.45,  p2: 0.55 }
   };
 
   let currentLevel = 'HL';
+
+  function updateSubtitleWeights(level) {
+    const equalWeight = document.getElementById('equalWeightToggle') && document.getElementById('equalWeightToggle').checked;
+    if (equalWeight) {
+      const p1aMax = parseFloat(document.getElementById('p1a_max').value) || ALL_BOUNDARIES[level].p1a.max;
+      const p1bMax = parseFloat(document.getElementById('p1b_max').value) || ALL_BOUNDARIES[level].p1b.max;
+      const p1Total = p1aMax + p1bMax;
+      const w1a = (p1aMax / p1Total * 45).toFixed(1);
+      const w1b = (p1bMax / p1Total * 45).toFixed(1);
+      document.getElementById('subtitleW1a').textContent = `${p1aMax}/${p1Total} of P1 (${w1a}%)`;
+      document.getElementById('subtitleW1b').textContent = `${p1bMax}/${p1Total} of P1 (${w1b}%)`;
+    } else if (level === 'HL') {
+      document.getElementById('subtitleW1a').textContent = '2/3 of P1 (30%)';
+      document.getElementById('subtitleW1b').textContent = '1/3 of P1 (15%)';
+    } else {
+      document.getElementById('subtitleW1a').textContent = '5/9 of P1 (25%)';
+      document.getElementById('subtitleW1b').textContent = '4/9 of P1 (20%)';
+    }
+    document.getElementById('subtitleW2').textContent = '55%';
+  }
 
   function setLevel(level) {
     currentLevel = level;
     document.getElementById('btnHL').classList.toggle('active', level === 'HL');
     document.getElementById('btnSL').classList.toggle('active', level === 'SL');
 
-    const levelLabel = level === 'HL' ? 'Higher Level' : 'Standard Level';
-    document.getElementById('subtitleLevel').textContent = levelLabel;
-    // Weights are the same for HL and SL
-    document.getElementById('subtitleW1a').textContent = '2/3 of P1 (30%)';
-    document.getElementById('subtitleW1b').textContent = '1/3 of P1 (15%)';
-    document.getElementById('subtitleW2').textContent = '55%';
+    document.getElementById('subtitleLevel').textContent = level === 'HL' ? 'Higher Level' : 'Standard Level';
+    updateSubtitleWeights(level);
 
     // Update default "Out of" placeholders
     const b = ALL_BOUNDARIES[level];
