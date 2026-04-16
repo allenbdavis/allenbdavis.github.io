@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Countdown Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --text: #1a1916;
+    --muted: #8a8780;
+    --border: rgba(26,25,22,0.12);
+    --border-hover: rgba(26,25,22,0.25);
+    --accent: #1a1916;
+    --danger: #c0392b;
+    --danger-soft: #fdf1f0;
+    --info: #1a5fa8;
+    --info-soft: #eef4fc;
+    --ring-track: rgba(26,25,22,0.1);
+    --ring-fill: #1a1916;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    padding: 3rem 2.5rem 2.5rem;
+    width: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    box-shadow: 0 4px 32px rgba(26,25,22,0.07);
+  }
+
+  .ring-wrap {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ring-wrap svg {
+    position: absolute;
+    top: 0; left: 0;
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg {
+    fill: none;
+    stroke: var(--ring-track);
+    stroke-width: 5;
+  }
+
+  .ring-fg {
+    fill: none;
+    stroke: var(--ring-fill);
+    stroke-width: 5;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.9s linear, stroke 0.3s;
+  }
+
+  .ring-fg.danger { stroke: var(--danger); }
+
+  .time-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 64px;
+    font-weight: 400;
+    letter-spacing: -1px;
+    color: var(--text);
+    transition: color 0.3s;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .time-display.danger { color: var(--danger); }
+
+  .status-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: 6px;
+  }
+
+  .set-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .set-row label {
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .time-input {
+    width: 56px;
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    text-align: center;
+    padding: 7px 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .time-input:focus { border-color: var(--border-hover); }
+
+  .set-row span {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .apply-btn {
+    margin-left: auto;
+    padding: 7px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+  }
+
+  .apply-btn:hover { background: var(--bg); border-color: var(--border-hover); }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, transform 0.08s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { background: var(--bg); border-color: var(--border-hover); }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-play {
+    background: var(--text);
+    color: var(--surface);
+    border-color: var(--text);
+    font-weight: 500;
+  }
+
+  .btn-play:hover { background: #333; border-color: #333; }
+
+  .btn-add {
+    border-color: rgba(26,95,168,0.3);
+    color: var(--info);
+    background: var(--info-soft);
+  }
+
+  .btn-add:hover { background: #ddeaf8; border-color: rgba(26,95,168,0.5); }
+
+  .btn-add .kbd {
+    font-size: 10px;
+    opacity: 0.6;
+    font-family: 'DM Mono', monospace;
+    margin-left: 4px;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="ring-wrap">
+    <svg width="220" height="220" viewBox="0 0 220 220">
+      <circle class="ring-bg" cx="110" cy="110" r="100" />
+      <circle class="ring-fg" id="ring" cx="110" cy="110" r="100" />
+    </svg>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div class="time-display" id="display">1:00</div>
+      <div class="status-label" id="statusLabel">ready</div>
+    </div>
+  </div>
+
+  <div class="set-row">
+    <label for="minIn">Duration</label>
+    <input class="time-input" type="number" id="minIn" min="0" max="99" value="1" />
+    <span>min</span>
+    <input class="time-input" type="number" id="secIn" min="0" max="59" value="0" />
+    <span>sec</span>
+    <button class="apply-btn" id="applyBtn">Apply</button>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-play" id="playBtn">Start</button>
+    <button class="btn" id="stopBtn">Stop</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+  <div class="controls">
+    <button class="btn btn-add" id="addBtn">+5 seconds <span class="kbd">[space]</span></button>
+  </div>
+</div>
+
+<script>
+  const displayEl = document.getElementById('display');
+  const ring = document.getElementById('ring');
+  const statusLabel = document.getElementById('statusLabel');
+  const playBtn = document.getElementById('playBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const addBtn = document.getElementById('addBtn');
+  const applyBtn = document.getElementById('applyBtn');
+  const minIn = document.getElementById('minIn');
+  const secIn = document.getElementById('secIn');
+
+  const R = 100;
+  const CIRC = 2 * Math.PI * R;
+  ring.style.strokeDasharray = CIRC;
+
+  let totalSecs = 60;      // the denominator for ring fraction
+  let highWater = 60;      // tracks the max remaining we've seen (for ring)
+  let remaining = 60;
+  let running = false;
+  let interval = null;
+
+  function fmt(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m + ':' + String(sec).padStart(2, '0');
+  }
+
+  function updateUI() {
+    displayEl.textContent = fmt(remaining);
+
+    // Ring: fraction = remaining / highWater (so adding time keeps it full)
+    const frac = highWater > 0 ? remaining / highWater : 0;
+    ring.style.strokeDashoffset = CIRC * (1 - frac);
+
+    const warn = remaining <= 10 && remaining > 0;
+    displayEl.classList.toggle('danger', warn);
+    ring.classList.toggle('danger', warn);
+
+    if (remaining === 0) {
+      statusLabel.textContent = 'done';
+    } else if (running) {
+      statusLabel.textContent = 'running';
+    } else if (remaining < highWater) {
+      statusLabel.textContent = 'paused';
+    } else {
+      statusLabel.textContent = 'ready';
+    }
+
+    if (running) {
+      playBtn.textContent = 'Pause';
+    } else if (remaining > 0 && remaining < highWater) {
+      playBtn.textContent = 'Resume';
+    } else {
+      playBtn.textContent = 'Start';
+    }
+  }
+
+  function startTimer() {
+    if (remaining === 0) return;
+    running = true;
+    interval = setInterval(() => {
+      remaining = Math.max(0, remaining - 1);
+      updateUI();
+      if (remaining === 0) {
+        clearInterval(interval);
+        running = false;
+        updateUI();
+      }
+    }, 1000);
+    updateUI();
+  }
+
+  function pauseTimer() {
+    running = false;
+    clearInterval(interval);
+    updateUI();
+  }
+
+  function stopTimer() {
+    pauseTimer();
+    remaining = 0;
+    updateUI();
+  }
+
+  function resetTimer() {
+    pauseTimer();
+    remaining = totalSecs;
+    highWater = totalSecs;
+    updateUI();
+  }
+
+  function addFive() {
+    remaining = Math.min(remaining + 5, 5999);
+    if (remaining > highWater) highWater = remaining;
+    updateUI();
+  }
+
+  function applyCustom() {
+    const m = Math.max(0, parseInt(minIn.value) || 0);
+    const s = Math.max(0, Math.min(59, parseInt(secIn.value) || 0));
+    let secs = m * 60 + s;
+    if (secs === 0) secs = 60;
+    totalSecs = secs;
+    pauseTimer();
+    remaining = secs;
+    highWater = secs;
+    updateUI();
+  }
+
+  playBtn.addEventListener('click', () => running ? pauseTimer() : startTimer());
+  stopBtn.addEventListener('click', stopTimer);
+  resetBtn.addEventListener('click', resetTimer);
+  addBtn.addEventListener('click', addFive);
+  applyBtn.addEventListener('click', applyCustom);
+  minIn.addEventListener('keydown', e => e.key === 'Enter' && applyCustom());
+  secIn.addEventListener('keydown', e => e.key === 'Enter' && applyCustom());
+
+  document.addEventListener('keydown', e => {
+    if (e.target === minIn || e.target === secIn) return;
+    if (e.code === 'Space') { e.preventDefault(); addFive(); }
+  });
+
+  updateUI();
+</script>
+</body>
+</html>
