@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Physh Bowl — Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ocean-deep:   #050d1a;
+    --ocean-mid:    #071528;
+    --ocean-panel:  #0b1e38;
+    --glow-cyan:    #00e5ff;
+    --glow-teal:    #00b4d8;
+    --glow-green:   #57ffa3;
+    --danger:       #ff4f6e;
+    --danger-glow:  rgba(255,79,110,0.35);
+    --text-bright:  #e8f4ff;
+    --text-mid:     #7aafc9;
+    --text-dim:     #3a6070;
+    --border-faint: rgba(0,229,255,0.12);
+    --border-mid:   rgba(0,229,255,0.25);
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--ocean-deep);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-bright);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Animated background ── */
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Grid lines like graph paper / physics notebook */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Floating bubbles */
+  .bubbles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bubble {
+    position: absolute;
+    bottom: -60px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,229,255,0.25);
+    animation: rise linear infinite;
+    opacity: 0;
+  }
+
+  @keyframes rise {
+    0%   { transform: translateY(0) scale(1);   opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.2; }
+    100% { transform: translateY(-110vh) scale(1.2); opacity: 0; }
+  }
+
+  /* Subtle scan-line shimmer */
+  .scanline {
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,229,255,0.015) 2px,
+      rgba(0,229,255,0.015) 4px
+    );
+  }
+
+  /* ── Layout ── */
+  .page {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    width: 100%;
+    padding: 2rem 1rem;
+  }
+
+  /* ── Title ── */
+  .title-block {
+    text-align: center;
+    animation: fadeDown 0.7s ease both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .title-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--glow-cyan);
+    font-weight: 600;
+    margin-bottom: 6px;
+    opacity: 0.8;
+  }
+
+  .title-main {
+    font-size: clamp(42px, 8vw, 72px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+    color: var(--text-bright);
+    position: relative;
+    display: inline-block;
+  }
+
+  .title-main .ph { color: var(--glow-cyan); }
+  .title-main .y  { color: var(--glow-green); font-style: italic; }
+  .title-main .sh { color: var(--text-bright); }
+
+  .title-main::after {
+    content: '';
+    display: block;
+    height: 2px;
+    background: linear-gradient(90deg, var(--glow-cyan), var(--glow-green), transparent);
+    margin-top: 8px;
+    border-radius: 2px;
+  }
+
+  .title-sub {
+    font-size: 13px;
+    color: var(--text-mid);
+    margin-top: 8px;
+    letter-spacing: 0.05em;
+    font-weight: 400;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--ocean-panel);
+    border: 1px solid var(--border-faint);
+    border-radius: 20px;
+    padding: 2.5rem 2.5rem 2rem;
+    width: min(400px, 94vw);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.75rem;
+    animation: fadeUp 0.7s 0.15s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Card top shimmer line */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glow-cyan), transparent);
+    opacity: 0.6;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Ring ── */
+  .ring-wrap {
+    position: relative;
+    width: 230px;
+    height: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ring-wrap svg {
+    position: absolute;
+    top: 0; left: 0;
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg { fill: none; stroke: rgba(0,229,255,0.08); stroke-width: 5; }
+
+  .ring-fg {
+    fill: none;
+    stroke: var(--glow-cyan);
+    stroke-width: 5;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 6px var(--glow-cyan));
+    transition: stroke-dashoffset 0.9s linear, stroke 0.3s, filter 0.3s;
+  }
+
+  .ring-fg.danger {
+    stroke: var(--danger);
+    filter: drop-shadow(0 0 8px var(--danger-glow));
+  }
+
+  /* Tick marks around ring */
+  .ring-ticks { position: absolute; top: 0; left: 0; }
+
+  .time-display {
+    font-family: 'Space Mono', monospace;
+    font-size: 68px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: -2px;
+    line-height: 1;
+    user-select: none;
+    transition: color 0.3s;
+    text-shadow: 0 0 24px rgba(0,229,255,0.3);
+  }
+
+  .time-display.danger {
+    color: var(--danger);
+    text-shadow: 0 0 24px var(--danger-glow);
+  }
+
+  .status-pill {
+    margin-top: 8px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--glow-cyan);
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 20px;
+    padding: 3px 12px;
+    transition: color 0.3s, background 0.3s, border-color 0.3s;
+  }
+
+  .status-pill.running {
+    color: var(--glow-green);
+    background: rgba(87,255,163,0.08);
+    border-color: rgba(87,255,163,0.25);
+  }
+
+  .status-pill.danger {
+    color: var(--danger);
+    background: rgba(255,79,110,0.08);
+    border-color: rgba(255,79,110,0.25);
+    animation: pulse 0.6s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
+
+  /* ── Duration row ── */
+  .set-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .set-row label {
+    font-size: 12px;
+    color: var(--text-mid);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .time-input {
+    width: 54px;
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    text-align: center;
+    padding: 7px 4px;
+    background: rgba(0,229,255,0.06);
+    border: 1px solid var(--border-faint);
+    border-radius: 8px;
+    color: var(--text-bright);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  .time-input::-webkit-inner-spin-button,
+  .time-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .time-input:focus {
+    border-color: var(--border-mid);
+    background: rgba(0,229,255,0.1);
+  }
+
+  .set-row .sep { font-size: 13px; color: var(--text-dim); }
+
+  .apply-btn {
+    margin-left: auto;
+    padding: 7px 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    border: 1px solid var(--border-mid);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--glow-cyan);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+
+  .apply-btn:hover { background: rgba(0,229,255,0.1); }
+
+  /* ── Buttons ── */
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .btn {
+    padding: 11px 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.08s, box-shadow 0.12s;
+    border: 1px solid;
+    letter-spacing: 0.04em;
+  }
+
+  .btn:active { transform: scale(0.96); }
+
+  .btn-play {
+    background: var(--glow-cyan);
+    color: var(--ocean-deep);
+    border-color: var(--glow-cyan);
+    box-shadow: 0 0 16px rgba(0,229,255,0.3);
+  }
+
+  .btn-play:hover {
+    background: #33ecff;
+    box-shadow: 0 0 24px rgba(0,229,255,0.5);
+  }
+
+  .btn-stop {
+    background: transparent;
+    color: var(--text-mid);
+    border-color: var(--border-faint);
+  }
+
+  .btn-stop:hover { background: rgba(255,255,255,0.05); color: var(--text-bright); }
+
+  .btn-reset {
+    background: transparent;
+    color: var(--text-mid);
+    border-color: var(--border-faint);
+  }
+
+  .btn-reset:hover { background: rgba(255,255,255,0.05); color: var(--text-bright); }
+
+  .btn-add {
+    grid-column: 1 / -1;
+    background: rgba(87,255,163,0.07);
+    color: var(--glow-green);
+    border-color: rgba(87,255,163,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-add:hover { background: rgba(87,255,163,0.14); box-shadow: 0 0 12px rgba(87,255,163,0.15); }
+
+  .kbd {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(87,255,163,0.12);
+    border: 1px solid rgba(87,255,163,0.25);
+    letter-spacing: 0;
+    font-weight: 400;
+  }
+
+  /* ── Time's up flash ── */
+  .flash-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+  }
+
+  .flash-overlay.go {
+    animation: screenFlash 1.6s ease-out forwards;
+  }
+
+  @keyframes screenFlash {
+    0%   { background: rgba(255,79,110,0.0);  opacity: 1; }
+    8%   { background: rgba(255,79,110,0.55); opacity: 1; }
+    20%  { background: rgba(255,79,110,0.15); opacity: 1; }
+    35%  { background: rgba(255,79,110,0.45); opacity: 1; }
+    50%  { background: rgba(255,79,110,0.1);  opacity: 1; }
+    65%  { background: rgba(255,79,110,0.35); opacity: 1; }
+    80%  { background: rgba(255,79,110,0.05); opacity: 1; }
+    100% { background: rgba(255,79,110,0.0);  opacity: 0; }
+  }
+
+  .time-display.elapsed {
+    animation: elapsedPulse 0.7s ease-in-out infinite alternate;
+  }
+
+  @keyframes elapsedPulse {
+    from { opacity: 1;   text-shadow: 0 0 32px rgba(255,79,110,0.8); }
+    to   { opacity: 0.3; text-shadow: 0 0 8px  rgba(255,79,110,0.3); }
+  }
+
+  /* ── Footer formula ── */
+  .formula {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+</style>
+</head>
+<body>
+
+<!-- Background layers -->
+<div class="bg-layer bg-grid"></div>
+<div class="bg-layer scanline"></div>
+<div class="bubbles" id="bubbles"></div>
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<div class="page">
+
+  <div class="title-block">
+    <div class="title-eyebrow">IB Physics Review Game</div>
+    <div class="title-main">
+      <span class="ph">Ph</span><span class="y">y</span><span class="sh">sh Bowl</span>
+    </div>
+    <div class="title-sub">Answer fast. Think faster.</div>
+  </div>
+
+  <div class="card">
+    <div class="ring-wrap">
+      <svg width="230" height="230" viewBox="0 0 230 230">
+        <!-- Tick marks -->
+        <g class="ring-ticks" stroke="rgba(0,229,255,0.2)" stroke-width="1.5">
+          <!-- 12 ticks evenly spaced, rendered via JS -->
+        </g>
+        <circle class="ring-bg" cx="115" cy="115" r="104" />
+        <circle class="ring-fg" id="ring" cx="115" cy="115" r="104" />
+      </svg>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <div class="time-display" id="display">1:00</div>
+        <div class="status-pill" id="statusPill">ready</div>
+      </div>
+    </div>
+
+    <div class="set-row">
+      <label for="minIn">Duration</label>
+      <input class="time-input" type="number" id="minIn" min="0" max="99" value="1" />
+      <span class="sep">m</span>
+      <input class="time-input" type="number" id="secIn" min="0" max="59" value="0" />
+      <span class="sep">s</span>
+      <button class="apply-btn" id="applyBtn">Apply</button>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-play" id="playBtn">Start</button>
+      <button class="btn btn-stop" id="stopBtn">Stop</button>
+      <button class="btn btn-reset" id="resetBtn">Reset</button>
+      <button class="btn btn-add" id="addBtn">
+        +5 seconds <span class="kbd">space</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="formula">Δt = 5 s &nbsp;|&nbsp; v = Δx/Δt &nbsp;|&nbsp; F = ma</div>
+
+</div>
+
+<script>
+  /* ── Bubbles ── */
+  const bubbleContainer = document.getElementById('bubbles');
+  for (let i = 0; i < 18; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = 6 + Math.random() * 18;
+    b.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random() * 100}%;
+      animation-duration:${8 + Math.random() * 14}s;
+      animation-delay:${Math.random() * 12}s;
+    `;
+    bubbleContainer.appendChild(b);
+  }
+
+  /* ── Timer logic ── */
+  const displayEl    = document.getElementById('display');
+  const ring         = document.getElementById('ring');
+  const statusPill   = document.getElementById('statusPill');
+  const playBtn      = document.getElementById('playBtn');
+  const stopBtn      = document.getElementById('stopBtn');
+  const resetBtn     = document.getElementById('resetBtn');
+  const addBtn       = document.getElementById('addBtn');
+  const applyBtn     = document.getElementById('applyBtn');
+  const minIn        = document.getElementById('minIn');
+  const secIn        = document.getElementById('secIn');
+  const flashOverlay = document.getElementById('flashOverlay');
+
+  const R    = 104;
+  const CIRC = 2 * Math.PI * R;
+  ring.style.strokeDasharray = CIRC;
+
+  let totalSecs = 60;
+  let highWater = 60;
+  let remaining = 60;
+  let running   = false;
+  let interval  = null;
+
+  function fmt(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m + ':' + String(sec).padStart(2, '0');
+  }
+
+  function triggerFlash() {
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth; // reflow to restart animation
+    flashOverlay.classList.add('go');
+  }
+
+  function updateUI() {
+    displayEl.textContent = fmt(remaining);
+
+    const frac = highWater > 0 ? remaining / highWater : 0;
+    ring.style.strokeDashoffset = CIRC * (1 - frac);
+
+    const warn = remaining <= 10 && remaining > 0;
+    const done = remaining === 0;
+
+    displayEl.classList.toggle('danger', warn || done);
+    displayEl.classList.toggle('elapsed', done);
+    ring.classList.toggle('danger', warn || done);
+
+    statusPill.classList.remove('running', 'danger');
+    if (done) {
+      statusPill.textContent = 'time\'s up';
+      statusPill.classList.add('danger');
+    } else if (warn && running) {
+      statusPill.textContent = 'hurry!';
+      statusPill.classList.add('danger');
+    } else if (running) {
+      statusPill.textContent = 'running';
+      statusPill.classList.add('running');
+    } else if (remaining < highWater) {
+      statusPill.textContent = 'paused';
+    } else {
+      statusPill.textContent = 'ready';
+    }
+
+    if (running) {
+      playBtn.textContent = 'Pause';
+    } else if (remaining > 0 && remaining < highWater) {
+      playBtn.textContent = 'Resume';
+    } else {
+      playBtn.textContent = 'Start';
+    }
+  }
+
+  function startTimer() {
+    if (remaining === 0) return;
+    running = true;
+    interval = setInterval(() => {
+      remaining = Math.max(0, remaining - 1);
+      updateUI();
+      if (remaining === 0) {
+        clearInterval(interval);
+        running = false;
+        triggerFlash();
+        updateUI();
+      }
+    }, 1000);
+    updateUI();
+  }
+
+  function pauseTimer() {
+    running = false;
+    clearInterval(interval);
+    updateUI();
+  }
+
+  function stopTimer()  { pauseTimer(); remaining = 0; displayEl.classList.remove('elapsed'); updateUI(); }
+
+  function resetTimer() {
+    pauseTimer();
+    remaining = totalSecs;
+    highWater = totalSecs;
+    displayEl.classList.remove('elapsed');
+    updateUI();
+  }
+
+  function addFive() {
+    remaining = Math.min(remaining + 5, 5999);
+    if (remaining > highWater) highWater = remaining;
+    updateUI();
+  }
+
+  function applyCustom() {
+    const m = Math.max(0, parseInt(minIn.value) || 0);
+    const s = Math.max(0, Math.min(59, parseInt(secIn.value) || 0));
+    let secs = m * 60 + s;
+    if (secs === 0) secs = 60;
+    totalSecs = secs;
+    pauseTimer();
+    remaining = secs;
+    highWater = secs;
+    updateUI();
+  }
+
+  playBtn.addEventListener('click',  () => running ? pauseTimer() : startTimer());
+  stopBtn.addEventListener('click',  stopTimer);
+  resetBtn.addEventListener('click', resetTimer);
+  addBtn.addEventListener('click',   addFive);
+  applyBtn.addEventListener('click', applyCustom);
+  minIn.addEventListener('keydown',  e => e.key === 'Enter' && applyCustom());
+  secIn.addEventListener('keydown',  e => e.key === 'Enter' && applyCustom());
+
+  document.addEventListener('keydown', e => {
+    if (e.target === minIn || e.target === secIn) return;
+    if (e.code === 'Space') { e.preventDefault(); addFive(); }
+  });
+
+  updateUI();
+</script>
+</body>
+</html>
