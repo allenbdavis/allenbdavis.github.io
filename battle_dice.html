@@ -719,6 +719,187 @@
   }
   .info-bar strong { color: var(--gold); font-style: normal; }
 
+  /* Analysis toggle bar */
+  .analysis-toggle-bar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .analysis-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    cursor: pointer;
+    user-select: none;
+    padding: 0.45rem 1rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    transition: border-color 0.2s;
+  }
+  .analysis-toggle:hover { border-color: var(--muted); }
+  .analysis-toggle input { display: none; }
+  .toggle-track {
+    width: 36px; height: 20px;
+    background: var(--border);
+    border-radius: 10px;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .analysis-toggle input:checked ~ .toggle-track { background: var(--crimson); }
+  .toggle-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 14px; height: 14px;
+    background: var(--cream-dim);
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .analysis-toggle input:checked ~ .toggle-track .toggle-thumb {
+    transform: translateX(16px);
+    background: var(--cream);
+  }
+  .toggle-text {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+  }
+  .analysis-toggle input:checked ~ * ~ .toggle-text { color: var(--gold); }
+  .toggle-hint {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.8rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* When analysis mode on, rerollable dice get a subtle glow hint */
+  body.analysis-on .die.can-reroll {
+    border-color: rgba(201,168,76,0.5);
+    box-shadow: 0 0 8px rgba(201,168,76,0.15);
+  }
+
+  /* Histogram tooltip */
+  #hist-tooltip {
+    position: fixed;
+    z-index: 500;
+    background: #1a1410;
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem 0.8rem;
+    width: 290px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 20px rgba(201,168,76,0.12);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  #hist-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .hist-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .hist-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+  }
+  .hist-subtitle {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .hist-legend {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.75rem;
+  }
+  .hist-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--cream-dim);
+  }
+  .legend-swatch {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .hist-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .hist-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 36px;
+    align-items: center;
+    gap: 5px;
+  }
+  .hist-sum-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    color: var(--cream-dim);
+    text-align: right;
+  }
+  .hist-sum-label.target-win  { color: #5dba6a; font-weight: 700; }
+  .hist-sum-label.target-draw { color: #c9a84c; font-weight: 700; }
+  .hist-sum-label.target-over { color: var(--crimson-bright); }
+  .hist-bar-track {
+    height: 13px;
+    background: var(--surface);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .hist-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.2s;
+  }
+  .bar-win   { background: #3a7d44; }
+  .bar-draw  { background: #7a6020; }
+  .bar-over  { background: #5a1a1a; }
+  .bar-lose  { background: #5a1a1a; }
+  .hist-pct {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.72rem;
+    color: var(--cream-dim);
+    text-align: right;
+  }
+  .hist-pct.pct-win  { color: #5dba6a; font-weight: 600; }
+  .hist-pct.pct-draw { color: var(--gold); font-weight: 600; }
+  .hist-pct.pct-over { color: var(--crimson-bright); }
+  .hist-footer {
+    margin-top: 0.7rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--border);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.78rem;
+    color: var(--cream-dim);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+  }
+  .hist-stat { white-space: nowrap; }
+  .hist-stat strong { color: var(--cream); }
+
   @media (max-width: 600px) {
     .arenas { grid-template-columns: 1fr; }
     .collection-cards { grid-template-columns: 1fr; }
@@ -727,6 +908,8 @@
     .score-bar { grid-template-columns: 1fr auto 1fr; padding: 0.7rem 1rem; }
     .score-num { font-size: 1.7rem; }
     .gameover-card, .result-card { padding: 1.5rem; }
+    #hist-tooltip { width: 240px; }
+    .toggle-hint { display: none; }
   }
 </style>
 </head>
@@ -806,6 +989,15 @@
   <!-- Info bar -->
   <div class="info-bar" id="info-bar"></div>
 
+  <!-- Analysis toggle -->
+  <div class="analysis-toggle-bar">
+    <label class="analysis-toggle">
+      <input type="checkbox" id="analysis-toggle-cb" onchange="toggleAnalysis(this.checked)">
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      <span class="toggle-text">Probabilistic Analysis <span class="toggle-hint">— hover rerollable dice to see outcome distribution</span></span>
+    </label>
+  </div>
+
   <!-- Arenas -->
   <div class="arenas">
     <!-- P1 Arena -->
@@ -854,6 +1046,17 @@
     <div class="rh-title">Round History</div>
     <div class="rh-grid" id="rh-grid"></div>
   </div>
+</div>
+
+<!-- Histogram Tooltip -->
+<div id="hist-tooltip">
+  <div class="hist-header">
+    <span class="hist-title" id="hist-title">Reroll d8</span>
+    <span class="hist-subtitle" id="hist-subtitle"></span>
+  </div>
+  <div class="hist-legend" id="hist-legend"></div>
+  <div class="hist-bars" id="hist-bars"></div>
+  <div class="hist-footer" id="hist-footer"></div>
 </div>
 
 <!-- Round Result Modal -->
@@ -1035,7 +1238,10 @@ function renderDice(playerIdx, rolls, justRolledIdx) {
 
     dc.appendChild(dieEl);
     dc.appendChild(labelEl);
-    if (canReroll) dc.appendChild(hintEl);
+    if (canReroll) {
+      dc.appendChild(hintEl);
+      attachHistogramListeners(dieEl, playerIdx, i);
+    }
     container.appendChild(dc);
   });
 }
@@ -1074,6 +1280,8 @@ function rerollDie(playerIdx, dieIdx) {
     updateArenaUI(playerIdx);
     if (ps.rerolls >= ps.maxRerolls) {
       autoStand(playerIdx);
+    } else {
+      refreshHistogramIfHovered();
     }
   });
 }
@@ -1097,6 +1305,8 @@ function stand(playerIdx) {
   const ps = state.playerState[playerIdx];
   if (!ps.rolledInitially || ps.stood) return;
   ps.stood = true;
+  hoveredDie = null;
+  hideHistogram();
   document.getElementById(`arena-${playerIdx}-stood`).style.display = 'block';
   renderDice(playerIdx, ps.rolls, -1);
   updateArenaUI(playerIdx);
@@ -1107,6 +1317,8 @@ function autoStand(playerIdx) {
   const ps = state.playerState[playerIdx];
   if (!ps.stood) {
     ps.stood = true;
+    hoveredDie = null;
+    hideHistogram();
     document.getElementById(`arena-${playerIdx}-stood`).style.display = 'block';
     renderDice(playerIdx, ps.rolls, -1);
     updateArenaUI(playerIdx);
@@ -1404,6 +1616,206 @@ function buildHistoryTable() {
 // ─── Init ─────────────────────────────────────────────────
 document.getElementById('p1-name').addEventListener('input', checkSetupReady);
 document.getElementById('p2-name').addEventListener('input', checkSetupReady);
+
+// ─── Probabilistic Analysis ───────────────────────────────
+let analysisOn = false;
+let hoveredDie = null; // { playerIdx, dieIdx, el }
+
+function toggleAnalysis(on) {
+  analysisOn = on;
+  document.body.classList.toggle('analysis-on', on);
+  if (!on) hideHistogram();
+}
+
+function computeRerollDistribution(playerIdx, dieIdx) {
+  const col = COLLECTIONS[state.collection];
+  const ps = state.playerState[playerIdx];
+  const sides = col.dice[dieIdx];
+  const otherSum = ps.rolls.reduce((acc, v, i) => i === dieIdx ? acc : acc + v, 0);
+  const dist = new Map();
+  for (let face = 1; face <= sides; face++) {
+    const s = otherSum + face;
+    dist.set(s, (dist.get(s) || 0) + 1 / sides);
+  }
+  return dist;
+}
+
+function classifySum(s, goal, opponentSum) {
+  if (s > goal) return 'over';
+  if (opponentSum === null) return 'under';
+  if (opponentSum > goal) return 'win';
+  const myDist  = goal - s;
+  const oppDist = goal - opponentSum;
+  if (myDist < oppDist) return 'win';
+  if (myDist === oppDist) return 'draw';
+  return 'lose';
+}
+
+function showHistogram(playerIdx, dieIdx, anchorEl) {
+  const col = COLLECTIONS[state.collection];
+  const ps  = state.playerState[playerIdx];
+  const sides = col.dice[dieIdx];
+  const goal  = col.goal;
+
+  const fp = state.firstPlayer;
+  const sp = 1 - fp;
+  const isSecondPlayer = (playerIdx === sp);
+  const opponentSum = isSecondPlayer
+    ? state.playerState[fp].rolls.reduce((a,b)=>a+b,0)
+    : null;
+
+  const dist = computeRerollDistribution(playerIdx, dieIdx);
+  const entries = [...dist.entries()].sort((a,b) => a[0]-b[0]);
+  const maxProb  = Math.max(...entries.map(e=>e[1]));
+
+  let pWin=0, pDraw=0, pLose=0, pOver=0, pUnder=0;
+  for (const [s, p] of entries) {
+    const cls = classifySum(s, goal, opponentSum);
+    if (cls==='win')        pWin   += p;
+    else if (cls==='draw')  pDraw  += p;
+    else if (cls==='lose')  pLose  += p;
+    else if (cls==='over')  pOver  += p;
+    else                    pUnder += p;
+  }
+
+  const tt = document.getElementById('hist-tooltip');
+  document.getElementById('hist-title').textContent = `Reroll d${sides}`;
+  const otherSum = ps.rolls.reduce((acc,v,i)=>i===dieIdx?acc:acc+v,0);
+  document.getElementById('hist-subtitle').textContent =
+    `other dice sum to ${otherSum} \u00b7 goal ${goal}`;
+
+  const legendEl = document.getElementById('hist-legend');
+  legendEl.innerHTML = '';
+  const legendItems = isSecondPlayer
+    ? [
+        { color:'#3a7d44', label:'Win' },
+        { color:'#7a6020', label:'Draw' },
+        { color:'#5a1a1a', label:'Lose / Bust' },
+      ]
+    : [
+        { color:'#2a5a3a', label:'Under goal' },
+        { color:'#5a1a1a', label:'Bust' },
+      ];
+  legendItems.forEach(({color, label}) => {
+    const item = document.createElement('div');
+    item.className = 'hist-legend-item';
+    item.innerHTML = `<span class="legend-swatch" style="background:${color}"></span>${label}`;
+    legendEl.appendChild(item);
+  });
+
+  const barsEl = document.getElementById('hist-bars');
+  barsEl.innerHTML = '';
+  for (const [s, prob] of entries) {
+    const cls = classifySum(s, goal, opponentSum);
+    const pct = Math.round(prob * 100);
+    const barPct = (prob / maxProb) * 100;
+
+    const barColor = { win:'bar-win', draw:'bar-draw', lose:'bar-lose', over:'bar-over', under:'bar-win' }[cls];
+    const labelCls = { win:'target-win', draw:'target-draw', lose:'', over:'target-over', under:'' }[cls];
+    const pctCls   = { win:'pct-win',   draw:'pct-draw',   lose:'', over:'pct-over',  under:'' }[cls];
+
+    let suffix = '';
+    if (s === goal) suffix = ' \u2605';
+    else if (isSecondPlayer && opponentSum !== null && opponentSum <= goal && s === opponentSum) suffix = ' =';
+
+    const row = document.createElement('div');
+    row.className = 'hist-row';
+    row.innerHTML = `
+      <div class="hist-sum-label ${labelCls}">${s}${suffix}</div>
+      <div class="hist-bar-track">
+        <div class="hist-bar-fill ${barColor}" style="width:${barPct.toFixed(1)}%"></div>
+      </div>
+      <div class="hist-pct ${pctCls}">${pct}%</div>
+    `;
+    barsEl.appendChild(row);
+  }
+
+  const footerEl = document.getElementById('hist-footer');
+  footerEl.innerHTML = '';
+  const addStat = (label, val, cls) => {
+    if (val < 0.005) return;
+    const span = document.createElement('span');
+    span.className = 'hist-stat';
+    span.innerHTML = `${label}: <strong class="${cls}">${Math.round(val*100)}%</strong>`;
+    footerEl.appendChild(span);
+  };
+  if (isSecondPlayer) {
+    addStat('Win', pWin, 'pct-win');
+    addStat('Draw', pDraw, 'pct-draw');
+    addStat('Lose / Bust', pLose + pOver, 'pct-over');
+  } else {
+    addStat('Under/at goal', pUnder + pWin, '');
+    addStat('Bust', pOver, 'pct-over');
+    const expSum = [...dist.entries()].reduce((acc,[s,p])=>acc+s*p,0);
+    const span = document.createElement('span');
+    span.className = 'hist-stat';
+    span.innerHTML = `Expected sum: <strong>${expSum.toFixed(1)}</strong>`;
+    footerEl.appendChild(span);
+  }
+
+  positionTooltip(tt, anchorEl);
+  tt.classList.add('visible');
+}
+
+function hideHistogram() {
+  document.getElementById('hist-tooltip').classList.remove('visible');
+}
+
+function positionTooltip(tt, anchor) {
+  const rect = anchor.getBoundingClientRect();
+  const ttW  = 290;
+  const vw   = window.innerWidth;
+  const vh   = window.innerHeight;
+  const margin = 10;
+
+  tt.style.visibility = 'hidden';
+  tt.style.display    = 'block';
+  const ttH = tt.offsetHeight || 340;
+  tt.style.visibility = '';
+
+  let top  = rect.top - ttH - 12;
+  let left = rect.left + rect.width/2 - ttW/2;
+
+  if (top < margin)            top  = rect.bottom + 10;
+  if (left < margin)           left = margin;
+  if (left + ttW > vw - margin) left = vw - ttW - margin;
+  if (top + ttH > vh - margin)  top  = vh - ttH - margin;
+
+  tt.style.top  = `${top}px`;
+  tt.style.left = `${left}px`;
+}
+
+function attachHistogramListeners(dieEl, playerIdx, dieIdx) {
+  dieEl.addEventListener('mouseenter', () => {
+    if (!analysisOn) return;
+    hoveredDie = { playerIdx, dieIdx, el: dieEl };
+    showHistogram(playerIdx, dieIdx, dieEl);
+  });
+  dieEl.addEventListener('mouseleave', () => {
+    hoveredDie = null;
+    hideHistogram();
+  });
+}
+
+// Called after a reroll lands — refreshes tooltip if user is still hovering a die
+function refreshHistogramIfHovered() {
+  if (!analysisOn || !hoveredDie) return;
+  const { playerIdx, dieIdx } = hoveredDie;
+  const ps = state.playerState[playerIdx];
+  // Only refresh if that die is still rerollable
+  if (ps.rolls && ps.rerolls < ps.maxRerolls && !ps.stood && playerIdx === state.currentPlayer) {
+    // renderDice rebuilt the DOM, so grab the fresh element
+    const container = document.getElementById(`arena-${playerIdx}-dice`);
+    const freshEl = container.querySelectorAll('.die')[dieIdx];
+    if (freshEl) {
+      hoveredDie.el = freshEl;
+      showHistogram(playerIdx, dieIdx, freshEl);
+    }
+  } else {
+    hoveredDie = null;
+    hideHistogram();
+  }
+}
 </script>
 </body>
 </html>
