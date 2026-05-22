@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr. Davis's Battle Dice</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0a08;
+    --surface: #141010;
+    --surface2: #1e1816;
+    --border: #3a2a20;
+    --crimson: #8b1a1a;
+    --crimson-bright: #c0392b;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --cream: #f0e8d8;
+    --cream-dim: #b8a890;
+    --muted: #6b5a4a;
+    --p1: #c9a84c;
+    --p2: #4a90c9;
+    --p2-bright: #6baed6;
+    --win-glow: rgba(201,168,76,0.3);
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Crimson Pro', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(139,26,26,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(74,100,160,0.1) 0%, transparent 60%);
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 2rem 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--crimson), var(--gold), var(--crimson), transparent);
+  }
+  .title-small {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--cream-dim);
+    letter-spacing: 0.15em;
+    margin-bottom: 0.3rem;
+  }
+  h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.4), 0 2px 4px rgba(0,0,0,0.8);
+    line-height: 1.1;
+    letter-spacing: 0.05em;
+  }
+  .title-sub {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    margin-top: 0.4rem;
+    text-transform: uppercase;
+  }
+
+  /* SETUP SCREEN */
+  #setup-screen {
+    max-width: 780px;
+    margin: 3rem auto;
+    padding: 0 1.5rem;
+  }
+  .setup-section {
+    margin-bottom: 2.5rem;
+  }
+  .setup-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .setup-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .name-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .name-group label {
+    display: block;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: var(--cream-dim);
+    margin-bottom: 0.4rem;
+  }
+  .name-group label span {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+  }
+  .p1-dot { background: var(--p1); }
+  .p2-dot { background: var(--p2); }
+  .name-group input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.1rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .name-group input:focus { border-color: var(--gold); }
+
+  /* Collection cards */
+  .collection-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .collection-card {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .collection-card:hover { border-color: var(--muted); }
+  .collection-card.selected {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.06);
+    box-shadow: 0 0 20px rgba(201,168,76,0.15);
+  }
+  .collection-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 0.8rem; right: 1rem;
+    color: var(--gold);
+    font-size: 1.2rem;
+  }
+  .coll-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+  .coll-dice {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+    flex-wrap: wrap;
+  }
+  .die-badge {
+    background: var(--crimson);
+    color: var(--cream);
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .coll-goal {
+    font-size: 0.95rem;
+    color: var(--cream-dim);
+  }
+  .coll-goal strong { color: var(--cream); font-size: 1.1rem; }
+
+  /* Start button */
+  .btn-start {
+    display: block;
+    margin: 0 auto;
+    background: linear-gradient(135deg, var(--crimson) 0%, #6b1010 100%);
+    color: var(--cream);
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.9rem 3rem;
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(139,26,26,0.4);
+  }
+  .btn-start:hover {
+    background: linear-gradient(135deg, var(--crimson-bright) 0%, var(--crimson) 100%);
+    box-shadow: 0 6px 30px rgba(192,57,43,0.5);
+    transform: translateY(-1px);
+  }
+  .btn-start:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* GAME SCREEN */
+  #game-screen { display: none; padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+
+  /* Score bar */
+  .score-bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .player-score {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .player-score.p2 { text-align: right; }
+  .player-name-display {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .p1 .player-name-display { color: var(--p1); }
+  .p2 .player-name-display { color: var(--p2-bright); }
+  .score-num {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 2.2rem;
+    line-height: 1;
+  }
+  .p1 .score-num { color: var(--p1); }
+  .p2 .score-num { color: var(--p2-bright); }
+  .score-center {
+    text-align: center;
+  }
+  .round-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .round-num {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.5rem;
+    color: var(--cream-dim);
+  }
+  .round-tracker {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    margin-top: 0.4rem;
+  }
+  .rt-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .rt-dot.p1-win { background: var(--p1); }
+  .rt-dot.p2-win { background: var(--p2); }
+  .rt-dot.draw { background: var(--muted); }
+  .rt-dot.current { background: var(--cream-dim); animation: pulse-dot 1s infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* Player arenas */
+  .arenas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .arena {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+  .arena.active-player {
+    border-color: var(--gold);
+    box-shadow: 0 0 25px rgba(201,168,76,0.15);
+  }
+  .arena.p1-arena { border-left: 3px solid var(--p1); }
+  .arena.p2-arena { border-left: 3px solid var(--p2); }
+  .arena-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .arena-pname {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+  .p1-arena .arena-pname { color: var(--p1); }
+  .p2-arena .arena-pname { color: var(--p2-bright); }
+  .turn-badge {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    display: none;
+  }
+  .arena.active-player .turn-badge { display: inline-block; }
+  .p1-arena .turn-badge { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+  .p2-arena .turn-badge { background: rgba(74,144,201,0.15); color: var(--p2-bright); border: 1px solid rgba(74,144,201,0.3); }
+
+  .rerolls-left {
+    font-size: 0.85rem;
+    color: var(--cream-dim);
+  }
+  .rerolls-left span {
+    color: var(--gold-light);
+    font-weight: 600;
+  }
+
+  /* Dice display */
+  .dice-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin: 1.2rem 0;
+    flex-wrap: wrap;
+  }
+  .die-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .die-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .die {
+    width: 64px; height: 64px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.4rem;
+    color: var(--cream);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    position: relative;
+  }
+  .die.can-reroll:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: scale(1.08);
+    box-shadow: 0 4px 15px rgba(201,168,76,0.3);
+  }
+  .die.can-reroll { cursor: pointer; }
+  .die.locked { cursor: default; }
+  .die.rolling {
+    animation: shake 0.35s ease;
+    color: var(--gold-light);
+    border-color: var(--gold);
+  }
+  .die.just-rolled {
+    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(201,168,76,0.4);
+  }
+  @keyframes shake {
+    0%,100%{transform:rotate(0deg) scale(1)}
+    15%{transform:rotate(-12deg) scale(1.1)}
+    30%{transform:rotate(10deg) scale(1.15)}
+    50%{transform:rotate(-8deg) scale(1.1)}
+    70%{transform:rotate(6deg) scale(1.05)}
+    85%{transform:rotate(-3deg) scale(1.02)}
+  }
+  .reroll-hint {
+    font-size: 0.6rem;
+    color: var(--gold);
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-family: 'Cinzel', serif;
+  }
+  .die:hover + .reroll-hint,
+  .die-container:hover .reroll-hint { opacity: 1; }
+
+  /* Sum display */
+  .sum-display {
+    text-align: center;
+    margin: 0.8rem 0;
+    padding: 0.7rem;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .sum-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+  .sum-value {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.8rem;
+    color: var(--cream);
+    line-height: 1;
+  }
+  .sum-value.over-goal { color: var(--crimson-bright); }
+  .sum-value.at-goal { color: var(--gold-light); text-shadow: 0 0 15px rgba(201,168,76,0.6); }
+  .goal-text {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+  .goal-text span { color: var(--cream-dim); }
+
+  /* Arena buttons */
+  .arena-btns {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+  .btn {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.55rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.15s;
+  }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+  .btn-roll {
+    background: linear-gradient(135deg, var(--crimson) 0%, #5a1010 100%);
+    color: var(--cream);
+    border-color: rgba(201,168,76,0.3);
+    box-shadow: 0 3px 12px rgba(139,26,26,0.4);
+  }
+  .btn-roll:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--crimson-bright) 0%, var(--crimson) 100%);
+    transform: translateY(-1px);
+  }
+  .btn-stand {
+    background: var(--surface);
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+  .btn-stand:hover:not(:disabled) {
+    background: rgba(201,168,76,0.1);
+    transform: translateY(-1px);
+  }
+
+  .stood-banner {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    padding: 0.5rem;
+    display: none;
+  }
+
+  /* Round result overlay */
+  #round-result {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  #round-result.show { display: flex; }
+  .result-card {
+    background: var(--surface2);
+    border: 2px solid var(--gold);
+    border-radius: 16px;
+    padding: 2.5rem 3rem;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 0 60px rgba(201,168,76,0.2), 0 20px 60px rgba(0,0,0,0.6);
+    animation: pop-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes pop-in {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .result-round-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .result-winner {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.6rem;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(201,168,76,0.4);
+    margin-bottom: 0.4rem;
+  }
+  .result-winner.draw { color: var(--cream-dim); text-shadow: none; }
+  .result-detail {
+    font-size: 0.95rem;
+    color: var(--cream-dim);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .result-scores {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .rs-item { text-align: center; }
+  .rs-name { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.1em; }
+  .p1 .rs-name { color: var(--p1); }
+  .p2 .rs-name { color: var(--p2-bright); }
+  .rs-score { font-family: 'Cinzel Decorative', serif; font-size: 1.8rem; }
+  .p1 .rs-score { color: var(--p1); }
+  .p2 .rs-score { color: var(--p2-bright); }
+  .btn-next {
+    background: linear-gradient(135deg, var(--crimson) 0%, #5a1010 100%);
+    color: var(--cream);
+    border-color: rgba(201,168,76,0.4);
+    padding: 0.7rem 2rem;
+    font-size: 0.85rem;
+  }
+  .btn-next:hover { background: linear-gradient(135deg, var(--crimson-bright) 0%, var(--crimson) 100%); }
+
+  /* Game over overlay */
+  #game-over {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #game-over.show { display: flex; }
+  .gameover-card {
+    background: var(--surface2);
+    border: 2px solid var(--gold);
+    border-radius: 20px;
+    padding: 3rem;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 0 80px rgba(201,168,76,0.25), 0 30px 80px rgba(0,0,0,0.7);
+    animation: pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .trophy { font-size: 3.5rem; margin-bottom: 0.5rem; display: block; animation: trophy-bounce 1.5s ease infinite; }
+  @keyframes trophy-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .gameover-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .gameover-winner {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(201,168,76,0.5);
+    margin-bottom: 0.3rem;
+  }
+  .gameover-winner.draw { color: var(--cream-dim); text-shadow: none; }
+  .gameover-sub {
+    font-size: 1rem;
+    color: var(--cream-dim);
+    margin-bottom: 2rem;
+    font-style: italic;
+  }
+  .final-scores {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-bottom: 2rem;
+    padding: 1.2rem;
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .fs-item { text-align: center; }
+  .fs-name { font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+  .p1-color { color: var(--p1); }
+  .p2-color { color: var(--p2-bright); }
+  .fs-score { font-family: 'Cinzel Decorative', serif; font-size: 2.5rem; }
+  .gameover-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn-new-game {
+    background: linear-gradient(135deg, var(--crimson) 0%, #5a1010 100%);
+    color: var(--cream);
+    border-color: rgba(201,168,76,0.4);
+    padding: 0.8rem 2.2rem;
+    font-size: 0.9rem;
+  }
+  .btn-new-game:hover { background: linear-gradient(135deg, var(--crimson-bright) 0%, var(--crimson) 100%); }
+  .btn-rematch {
+    background: var(--surface);
+    color: var(--gold);
+    border-color: var(--gold);
+    padding: 0.8rem 2.2rem;
+    font-size: 0.9rem;
+  }
+  .btn-rematch:hover { background: rgba(201,168,76,0.1); }
+
+  /* round history */
+  .round-history {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-top: 1rem;
+  }
+  .rh-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+  }
+  .rh-grid {
+    display: grid;
+    grid-template-columns: auto repeat(7, 1fr);
+    gap: 2px;
+    font-size: 0.8rem;
+  }
+  .rh-cell {
+    padding: 0.3rem 0.4rem;
+    text-align: center;
+    background: var(--surface);
+    border-radius: 3px;
+    font-family: 'Crimson Pro', serif;
+    color: var(--cream-dim);
+  }
+  .rh-cell.header {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    background: transparent;
+  }
+  .rh-cell.p1-win { color: var(--p1); font-weight: 600; }
+  .rh-cell.p2-win { color: var(--p2-bright); font-weight: 600; }
+  .rh-cell.future { color: var(--border); background: var(--bg); }
+  .rh-row-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-align: right;
+    padding-right: 0.6rem;
+    background: transparent;
+    display: flex; align-items: center; justify-content: flex-end;
+  }
+
+  /* Info bar */
+  .info-bar {
+    text-align: center;
+    padding: 0.6rem;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--cream-dim);
+    min-height: 2rem;
+  }
+  .info-bar strong { color: var(--gold); font-style: normal; }
+
+  @media (max-width: 600px) {
+    .arenas { grid-template-columns: 1fr; }
+    .collection-cards { grid-template-columns: 1fr; }
+    .name-inputs { grid-template-columns: 1fr; }
+    .die { width: 52px; height: 52px; font-size: 1.1rem; }
+    .score-bar { grid-template-columns: 1fr auto 1fr; padding: 0.7rem 1rem; }
+    .score-num { font-size: 1.7rem; }
+    .gameover-card, .result-card { padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="title-small">Dr. Davis's</div>
+  <h1>Battle Dice</h1>
+  <div class="title-sub">A Game of Chance &amp; Strategy</div>
+</header>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-section">
+    <div class="setup-label">Players</div>
+    <div class="name-inputs">
+      <div class="name-group">
+        <label><span class="p1-dot"></span>Player 1</label>
+        <input type="text" id="p1-name" placeholder="Enter name…" maxlength="20" value="Player 1">
+      </div>
+      <div class="name-group">
+        <label><span class="p2-dot"></span>Player 2</label>
+        <input type="text" id="p2-name" placeholder="Enter name…" maxlength="20" value="Player 2">
+      </div>
+    </div>
+  </div>
+
+  <div class="setup-section">
+    <div class="setup-label">Choose Dice Collection</div>
+    <div class="collection-cards">
+      <div class="collection-card" id="card-a" onclick="selectCollection('A')">
+        <div class="coll-name">Collection A</div>
+        <div class="coll-dice">
+          <span class="die-badge">d4</span>
+          <span class="die-badge">d8</span>
+          <span class="die-badge">d12</span>
+        </div>
+        <div class="coll-goal">Sum goal: <strong>14</strong></div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-top:0.4rem;">Max possible: 24 &nbsp;·&nbsp; Range: 3–14</div>
+      </div>
+      <div class="collection-card" id="card-b" onclick="selectCollection('B')">
+        <div class="coll-name">Collection B</div>
+        <div class="coll-dice">
+          <span class="die-badge">d6</span>
+          <span class="die-badge">d10</span>
+          <span class="die-badge">d20</span>
+        </div>
+        <div class="coll-goal">Sum goal: <strong>21</strong></div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-top:0.4rem;">Max possible: 36 &nbsp;·&nbsp; Range: 3–21</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-start" id="start-btn" onclick="startGame()" disabled>Begin Game</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen">
+  <!-- Score bar -->
+  <div class="score-bar">
+    <div class="player-score p1">
+      <div class="player-name-display" id="p1-name-disp">Player 1</div>
+      <div class="score-num" id="p1-score">0</div>
+    </div>
+    <div class="score-center">
+      <div class="round-label">Round</div>
+      <div class="round-num" id="round-num">1 / 7</div>
+      <div class="round-tracker" id="round-tracker"></div>
+    </div>
+    <div class="player-score p2">
+      <div class="player-name-display" id="p2-name-disp">Player 2</div>
+      <div class="score-num" id="p2-score">0</div>
+    </div>
+  </div>
+
+  <!-- Info bar -->
+  <div class="info-bar" id="info-bar"></div>
+
+  <!-- Arenas -->
+  <div class="arenas">
+    <!-- P1 Arena -->
+    <div class="arena p1-arena" id="arena-0">
+      <div class="arena-header">
+        <span class="arena-pname" id="arena-0-name">Player 1</span>
+        <span class="turn-badge">Your Turn</span>
+        <span class="rerolls-left" id="arena-0-rerolls"></span>
+      </div>
+      <div class="dice-row" id="arena-0-dice"></div>
+      <div class="sum-display">
+        <span class="sum-label">Current Sum</span>
+        <div class="sum-value" id="arena-0-sum">—</div>
+        <div class="goal-text">Goal: <span id="arena-0-goal">—</span></div>
+      </div>
+      <div class="arena-btns" id="arena-0-btns">
+        <button class="btn btn-roll" id="arena-0-roll-btn" onclick="initialRoll(0)" disabled>Roll Dice</button>
+        <button class="btn btn-stand" id="arena-0-stand-btn" onclick="stand(0)" disabled>Stand</button>
+      </div>
+      <div class="stood-banner" id="arena-0-stood">Stood ✓</div>
+    </div>
+
+    <!-- P2 Arena -->
+    <div class="arena p2-arena" id="arena-1">
+      <div class="arena-header">
+        <span class="arena-pname" id="arena-1-name">Player 2</span>
+        <span class="turn-badge">Your Turn</span>
+        <span class="rerolls-left" id="arena-1-rerolls"></span>
+      </div>
+      <div class="dice-row" id="arena-1-dice"></div>
+      <div class="sum-display">
+        <span class="sum-label">Current Sum</span>
+        <div class="sum-value" id="arena-1-sum">—</div>
+        <div class="goal-text">Goal: <span id="arena-1-goal">—</span></div>
+      </div>
+      <div class="arena-btns" id="arena-1-btns">
+        <button class="btn btn-roll" id="arena-1-roll-btn" onclick="initialRoll(1)" disabled>Roll Dice</button>
+        <button class="btn btn-stand" id="arena-1-stand-btn" onclick="stand(1)" disabled>Stand</button>
+      </div>
+      <div class="stood-banner" id="arena-1-stood">Stood ✓</div>
+    </div>
+  </div>
+
+  <!-- Round history table -->
+  <div class="round-history">
+    <div class="rh-title">Round History</div>
+    <div class="rh-grid" id="rh-grid"></div>
+  </div>
+</div>
+
+<!-- Round Result Modal -->
+<div id="round-result">
+  <div class="result-card">
+    <div class="result-round-label" id="rr-round-label">Round 1 Result</div>
+    <div class="result-winner" id="rr-winner">—</div>
+    <div class="result-detail" id="rr-detail"></div>
+    <div class="result-scores">
+      <div class="rs-item p1">
+        <div class="rs-name" id="rr-p1-name">P1</div>
+        <div class="rs-score" id="rr-p1-score">0</div>
+      </div>
+      <div style="color:var(--muted);font-size:1.5rem;align-self:center;">–</div>
+      <div class="rs-item p2">
+        <div class="rs-name" id="rr-p2-name">P2</div>
+        <div class="rs-score" id="rr-p2-score">0</div>
+      </div>
+    </div>
+    <button class="btn btn-next" id="rr-next-btn" onclick="nextRound()">Next Round →</button>
+  </div>
+</div>
+
+<!-- Game Over Modal -->
+<div id="game-over">
+  <div class="gameover-card">
+    <span class="trophy" id="go-trophy">🏆</span>
+    <div class="gameover-title">Game Over</div>
+    <div class="gameover-winner" id="go-winner">—</div>
+    <div class="gameover-sub" id="go-sub"></div>
+    <div class="final-scores">
+      <div class="fs-item">
+        <div class="fs-name p1-color" id="go-p1-name">P1</div>
+        <div class="fs-score p1-color" id="go-p1-score">0</div>
+      </div>
+      <div style="color:var(--muted);font-size:2rem;align-self:center;">–</div>
+      <div class="fs-item">
+        <div class="fs-name p2-color" id="go-p2-name">P2</div>
+        <div class="fs-score p2-color" id="go-p2-score">0</div>
+      </div>
+    </div>
+    <div class="gameover-btns">
+      <button class="btn btn-rematch" onclick="rematch()">Rematch</button>
+      <button class="btn btn-new-game" onclick="newGame()">New Game</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────
+const COLLECTIONS = {
+  A: { dice: [4, 8, 12], goal: 14, label: 'A (d4, d8, d12)' },
+  B: { dice: [6, 10, 20], goal: 21, label: 'B (d6, d10, d20)' }
+};
+
+let state = {};
+
+function getInitialState(p1, p2, collection, p1GoesFirst) {
+  return {
+    p1Name: p1, p2Name: p2,
+    collection,
+    scores: [0, 0],
+    round: 1,
+    // who goes first this round: 0=p1, 1=p2
+    firstPlayer: p1GoesFirst ? 0 : 1,
+    currentPlayer: null, // which player is actively taking their turn
+    playerState: [
+      { rolls: null, rerolls: 0, maxRerolls: 0, stood: false, rolledInitially: false },
+      { rolls: null, rerolls: 0, maxRerolls: 0, stood: false, rolledInitially: false }
+    ],
+    roundHistory: [], // array of {sums:[s0,s1], winner: 0|1|null}
+    gameOver: false
+  };
+}
+
+// ─── Setup ────────────────────────────────────────────────
+let selectedCollection = null;
+
+function selectCollection(c) {
+  selectedCollection = c;
+  document.getElementById('card-a').classList.toggle('selected', c === 'A');
+  document.getElementById('card-b').classList.toggle('selected', c === 'B');
+  checkSetupReady();
+}
+
+function checkSetupReady() {
+  document.getElementById('start-btn').disabled = !selectedCollection;
+}
+
+function startGame() {
+  const p1 = document.getElementById('p1-name').value.trim() || 'Player 1';
+  const p2 = document.getElementById('p2-name').value.trim() || 'Player 2';
+  // randomly pick who goes first round 1
+  state = getInitialState(p1, p2, selectedCollection, Math.random() < 0.5);
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+  initRound();
+}
+
+// ─── Round Setup ─────────────────────────────────────────
+function initRound() {
+  const col = COLLECTIONS[state.collection];
+  const fp = state.firstPlayer;
+  const sp = 1 - fp;
+
+  // Reset player states
+  state.playerState = [
+    { rolls: null, rerolls: 0, maxRerolls: fp === 0 ? 3 : 2, stood: false, rolledInitially: false },
+    { rolls: null, rerolls: 0, maxRerolls: fp === 1 ? 3 : 2, stood: false, rolledInitially: false }
+  ];
+
+  // First player goes
+  state.currentPlayer = fp;
+
+  // Update header
+  document.getElementById('p1-name-disp').textContent = state.p1Name;
+  document.getElementById('p2-name-disp').textContent = state.p2Name;
+  document.getElementById('p1-score').textContent = state.scores[0];
+  document.getElementById('p2-score').textContent = state.scores[1];
+  document.getElementById('round-num').textContent = `${state.round} / 7`;
+
+  buildRoundTracker();
+  buildHistoryTable();
+
+  // Update arenas
+  for (let p = 0; p < 2; p++) {
+    const ps = state.playerState[p];
+    document.getElementById(`arena-${p}-name`).textContent = p === 0 ? state.p1Name : state.p2Name;
+    document.getElementById(`arena-${p}-goal`).textContent = col.goal;
+    document.getElementById(`arena-${p}-sum`).textContent = '—';
+    document.getElementById(`arena-${p}-sum`).className = 'sum-value';
+    document.getElementById(`arena-${p}-stood`).style.display = 'none';
+    renderDice(p, null, -1);
+    updateArenaUI(p);
+  }
+
+  const fpName = fp === 0 ? state.p1Name : state.p2Name;
+  setInfo(`Round ${state.round}: <strong>${fpName}</strong> goes first. Roll your dice!`);
+}
+
+// ─── Dice Rendering ───────────────────────────────────────
+function renderDice(playerIdx, rolls, justRolledIdx) {
+  const col = COLLECTIONS[state.collection];
+  const container = document.getElementById(`arena-${playerIdx}-dice`);
+  container.innerHTML = '';
+  const ps = state.playerState[playerIdx];
+
+  col.dice.forEach((sides, i) => {
+    const dc = document.createElement('div');
+    dc.className = 'die-container';
+
+    const dieEl = document.createElement('div');
+    dieEl.className = 'die';
+
+    const canReroll = rolls !== null
+      && ps.rerolls < ps.maxRerolls
+      && !ps.stood
+      && playerIdx === state.currentPlayer
+      && ps.rolledInitially;
+
+    if (canReroll) dieEl.classList.add('can-reroll');
+    else dieEl.classList.add('locked');
+
+    if (justRolledIdx === i) dieEl.classList.add('just-rolled');
+
+    dieEl.textContent = rolls ? rolls[i] : '?';
+    if (canReroll) {
+      dieEl.title = `Click to reroll d${sides}`;
+      dieEl.onclick = () => rerollDie(playerIdx, i);
+    }
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'die-label';
+    labelEl.textContent = `d${sides}`;
+
+    const hintEl = document.createElement('div');
+    hintEl.className = 'reroll-hint';
+    hintEl.textContent = canReroll ? 'click to reroll' : '';
+
+    dc.appendChild(dieEl);
+    dc.appendChild(labelEl);
+    if (canReroll) dc.appendChild(hintEl);
+    container.appendChild(dc);
+  });
+}
+
+function rollDie(sides) {
+  return Math.floor(Math.random() * sides) + 1;
+}
+
+// ─── Turn Actions ─────────────────────────────────────────
+function initialRoll(playerIdx) {
+  if (playerIdx !== state.currentPlayer) return;
+  const col = COLLECTIONS[state.collection];
+  const ps = state.playerState[playerIdx];
+  ps.rolls = col.dice.map(s => rollDie(s));
+  ps.rolledInitially = true;
+
+  animateRoll(playerIdx, -1, () => {
+    updateSum(playerIdx);
+    renderDice(playerIdx, ps.rolls, -1);
+    updateArenaUI(playerIdx);
+  });
+}
+
+function rerollDie(playerIdx, dieIdx) {
+  if (playerIdx !== state.currentPlayer) return;
+  const ps = state.playerState[playerIdx];
+  if (!ps.rolledInitially || ps.stood || ps.rerolls >= ps.maxRerolls) return;
+
+  const col = COLLECTIONS[state.collection];
+  ps.rerolls++;
+  ps.rolls[dieIdx] = rollDie(col.dice[dieIdx]);
+
+  animateRoll(playerIdx, dieIdx, () => {
+    updateSum(playerIdx);
+    renderDice(playerIdx, ps.rolls, dieIdx);
+    updateArenaUI(playerIdx);
+    if (ps.rerolls >= ps.maxRerolls) {
+      autoStand(playerIdx);
+    }
+  });
+}
+
+function animateRoll(playerIdx, dieIdx, callback) {
+  const container = document.getElementById(`arena-${playerIdx}-dice`);
+  const dieEls = container.querySelectorAll('.die');
+  const targets = dieIdx === -1 ? [...dieEls] : [dieEls[dieIdx]];
+  targets.forEach(el => {
+    el.classList.add('rolling');
+    el.textContent = '?';
+  });
+  setTimeout(() => {
+    targets.forEach(el => el.classList.remove('rolling'));
+    callback();
+  }, 380);
+}
+
+function stand(playerIdx) {
+  if (playerIdx !== state.currentPlayer) return;
+  const ps = state.playerState[playerIdx];
+  if (!ps.rolledInitially || ps.stood) return;
+  ps.stood = true;
+  document.getElementById(`arena-${playerIdx}-stood`).style.display = 'block';
+  renderDice(playerIdx, ps.rolls, -1);
+  updateArenaUI(playerIdx);
+  advanceTurn();
+}
+
+function autoStand(playerIdx) {
+  const ps = state.playerState[playerIdx];
+  if (!ps.stood) {
+    ps.stood = true;
+    document.getElementById(`arena-${playerIdx}-stood`).style.display = 'block';
+    renderDice(playerIdx, ps.rolls, -1);
+    updateArenaUI(playerIdx);
+    setTimeout(() => advanceTurn(), 300);
+  }
+}
+
+function advanceTurn() {
+  const fp = state.firstPlayer;
+  const sp = 1 - fp;
+  const fpState = state.playerState[fp];
+  const spState = state.playerState[sp];
+
+  if (!fpState.stood) {
+    // first player still needs to go (shouldn't happen but safety)
+    state.currentPlayer = fp;
+    updateArenaActive();
+  } else if (!spState.stood) {
+    // second player's turn
+    state.currentPlayer = sp;
+    updateArenaActive();
+    const spName = sp === 0 ? state.p1Name : state.p2Name;
+    const fpSum = fpState.rolls.reduce((a,b)=>a+b,0);
+    const col = COLLECTIONS[state.collection];
+    const fpOver = fpSum > col.goal;
+    const info = fpOver
+      ? `<strong>${spName}</strong>'s turn — opponent busted (${fpSum}). Roll your best!`
+      : `<strong>${spName}</strong>'s turn — opponent scored <strong>${fpSum}</strong>. Try to beat it!`;
+    setInfo(info);
+    updateArenaUI(sp);
+  } else {
+    // both stood — pause so players can see the second player's final roll, then resolve
+    setInfo('Calculating results…');
+    setTimeout(() => resolveRound(), 1400);
+  }
+}
+
+function updateArenaActive() {
+  for (let p = 0; p < 2; p++) {
+    const arena = document.getElementById(`arena-${p}`);
+    arena.classList.toggle('active-player', p === state.currentPlayer);
+  }
+}
+
+// ─── UI Updates ───────────────────────────────────────────
+function updateArenaUI(playerIdx) {
+  const ps = state.playerState[playerIdx];
+  const isActive = playerIdx === state.currentPlayer;
+  const rerollsUsed = ps.rerolls;
+  const maxR = ps.maxRerolls;
+  const rerollsLeft = maxR - rerollsUsed;
+
+  const rollBtn = document.getElementById(`arena-${playerIdx}-roll-btn`);
+  const standBtn = document.getElementById(`arena-${playerIdx}-stand-btn`);
+  const rerollsEl = document.getElementById(`arena-${playerIdx}-rerolls`);
+
+  rollBtn.disabled = !(isActive && !ps.rolledInitially);
+  standBtn.disabled = !(isActive && ps.rolledInitially && !ps.stood);
+
+  if (ps.rolledInitially) {
+    rerollsEl.innerHTML = `Rerolls left: <span>${rerollsLeft}</span> / ${maxR}`;
+  } else {
+    rerollsEl.innerHTML = `Rerolls: <span>${maxR}</span> available`;
+  }
+
+  const arena = document.getElementById(`arena-${playerIdx}`);
+  arena.classList.toggle('active-player', isActive && !ps.stood);
+}
+
+function updateSum(playerIdx) {
+  const ps = state.playerState[playerIdx];
+  const col = COLLECTIONS[state.collection];
+  const sum = ps.rolls.reduce((a,b) => a+b, 0);
+  const el = document.getElementById(`arena-${playerIdx}-sum`);
+  el.textContent = sum;
+  el.className = 'sum-value';
+  if (sum > col.goal) el.classList.add('over-goal');
+  else if (sum === col.goal) el.classList.add('at-goal');
+}
+
+function setInfo(html) {
+  document.getElementById('info-bar').innerHTML = html;
+}
+
+function buildRoundTracker() {
+  const tracker = document.getElementById('round-tracker');
+  tracker.innerHTML = '';
+  for (let i = 1; i <= 7; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'rt-dot';
+    if (i < state.round) {
+      const rh = state.roundHistory[i-1];
+      if (rh) {
+        if (rh.winner === 0) dot.classList.add('p1-win');
+        else if (rh.winner === 1) dot.classList.add('p2-win');
+        else dot.classList.add('draw');
+      }
+    } else if (i === state.round) {
+      dot.classList.add('current');
+    }
+    tracker.appendChild(dot);
+  }
+}
+
+// ─── Round Resolution ─────────────────────────────────────
+function resolveRound() {
+  const col = COLLECTIONS[state.collection];
+  const p0 = state.playerState[0];
+  const p1s = state.playerState[1];
+  const sum0 = p0.rolls.reduce((a,b)=>a+b,0);
+  const sum1 = p1s.rolls.reduce((a,b)=>a+b,0);
+  const goal = col.goal;
+  const over0 = sum0 > goal;
+  const over1 = sum1 > goal;
+
+  let winner = null; // null = draw
+  if (over0 && over1) { winner = null; }
+  else if (over0) { winner = 1; }
+  else if (over1) { winner = 0; }
+  else {
+    const diff0 = goal - sum0;
+    const diff1 = goal - sum1;
+    if (diff0 < diff1) winner = 0;
+    else if (diff1 < diff0) winner = 1;
+    else winner = null; // tie
+  }
+
+  if (winner !== null) state.scores[winner]++;
+
+  state.roundHistory.push({ sums: [sum0, sum1], winner });
+
+  // Show result modal
+  showRoundResult(winner, sum0, sum1, goal, over0, over1);
+}
+
+function showRoundResult(winner, sum0, sum1, goal, over0, over1) {
+  const rrEl = document.getElementById('round-result');
+  document.getElementById('rr-round-label').textContent = `Round ${state.round} Result`;
+  document.getElementById('rr-p1-name').textContent = state.p1Name;
+  document.getElementById('rr-p2-name').textContent = state.p2Name;
+  document.getElementById('rr-p1-score').textContent = state.scores[0];
+  document.getElementById('rr-p2-score').textContent = state.scores[1];
+
+  const winnerEl = document.getElementById('rr-winner');
+  const detailEl = document.getElementById('rr-detail');
+
+  function sumText(p, sum, over) {
+    const name = p === 0 ? state.p1Name : state.p2Name;
+    return over ? `${name}: ${sum} (bust!)` : `${name}: ${sum}`;
+  }
+
+  if (winner === null) {
+    winnerEl.textContent = 'Draw!';
+    winnerEl.className = 'result-winner draw';
+    if (over0 && over1) {
+      detailEl.textContent = `Both players busted. No points awarded.\n${sumText(0,sum0,over0)} · ${sumText(1,sum1,over1)}`;
+    } else {
+      detailEl.textContent = `Both equally close to ${goal}. No points awarded.\n${sumText(0,sum0,over0)} · ${sumText(1,sum1,over1)}`;
+    }
+  } else {
+    const winName = winner === 0 ? state.p1Name : state.p2Name;
+    winnerEl.textContent = `${winName} wins!`;
+    winnerEl.className = 'result-winner';
+    detailEl.innerHTML = `${sumText(0,sum0,over0)}<br>${sumText(1,sum1,over1)}<br><br>Goal was ${goal}.`;
+  }
+
+  // Check if game is over before showing next button
+  const maxScore = Math.max(state.scores[0], state.scores[1]);
+  const roundsLeft = 7 - state.round;
+  const isOver = state.round === 7 || (maxScore > roundsLeft + Math.min(state.scores[0], state.scores[1]));
+
+  const nextBtn = document.getElementById('rr-next-btn');
+  if (state.round === 7) {
+    nextBtn.textContent = 'See Final Results →';
+  } else {
+    nextBtn.textContent = 'Next Round →';
+  }
+
+  rrEl.classList.add('show');
+}
+
+function nextRound() {
+  document.getElementById('round-result').classList.remove('show');
+
+  if (state.round === 7) {
+    showGameOver();
+    return;
+  }
+
+  state.round++;
+  // Alternate who goes first
+  state.firstPlayer = 1 - state.firstPlayer;
+
+  initRound();
+}
+
+// ─── Game Over ────────────────────────────────────────────
+function showGameOver() {
+  const s0 = state.scores[0], s1 = state.scores[1];
+  let winner, sub, trophy;
+  if (s0 > s1) {
+    winner = state.p1Name;
+    sub = `with ${s0} rounds won`;
+    trophy = '🏆';
+  } else if (s1 > s0) {
+    winner = state.p2Name;
+    sub = `with ${s1} rounds won`;
+    trophy = '🏆';
+  } else {
+    winner = 'It\'s a Draw!';
+    sub = `Both players won ${s0} rounds`;
+    trophy = '🤝';
+  }
+
+  document.getElementById('go-trophy').textContent = trophy;
+  document.getElementById('go-winner').textContent = winner;
+  document.getElementById('go-winner').className = s0 === s1 ? 'gameover-winner draw' : 'gameover-winner';
+  document.getElementById('go-sub').textContent = sub;
+  document.getElementById('go-p1-name').textContent = state.p1Name;
+  document.getElementById('go-p2-name').textContent = state.p2Name;
+  document.getElementById('go-p1-score').textContent = s0;
+  document.getElementById('go-p2-score').textContent = s1;
+
+  document.getElementById('game-over').classList.add('show');
+}
+
+function rematch() {
+  document.getElementById('game-over').classList.remove('show');
+  state = getInitialState(state.p1Name, state.p2Name, state.collection, Math.random() < 0.5);
+  document.getElementById('p1-score').textContent = 0;
+  document.getElementById('p2-score').textContent = 0;
+  initRound();
+}
+
+function newGame() {
+  document.getElementById('game-over').classList.remove('show');
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'block';
+}
+
+// ─── History Table ────────────────────────────────────────
+function buildHistoryTable() {
+  const grid = document.getElementById('rh-grid');
+  grid.innerHTML = '';
+
+  // Header row
+  const headerLabel = document.createElement('div');
+  headerLabel.className = 'rh-cell header';
+  headerLabel.textContent = '';
+  grid.appendChild(headerLabel);
+  for (let r = 1; r <= 7; r++) {
+    const h = document.createElement('div');
+    h.className = 'rh-cell header';
+    h.textContent = `R${r}`;
+    grid.appendChild(h);
+  }
+
+  // P1 row
+  const p1Label = document.createElement('div');
+  p1Label.className = 'rh-row-label';
+  p1Label.textContent = state.p1Name;
+  grid.appendChild(p1Label);
+  for (let r = 0; r < 7; r++) {
+    const cell = document.createElement('div');
+    const rh = state.roundHistory[r];
+    if (rh) {
+      cell.textContent = rh.sums[0];
+      cell.className = 'rh-cell' + (rh.winner === 0 ? ' p1-win' : '');
+    } else {
+      cell.className = 'rh-cell future';
+      cell.textContent = r === state.round - 1 ? '…' : '—';
+    }
+    grid.appendChild(cell);
+  }
+
+  // P2 row
+  const p2Label = document.createElement('div');
+  p2Label.className = 'rh-row-label';
+  p2Label.textContent = state.p2Name;
+  grid.appendChild(p2Label);
+  for (let r = 0; r < 7; r++) {
+    const cell = document.createElement('div');
+    const rh = state.roundHistory[r];
+    if (rh) {
+      cell.textContent = rh.sums[1];
+      cell.className = 'rh-cell' + (rh.winner === 1 ? ' p2-win' : '');
+    } else {
+      cell.className = 'rh-cell future';
+      cell.textContent = r === state.round - 1 ? '…' : '—';
+    }
+    grid.appendChild(cell);
+  }
+}
+
+// ─── Init ─────────────────────────────────────────────────
+document.getElementById('p1-name').addEventListener('input', checkSetupReady);
+document.getElementById('p2-name').addEventListener('input', checkSetupReady);
+</script>
+</body>
+</html>
