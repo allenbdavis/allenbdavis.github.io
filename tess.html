@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TESS Explorer — DEBUG</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
+
+  :root {
+    --bg:       #05080f;
+    --panel-bg: #0a0e1a;
+    --border:   #1a2340;
+    --accent:   #4af3c8;
+    --accent2:  #3a7ff6;
+    --warn:     #f3c84a;
+    --danger:   #f35a4a;
+    --text:     #c8d8f0;
+    --text-dim: #4a6080;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Exo 2', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-bg);
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-family: var(--mono); font-size: 13px;
+    letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase;
+  }
+  #status { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--warn); }
+  #status.ready { color: var(--accent); }
+  #status.error { color: var(--danger); }
+
+  /* ── Main layout: narrow star strip left, plots right ── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Star field — narrow fixed-width column ── */
+  #field-panel {
+    width: 30%;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  #starCanvas { display: block; cursor: crosshair; }
+
+  /* ── Right panel: header + scrollable plots ── */
+  #side-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--panel-bg);
+  }
+
+  /* Panel header — star ID, buttons */
+  #sp-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    background: var(--panel-bg);
+  }
+  .sp-label {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase;
+  }
+  #star-id-display {
+    font-family: var(--mono); font-size: 12px; color: var(--accent2); flex: 1;
+  }
+  #debug-info {
+    display: none;
+    font-family: var(--mono); font-size: 10px; color: var(--warn);
+    letter-spacing: 0.05em;
+  }
+
+  .hdr-btn {
+    background: none; border: 1px solid var(--border); color: var(--text-dim);
+    font-family: var(--mono); font-size: 10px; padding: 3px 9px;
+    cursor: pointer; border-radius: 2px; transition: all 0.12s; white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+  .hdr-btn:hover  { border-color: var(--accent); color: var(--accent); }
+  .hdr-btn.active { border-color: var(--warn);   color: var(--warn);   }
+
+  /* ── Scrollable plot area ── */
+  #plot-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #plot-scroll::-webkit-scrollbar { width: 4px; }
+  #plot-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── Placeholder ── */
+  #placeholder {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 200px;
+    color: var(--text-dim); font-family: var(--mono);
+    font-size: 11px; letter-spacing: 0.08em;
+    text-align: center; line-height: 2.2;
+  }
+  #placeholder .icon { font-size: 28px; opacity: 0.2; margin-bottom: 10px; }
+
+  /* ── LC image + overlay canvas wrapper ── */
+  #lc-wrapper {
+    position: relative;
+    width: 100%;
+    display: none;
+  }
+  #plot-img   { display: block; width: 100%; height: auto; border-radius: 3px; }
+  #lc-overlay {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    cursor: crosshair; border-radius: 3px;
+  }
+
+  .click-hint {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text-dim); letter-spacing: 0.05em; padding: 3px 0;
+  }
+  .click-hint b { color: var(--accent); font-weight: normal; }
+
+  /* ── Section divider label ── */
+  .sec-label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+    color: var(--text-dim); text-transform: uppercase;
+    border-top: 1px solid var(--border); padding-top: 8px;
+    margin-top: 2px;
+  }
+
+  /* ── Period controls ── */
+  #period-box {
+    background: #070b14; border: 1px solid var(--border);
+    border-radius: 4px; padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .p-row { display: flex; align-items: center; gap: 8px; }
+  #period-slider {
+    flex: 1; -webkit-appearance: none; height: 3px;
+    background: var(--border); border-radius: 2px; outline: none; cursor: pointer;
+  }
+  #period-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px;
+    background: var(--accent); border-radius: 50%; cursor: pointer;
+    box-shadow: 0 0 6px #4af3c866;
+  }
+  .nudge {
+    background: none; border: 1px solid var(--border); color: var(--text-dim);
+    font-family: var(--mono); font-size: 9px; padding: 3px 7px;
+    cursor: pointer; border-radius: 2px; transition: all 0.1s; white-space: nowrap;
+  }
+  .nudge:hover { border-color: var(--accent); color: var(--accent); }
+  #period-val {
+    font-family: var(--mono); font-size: 14px; color: var(--accent);
+    min-width: 85px; text-align: right; letter-spacing: 0.05em;
+  }
+  .stats-row {
+    display: flex; gap: 18px;
+    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+  }
+  .stats-row span { color: var(--text); }
+  #computing { font-family: var(--mono); font-size: 10px; color: var(--warn);
+               letter-spacing: 0.08em; min-height: 14px; }
+
+  /* ── Sub-plot images ── */
+  .sub-img { display: block; width: 100%; height: auto; border-radius: 3px; margin-top: 6px; }
+
+  /* ── Loading overlay ── */
+  #loading-overlay {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 100; gap: 16px;
+  }
+  #loading-overlay h2 {
+    font-family: var(--mono); font-size: 12px;
+    letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase;
+  }
+  #loading-msg { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Footer ── */
+  footer {
+    padding: 6px 20px; border-top: 1px solid var(--border);
+    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+    flex-shrink: 0; display: flex; gap: 20px;
+  }
+  footer span { color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <h2>Initializing TESS Pipeline</h2>
+  <div id="loading-msg">Loading Python runtime…</div>
+</div>
+
+<!-- Header -->
+<header>
+  <h1>TESS Explorer // DEBUG — seed=0</h1>
+  <div id="status">● LOADING</div>
+</header>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Star field strip -->
+  <div id="field-panel">
+    <canvas id="starCanvas"></canvas>
+  </div>
+
+  <!-- Right panel -->
+  <div id="side-panel">
+
+    <!-- Sticky header -->
+    <div id="sp-header">
+      <span class="sp-label">LC</span>
+      <span id="star-id-display">— select a star</span>
+      <span id="debug-info"></span>
+      <button class="hdr-btn" id="reset-btn" style="display:none">↺ Reset</button>
+      <button class="hdr-btn" id="flag-btn"  style="display:none">⚑ Flag</button>
+    </div>
+
+    <!-- Scrollable plot area -->
+    <div id="plot-scroll">
+
+      <!-- Placeholder -->
+      <div id="placeholder">
+        <div class="icon">✦</div>
+        Click any star<br>to view its light curve
+      </div>
+
+      <!-- Light curve -->
+      <div id="lc-wrapper">
+        <img id="plot-img" alt="light curve" />
+        <canvas id="lc-overlay"></canvas>
+      </div>
+      <div id="click-hint" class="click-hint" style="display:none">
+        Click on transit dips to mark them &nbsp;·&nbsp;
+        <b id="click-count">0</b> / 4 marked
+      </div>
+
+      <!-- Period controls -->
+      <div id="period-box" style="display:none">
+        <div class="sec-label" style="border:none;padding:0;margin:0">Period Refinement</div>
+        <div class="p-row">
+          <button class="nudge" id="p-minus">−0.0001 d</button>
+          <input type="range" id="period-slider" step="0.0001" />
+          <button class="nudge" id="p-plus">+0.0001 d</button>
+        </div>
+        <div class="p-row" style="justify-content:space-between">
+          <div id="period-val">— d</div>
+          <div id="computing"></div>
+        </div>
+        <div class="stats-row">
+          <div>SNR: <span id="snr-val">—</span></div>
+          <div>depth: <span id="depth-val">—</span></div>
+          <div>χ²ᵣ: <span id="chi2-val">—</span></div>
+        </div>
+      </div>
+
+      <!-- Phase fold -->
+      <div id="fold-area" style="display:none">
+        <div class="sec-label">Phase-Folded Light Curve</div>
+        <img class="sub-img" id="fold-img" alt="phase fold" />
+      </div>
+
+      <!-- Odd / even -->
+      <div id="oddeven-area" style="display:none">
+        <div class="sec-label">Odd / Even Transit Check</div>
+        <img class="sub-img" id="oddeven-img" alt="odd/even" />
+      </div>
+
+    </div><!-- /plot-scroll -->
+  </div><!-- /side-panel -->
+</div><!-- /main -->
+
+<!-- Footer -->
+<footer>
+  <div>Stars: <span id="star-count">—</span></div>
+  <div>Seed: <span id="seed-display">—</span></div>
+  <div>Flagged: <span id="flagged-count">0</span></div>
+  <div>Backend: <span>Pyodide / Python</span></div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  PYTHON
+// ═══════════════════════════════════════════════════════════════════════
+const PYTHON = `
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import io, base64, json
+
+# Per-star data store — persists between runPython calls in Pyodide
+_star_data = {}
+
+# Shared colour palette
+S = dict(
+    fig_bg   = '#0a0e1a',
+    ax_bg    = '#05080f',
+    line     = '#4af3c8',
+    ax_col   = '#4a6080',
+    title    = '#c8d8f0',
+    grid     = '#1a2340',
+    fit      = '#f3c84a',
+    odd_col  = '#f35a9a',
+    even_col = '#4af3c8',
+)
+
+def _style(ax, title='', xlabel='Time (days)', ylabel='Relative Flux'):
+    ax.set_facecolor(S['ax_bg'])
+    ax.set_xlabel(xlabel, color=S['ax_col'], fontsize=8, labelpad=4)
+    ax.set_ylabel(ylabel, color=S['ax_col'], fontsize=8, labelpad=4)
+    if title:
+        ax.set_title(title, color=S['title'], fontsize=8, pad=5)
+    for sp in ax.spines.values():
+        sp.set_edgecolor(S['grid'])
+    ax.tick_params(colors=S['ax_col'], labelsize=7)
+    ax.grid(True, color=S['grid'], lw=0.4, alpha=0.8)
+
+def _to_b64(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', dpi=150, facecolor=fig.get_facecolor())
+    plt.close(fig)
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode()
+
+# ─────────────────────────────────────────────────────────────────────────────
+def generate_starfield(seed=42, n_stars=25):
+    rng   = np.random.default_rng(seed)
+    types = ['boring']*5 + ['pulsating', 'transit', 'transit', 'eb']
+    stars = []
+    for i in range(n_stars):
+        stars.append({
+            'id':         i,
+            'x':          float(rng.uniform(0.05, 0.95)),
+            'y':          float(rng.uniform(0.05, 0.95)),
+            'brightness': float(rng.uniform(0.2, 1.0)),
+            'type':       str(rng.choice(types)),
+        })
+    return json.dumps(stars)
+
+# ─────────────────────────────────────────────────────────────────────────────
+def _gen_flux(star_id, star_type, brightness, seed):
+    """
+    Generate the time array and flux for one star.
+    This is the single source of truth — called once per star, result cached.
+    """
+    rng   = np.random.default_rng(seed * 1000 + star_id)
+    t     = np.linspace(0, 27, 1500)            # 27-day TESS sector
+    sigma = 0.0006 + (1.0 - brightness) * 0.0024  # DEBUG: 5x reduced noise
+    flux  = np.ones(len(t)) + rng.normal(0, sigma, len(t))
+    params = {}
+
+    if star_type == 'pulsating':
+        P = float(rng.uniform(0.5, 3.0))
+        A = float(rng.uniform(0.005, 0.02))
+        flux += A * np.sin(2 * np.pi * t / P)
+        params = dict(period=P, amp=A)
+
+    elif star_type == 'transit':
+        P        = float(rng.uniform(2.0, 15.0))
+        depth    = float(rng.uniform(0.005, 0.025))
+        t0       = float(rng.uniform(0, P))
+        dur_frac = float(rng.uniform(0.03, 0.08))  # transit duration as fraction of P
+        ph       = ((t - t0) % P) / P
+        ph       = np.where(ph > 0.5, ph - 1.0, ph)
+        flux[np.abs(ph) < dur_frac / 2] -= depth
+        params   = dict(period=P, depth=depth, t0=t0, dur_frac=dur_frac)
+
+    elif star_type == 'eb':
+        P  = float(rng.uniform(1.0, 8.0))
+        d1 = float(rng.uniform(0.05, 0.25))        # primary depth
+        d2 = float(d1 * rng.uniform(0.3, 0.7))     # secondary depth
+        t0 = float(rng.uniform(0, P))
+        ph = ((t - t0) % P) / P
+        # Primary eclipse (V-shape centred at phase 0)
+        dp = np.minimum(np.abs(ph), 1.0 - np.abs(ph))
+        w1 = 0.08
+        m1 = dp < w1
+        flux[m1] -= d1 * (1.0 - dp[m1] / w1)
+        # Secondary eclipse (phase 0.5)
+        ds = np.abs(ph - 0.5)
+        w2 = 0.06
+        m2 = ds < w2
+        flux[m2] -= d2 * (1.0 - ds[m2] / w2)
+        params = dict(period=P, d1=d1, d2=d2, t0=t0)
+
+    return t, flux, sigma, params
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+def _bls_vectorized(ph, flux, sigma, n_centers=60, n_widths=15):
+    """
+    Vectorized BLS-style box fit on already-folded data.
+
+    Avoids all Python loops — uses numpy broadcasting to evaluate
+    n_centers x n_widths box models simultaneously.
+
+    Depth = mean(out) - mean(in), computed analytically per box.
+    Returns: (best_center, best_w, best_depth, best_chi2, n_in)
+    """
+    N       = len(flux)
+    var     = sigma ** 2
+    S_total = float(np.sum(flux))          # sum of all flux values
+
+    centers = np.linspace(-0.40, 0.40, n_centers)   # (C,)
+    widths  = np.linspace(0.01,  0.15,  n_widths)    # (W,)
+
+    # ph: (N,)  centers: (C,)  -> dist: (C, N)
+    dist = np.abs(ph[np.newaxis, :] - centers[:, np.newaxis])  # (C, N)
+
+    best_chi2   = np.inf
+    best_center = 0.0
+    best_w      = 0.05
+    best_depth  = 0.0
+
+    for w in widths:
+        in_box = dist < w                          # (C, N) bool
+        n_in   = in_box.sum(axis=1)                # (C,)
+        n_out  = N - n_in
+
+        # Skip boxes with too few points
+        valid = (n_in >= 3) & (n_out >= 10)
+        if not valid.any():
+            continue
+
+        S_in  = (in_box * flux[np.newaxis, :]).sum(axis=1)   # (C,)
+        S_out = S_total - S_in
+
+        mean_in  = np.where(n_in  > 0, S_in  / n_in,  1.0)
+        mean_out = np.where(n_out > 0, S_out / n_out,  1.0)
+        dep      = mean_out - mean_in                          # (C,)
+
+        # Only consider positive depths
+        valid = valid & (dep > 0)
+        if not valid.any():
+            continue
+
+        # chi2: sum of squared residuals / var
+        # = (sum(flux^2) - n_out*mean_out^2 - n_in*(mean_out-dep)^2) / var  [simplified]
+        # Direct vectorized form:
+        model_mean = np.where(in_box,
+                              (mean_out - dep)[: , np.newaxis],
+                               mean_out[:, np.newaxis])        # (C, N)
+        chi2 = np.sum((flux[np.newaxis, :] - model_mean) ** 2, axis=1) / var  # (C,)
+
+        # Mask invalid entries
+        chi2 = np.where(valid, chi2, np.inf)
+        idx  = int(np.argmin(chi2))
+
+        if chi2[idx] < best_chi2:
+            best_chi2   = float(chi2[idx])
+            best_center = float(centers[idx])
+            best_w      = float(w)
+            best_depth  = float(dep[idx])
+
+    mask_best = np.abs(ph - best_center) < best_w
+    n_in      = int(mask_best.sum())
+    return best_center, best_w, best_depth, best_chi2, n_in
+
+
+def find_best_period(star_id, t0_guess, period_guess, n_periods=200):
+    """
+    Grid search over n_periods trial periods in [0.9*P, 1.1*P].
+    At each period, runs _bls_vectorized (no Python inner loops).
+    Picks the period with the lowest chi-squared.
+
+    Returns JSON: { img, best_period, snr, depth, dur_frac, chi2r }
+    """
+    d = _star_data.get(star_id)
+    if not d:
+        return json.dumps(dict(error='no data'))
+
+    t, flux, sigma = d['t'], d['flux'], d['sigma']
+    t0_guess      = float(t0_guess)
+    period_guess  = float(period_guess)
+
+    # ── Iterative zoom: coarse → fine until precision < 0.0001 d ───────
+    # Round 1: broad search ±10% of guess
+    p_lo, p_hi = 0.9 * period_guess, 1.1 * period_guess
+
+    best_chi2   = np.inf
+    best_period = period_guess
+    best_center = 0.0
+    best_w      = 0.05
+    best_depth  = 0.0
+
+    while True:
+        periods = np.linspace(p_lo, p_hi, int(n_periods))
+        step    = periods[1] - periods[0]
+
+        for P in periods:
+            ph = ((t - t0_guess) % P) / P
+            ph = np.where(ph > 0.5, ph - 1.0, ph)
+            c, w, dep, chi2, _ = _bls_vectorized(ph, flux, sigma)
+            if chi2 < best_chi2:
+                best_chi2   = chi2
+                best_period = float(P)
+                best_center = c
+                best_w      = w
+                best_depth  = dep
+
+        # Converged when step is finer than 0.0001 d
+        if step < 0.0001:
+            break
+
+        # Zoom: new range is ±1 step around current best
+        p_lo = max(best_period - step, 0.5 * period_guess)
+        p_hi = min(best_period + step, 1.5 * period_guess)
+        best_chi2 = np.inf  # reset so we re-evaluate all points in new window
+
+    # ── Final fold and stats ────────────────────────────────────────────
+    ph_best   = ((t - t0_guess) % best_period) / best_period
+    ph_best   = np.where(ph_best > 0.5, ph_best - 1.0, ph_best)
+    mask_best = np.abs(ph_best - best_center) < best_w
+    n_in      = int(mask_best.sum())
+    chi2r     = best_chi2 / max(len(flux) - 2, 1)
+    snr       = best_depth / (sigma / max(n_in ** 0.5, 1))
+
+    # ── Refine depth using inner 60% of box to avoid edge dilution ─────
+    mask_core   = np.abs(ph_best - best_center) < best_w * 0.6
+    mask_out    = np.abs(ph_best - best_center) > best_w * 1.5
+    if mask_core.sum() >= 3 and mask_out.sum() >= 10:
+        plot_depth = float(np.median(flux[mask_out])) - float(np.median(flux[mask_core]))
+        plot_base  = float(np.median(flux[mask_out]))
+    else:
+        plot_depth = best_depth
+        plot_base  = float(np.mean(flux[~mask_best]))
+
+    # ── Plot ────────────────────────────────────────────────────────────
+    sidx    = np.argsort(ph_best)
+    fig, ax = plt.subplots(figsize=(5.2, 2.4), facecolor=S['fig_bg'])
+    ax.scatter(ph_best[sidx], flux[sidx], s=1.2, c=S['line'], alpha=0.45, linewidths=0)
+
+    c0 = best_center
+    bx = [c0-best_w-.001, c0-best_w, c0-best_w,
+          c0+best_w,       c0+best_w, c0+best_w+.001]
+    by = [plot_base, plot_base, plot_base-plot_depth,
+          plot_base-plot_depth, plot_base, plot_base]
+    ax.plot(bx, by, color=S['fit'], lw=1.5, alpha=0.9, zorder=5)
+
+    _style(ax,
+           title=f'Phase Fold   P = {best_period:.4f} d   SNR = {snr:.1f}',
+           xlabel='Phase', ylabel='Relative Flux')
+    ax.set_xlim(-0.5, 0.5)
+    fig.tight_layout(pad=0.8)
+
+    return json.dumps(dict(
+        img         = _to_b64(fig),
+        best_period = best_period,
+        snr         = snr,
+        depth       = plot_depth,
+        dur_frac    = best_w * 2,
+        chi2r       = chi2r,
+    ))
+
+# ─────────────────────────────────────────────────────────────────────────────
+def make_lightcurve(star_id, star_type, brightness, seed):
+    """
+    Plot the full light curve and return:
+      - base64 PNG
+      - matplotlib axes bounds in figure-fraction coordinates  <-- JS uses these
+        to map click pixel positions back to time values
+      - noise level sigma
+    """
+    t, flux, sigma, params = _gen_flux(star_id, star_type, brightness, seed)
+    _star_data[star_id]    = dict(t=t, flux=flux, sigma=sigma, params=params)
+
+    labels = dict(boring='Quiet Star', pulsating='Pulsating Star',
+                  transit='Transit Candidate', eb='Eclipsing Binary')
+
+    fig, ax = plt.subplots(figsize=(7.5, 2.6), facecolor=S['fig_bg'])
+    ax.plot(t, flux, color=S['line'], lw=0.55, alpha=0.9)
+    _style(ax, title=f"Star #{star_id}  —  {labels.get(star_type, star_type)}")
+    fig.tight_layout(pad=0.8)
+
+    bbox = ax.get_position()   # figure-fraction bounding box of the axes
+    b64  = _to_b64(fig)
+
+    return json.dumps(dict(
+        img  = b64,
+        ax_x0 = float(bbox.x0), ax_x1 = float(bbox.x1),
+        ax_y0 = float(bbox.y0), ax_y1 = float(bbox.y1),
+        t_min = 0.0, t_max = 27.0,
+        sigma = float(sigma),
+        true_period = float(params.get('period', -1)),
+        true_t0     = float(params.get('t0', -1)),
+        true_depth  = float(params.get('depth', -1)),
+    ))
+
+# ─────────────────────────────────────────────────────────────────────────────
+def make_folded_plot(star_id, period, t0):
+    """
+    Phase-fold the cached light curve on (period, t0).
+
+    Box model fit:
+      - Grid of 40 trial box half-widths (dur_frac 0.02..0.45)
+      - For each width, optimal depth solved analytically as mean(1 - flux_in_box)
+      - SNR = depth / (sigma / sqrt(N_in))  -- signal strength at this period
+      - Best width = one maximising SNR
+    Returns: image + SNR + depth + reduced chi2
+    """
+    d = _star_data.get(star_id)
+    if not d:
+        return json.dumps(dict(error='no data'))
+
+    t, flux, sigma = d['t'], d['flux'], d['sigma']
+
+    # Phase fold: transits appear at phase 0
+    ph = ((t - t0) % period) / period
+    ph = np.where(ph > 0.5, ph - 1.0, ph)
+
+    # Use robust box fit: scans phase centers + widths, depth = median(out)-median(in)
+    c0, w, dep, chi2, n_in = _bls_vectorized(ph, flux, sigma)
+    chi2r = chi2 / max(len(flux) - 2, 1)
+    snr   = dep / (sigma / max(n_in ** 0.5, 1))
+
+    # ── Plot ──
+    sidx = np.argsort(ph)
+    fig, ax = plt.subplots(figsize=(5.2, 2.4), facecolor=S['fig_bg'])
+    ax.scatter(ph[sidx], flux[sidx], s=1.2, c=S['line'], alpha=0.45, linewidths=0)
+
+    mask_best = np.abs(ph - c0) < w
+    # Refine depth using inner 60% of box to avoid edge dilution
+    mask_core = np.abs(ph - c0) < w * 0.6
+    mask_out  = np.abs(ph - c0) > w * 1.5
+    if mask_core.sum() >= 3 and mask_out.sum() >= 10:
+        plot_depth = float(np.median(flux[mask_out])) - float(np.median(flux[mask_core]))
+        plot_base  = float(np.median(flux[mask_out]))
+    else:
+        plot_depth = dep
+        plot_base  = float(np.median(flux[~mask_best]))
+    bx = [c0-w-.001, c0-w, c0-w,             c0+w,             c0+w, c0+w+.001]
+    by = [plot_base, plot_base, plot_base-plot_depth,
+          plot_base-plot_depth, plot_base, plot_base]
+    ax.plot(bx, by, color=S['fit'], lw=1.5, alpha=0.9, zorder=5)
+
+    _style(ax,
+           title=f'Phase Fold   P = {period:.4f} d   SNR = {snr:.1f}',
+           xlabel='Phase', ylabel='Relative Flux')
+    ax.set_xlim(-0.5, 0.5)
+    fig.tight_layout(pad=0.8)
+
+    return json.dumps(dict(
+        img      = _to_b64(fig),
+        snr      = snr,
+        depth    = dep,
+        dur_frac = w * 2,
+        chi2r    = chi2r,
+    ))
+
+# ─────────────────────────────────────────────────────────────────────────────
+def make_oddeven_plot(star_id, period, t0):
+    """
+    Phase-fold and colour points by even/odd transit number.
+    Genuine planet: even and odd overlap perfectly.
+    EB with true period 2P: the two eclipses appear at different depths.
+    """
+    d = _star_data.get(star_id)
+    if not d:
+        return json.dumps(dict(error='no data'))
+
+    t, flux = d['t'], d['flux']
+    ph   = ((t - t0) % period) / period
+    ph   = np.where(ph > 0.5, ph - 1.0, ph)
+    tnum = np.floor((t - t0) / period).astype(int)
+    even = (tnum % 2 == 0)
+
+    fig, ax = plt.subplots(figsize=(5.2, 2.4), facecolor=S['fig_bg'])
+    for mask, col, lbl in [(even, S['even_col'], 'Even'), (~even, S['odd_col'], 'Odd')]:
+        idx = np.argsort(ph[mask])
+        ax.scatter(ph[mask][idx], flux[mask][idx],
+                   s=1.2, c=col, alpha=0.5, linewidths=0, label=lbl)
+
+    ax.legend(fontsize=7, facecolor=S['fig_bg'], labelcolor=S['title'],
+              loc='lower right', markerscale=4, framealpha=0.7)
+    _style(ax, title='Odd / Even Transit Comparison',
+           xlabel='Phase', ylabel='Relative Flux')
+    ax.set_xlim(-0.5, 0.5)
+    fig.tight_layout(pad=0.8)
+
+    return json.dumps(dict(img=_to_b64(fig)))
+`;
+
+// ═══════════════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════════════
+let pyodide = null, stars = [], flagged = new Set();
+let currentStar = null, axBounds = null;
+let transitClicks = [], currentPeriod = null, currentT0 = null;
+let foldDebounce = null;
+
+const SEED    = 0;   // DEBUG: fixed seed
+const N_STARS = 25;
+
+// DOM
+const fieldCanvas  = document.getElementById('starCanvas');
+const fCtx         = fieldCanvas.getContext('2d');
+const lcOverlay    = document.getElementById('lc-overlay');
+const oCtx         = lcOverlay.getContext('2d');
+const plotImg      = document.getElementById('plot-img');
+const foldImg      = document.getElementById('fold-img');
+const oddevenImg   = document.getElementById('oddeven-img');
+const periodSlider = document.getElementById('period-slider');
+const periodVal    = document.getElementById('period-val');
+const snrVal       = document.getElementById('snr-val');
+const depthVal     = document.getElementById('depth-val');
+const chi2Val      = document.getElementById('chi2-val');
+const computingEl  = document.getElementById('computing');
+const clickCountEl = document.getElementById('click-count');
+
+// ═══════════════════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════════════════
+async function boot() {
+  const overlay = document.getElementById('loading-overlay');
+  const msg     = document.getElementById('loading-msg');
+  const statusEl= document.getElementById('status');
+  try {
+    msg.textContent = 'Loading Python runtime… (~15s first time)';
+    pyodide = await loadPyodide();
+    msg.textContent = 'Loading numpy + matplotlib…';
+    await pyodide.loadPackage(['numpy','matplotlib']);
+    msg.textContent = 'Defining Python functions…';
+    pyodide.runPython(PYTHON);
+    msg.textContent = 'Generating star field…';
+    stars = JSON.parse(pyodide.runPython(`generate_starfield(seed=${SEED}, n_stars=${N_STARS})`));
+    document.getElementById('star-count').textContent   = stars.length;
+    document.getElementById('seed-display').textContent = SEED;
+    statusEl.textContent = '● READY';
+    statusEl.className   = 'ready';
+    overlay.style.display = 'none';
+    initCanvas();
+  } catch(e) {
+    msg.textContent = 'Error: ' + e.message;
+    statusEl.textContent = '● ERROR';
+    statusEl.className = 'error';
+    console.error(e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  STAR FIELD
+// ═══════════════════════════════════════════════════════════════════════
+function initCanvas() {
+  resizeCanvas();
+  window.addEventListener('resize', () => { resizeCanvas(); drawStars(); });
+  fieldCanvas.addEventListener('mousemove', onMouseMove);
+  fieldCanvas.addEventListener('click', onStarClick);
+  drawStars();
+}
+
+function resizeCanvas() {
+  const p = document.getElementById('field-panel');
+  fieldCanvas.width  = p.clientWidth;
+  fieldCanvas.height = p.clientHeight;
+}
+
+const starPos   = s => ({ x: s.x * fieldCanvas.width, y: s.y * fieldCanvas.height });
+const starR     = s => 1.5 + s.brightness * 4.5;
+const starColor = s => {
+  const b = s.brightness;
+  return b > 0.85 ? '#b8d8ff' : b > 0.65 ? '#ffffff' : b > 0.45 ? '#ffe9c4' : '#ffcc88';
+};
+
+function drawStars() {
+  fCtx.clearRect(0, 0, fieldCanvas.width, fieldCanvas.height);
+  const bg = fCtx.createRadialGradient(
+    fieldCanvas.width/2, fieldCanvas.height/2, 0,
+    fieldCanvas.width/2, fieldCanvas.height/2,
+    Math.max(fieldCanvas.width, fieldCanvas.height) * 0.9);
+  bg.addColorStop(0, '#070b14'); bg.addColorStop(1, '#05080f');
+  fCtx.fillStyle = bg;
+  fCtx.fillRect(0, 0, fieldCanvas.width, fieldCanvas.height);
+
+  stars.forEach(s => {
+    const {x,y} = starPos(s), r = starR(s), c = starColor(s);
+    const glow = fCtx.createRadialGradient(x,y,0,x,y,r*5);
+    glow.addColorStop(0, c+'44'); glow.addColorStop(1,'transparent');
+    fCtx.beginPath(); fCtx.arc(x,y,r*5,0,Math.PI*2); fCtx.fillStyle=glow; fCtx.fill();
+    fCtx.beginPath(); fCtx.arc(x,y,r,0,Math.PI*2);   fCtx.fillStyle=c;    fCtx.fill();
+    if (flagged.has(s.id)) {
+      fCtx.beginPath(); fCtx.arc(x,y,r+5,0,Math.PI*2);
+      fCtx.strokeStyle='#f3c84a88'; fCtx.lineWidth=1; fCtx.stroke();
+    }
+    if (currentStar && currentStar.id === s.id) {
+      fCtx.beginPath(); fCtx.arc(x,y,r+7,0,Math.PI*2);
+      fCtx.strokeStyle='#4af3c8'; fCtx.lineWidth=1.5; fCtx.stroke();
+    }
+  });
+  if (hoveredStar && (!currentStar || hoveredStar.id !== currentStar.id)) {
+    const {x,y} = starPos(hoveredStar);
+    fCtx.beginPath(); fCtx.arc(x,y,starR(hoveredStar)+5,0,Math.PI*2);
+    fCtx.strokeStyle='#4af3c888'; fCtx.lineWidth=1; fCtx.stroke();
+  }
+}
+
+let hoveredStar = null;
+function hitTest(mx,my) {
+  let best=null, bd=Infinity;
+  for (const s of stars) {
+    const {x,y}=starPos(s), d=Math.hypot(mx-x,my-y);
+    if (d < Math.max(starR(s)*2.5,10) && d < bd) { best=s; bd=d; }
+  }
+  return best;
+}
+
+function onMouseMove(e) {
+  const r   = fieldCanvas.getBoundingClientRect();
+  const hit = hitTest(e.clientX-r.left, e.clientY-r.top);
+  if (hit !== hoveredStar) {
+    hoveredStar = hit;
+    fieldCanvas.style.cursor = hit ? 'pointer' : 'crosshair';
+    drawStars();
+  }
+}
+
+async function onStarClick(e) {
+  const r    = fieldCanvas.getBoundingClientRect();
+  const star = hitTest(e.clientX-r.left, e.clientY-r.top);
+  if (!star || (currentStar && currentStar.id === star.id)) return;
+  currentStar = star;
+  resetTransits();
+  drawStars();
+  await loadLC(star);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  LIGHT CURVE
+// ═══════════════════════════════════════════════════════════════════════
+async function loadLC(star) {
+  document.getElementById('placeholder').style.display    = 'flex';
+  document.getElementById('lc-wrapper').style.display     = 'none';
+  document.getElementById('click-hint').style.display     = 'none';
+  document.getElementById('reset-btn').style.display      = 'none';
+  document.getElementById('flag-btn').style.display       = 'none';
+  document.getElementById('debug-info').style.display     = 'none';
+  document.getElementById('star-id-display').textContent  = `Star #${star.id}  (${star.type})`;
+  await new Promise(r => setTimeout(r, 20));
+
+  try {
+    const raw    = pyodide.runPython(
+      `make_lightcurve(${star.id}, '${star.type}', ${star.brightness}, seed=${SEED})`);
+    const result = JSON.parse(raw);
+
+    axBounds = {
+      x0: result.ax_x0, x1: result.ax_x1,
+      y0: result.ax_y0, y1: result.ax_y1,
+      t_min: result.t_min, t_max: result.t_max,
+    };
+
+    plotImg.src = 'data:image/png;base64,' + result.img;
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('lc-wrapper').style.display  = 'block';
+    document.getElementById('click-hint').style.display  = 'block';
+    document.getElementById('reset-btn').style.display   = 'inline-block';
+    document.getElementById('flag-btn').style.display    = 'inline-block';
+    updateFlagBtn();
+
+    // DEBUG info
+    const dbg = document.getElementById('debug-info');
+    if (result.true_period > 0) {
+      dbg.textContent = `TRUE P=${result.true_period.toFixed(4)}d  T0=${result.true_t0.toFixed(4)}d  depth=${(result.true_depth*100).toFixed(3)}%`;
+      dbg.style.display = 'inline';
+    }
+  } catch(e) {
+    console.error(e);
+    document.getElementById('placeholder').innerHTML =
+      '<div style="color:var(--danger)">Error loading light curve</div>';
+  }
+}
+
+// Sync overlay canvas size to rendered image
+plotImg.addEventListener('load', () => {
+  requestAnimationFrame(() => {
+    lcOverlay.width  = plotImg.clientWidth;
+    lcOverlay.height = plotImg.clientHeight;
+    lcOverlay.style.width  = plotImg.clientWidth  + 'px';
+    lcOverlay.style.height = plotImg.clientHeight + 'px';
+    redrawOverlay();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+//  OVERLAY — transit markers
+// ═══════════════════════════════════════════════════════════════════════
+function timeToX(t) {
+  const frac = axBounds.x0 +
+    (t - axBounds.t_min) / (axBounds.t_max - axBounds.t_min) *
+    (axBounds.x1 - axBounds.x0);
+  return frac * lcOverlay.width;
+}
+
+function clickToTime(px, py) {
+  const fx = px / lcOverlay.width;
+  const fy = 1.0 - py / lcOverlay.height;
+  if (fx < axBounds.x0 || fx > axBounds.x1 ||
+      fy < axBounds.y0 || fy > axBounds.y1) return null;
+  return axBounds.t_min +
+    (fx - axBounds.x0) / (axBounds.x1 - axBounds.x0) *
+    (axBounds.t_max - axBounds.t_min);
+}
+
+function redrawOverlay() {
+  oCtx.clearRect(0, 0, lcOverlay.width, lcOverlay.height);
+  if (!axBounds || transitClicks.length === 0) return;
+  const cols = ['#f3c84a','#f35a4a','#3a7ff6','#c84af3'];
+  transitClicks.forEach((t, i) => {
+    const x = timeToX(t);
+    oCtx.save();
+    oCtx.strokeStyle = cols[i]; oCtx.lineWidth = 1.5;
+    oCtx.setLineDash([4,3]); oCtx.globalAlpha = 0.85;
+    oCtx.beginPath(); oCtx.moveTo(x,0); oCtx.lineTo(x, lcOverlay.height); oCtx.stroke();
+    oCtx.restore();
+    oCtx.fillStyle = cols[i]; oCtx.font = 'bold 10px monospace';
+    oCtx.fillText(`T${i}`, x+3, 13);
+  });
+}
+
+lcOverlay.addEventListener('click', e => {
+  if (!axBounds || !currentStar || transitClicks.length >= 4) return;
+  const rect = lcOverlay.getBoundingClientRect();
+  const t    = clickToTime(e.clientX-rect.left, e.clientY-rect.top);
+  if (t === null) return;
+  transitClicks.push(t);
+  transitClicks.sort((a,b) => a-b);
+  clickCountEl.textContent = transitClicks.length;
+  redrawOverlay();
+
+  if (transitClicks.length >= 2) {
+    currentT0 = transitClicks[0];
+    const P   = estimatePeriod();
+    clearTimeout(foldDebounce);
+    foldDebounce = setTimeout(() => findBestPeriodAndFold(P), 100);
+  }
+  if (transitClicks.length >= 4) updateOddEven();
+});
+
+function estimatePeriod() {
+  let sum = 0;
+  for (let i=1; i<transitClicks.length; i++) sum += transitClicks[i]-transitClicks[i-1];
+  return sum / (transitClicks.length - 1);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  PERIOD SLIDER
+// ═══════════════════════════════════════════════════════════════════════
+function initSlider(P) {
+  currentPeriod = P;
+  const units   = Math.round(P * 10000);
+  const range   = Math.max(Math.round(P * 0.10 * 10000), 10);
+  periodSlider.min   = units - range;
+  periodSlider.max   = units + range;
+  periodSlider.step  = 1;
+  periodSlider.value = units;
+  periodVal.textContent = P.toFixed(4) + ' d';
+  document.getElementById('period-box').style.display = 'block';
+}
+
+periodSlider.addEventListener('input', () => {
+  currentPeriod = parseInt(periodSlider.value) / 10000;
+  periodVal.textContent = currentPeriod.toFixed(4) + ' d';
+  clearTimeout(foldDebounce);
+  foldDebounce = setTimeout(updateFold, 220);
+});
+
+document.getElementById('p-minus').addEventListener('click', () => nudge(-0.0001));
+document.getElementById('p-plus' ).addEventListener('click', () => nudge(+0.0001));
+
+function nudge(delta) {
+  const p = parseFloat((currentPeriod + delta).toFixed(4));
+  if (p < parseFloat(periodSlider.min)) periodSlider.min = (p - 0.001).toFixed(4);
+  if (p > parseFloat(periodSlider.max)) periodSlider.max = (p + 0.001).toFixed(4);
+  currentPeriod = p;
+  periodSlider.value = Math.round(p * 10000);
+  periodVal.textContent = p.toFixed(4) + ' d';
+  clearTimeout(foldDebounce);
+  foldDebounce = setTimeout(updateFold, 120);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  PHASE FOLD — auto (on clicks)
+// ═══════════════════════════════════════════════════════════════════════
+async function findBestPeriodAndFold(pGuess) {
+  if (!currentStar) return;
+  computingEl.textContent = 'searching…';
+  document.getElementById('fold-area').style.display = 'block';
+  await new Promise(r => setTimeout(r, 15));
+  try {
+    const raw = pyodide.runPython(
+      `find_best_period(${currentStar.id}, ${currentT0}, ${pGuess})`);
+    const res = JSON.parse(raw);
+    initSlider(res.best_period);
+    foldImg.src = 'data:image/png;base64,' + res.img;
+    updateStats(res.snr, res.depth, res.chi2r);
+  } catch(e) { console.error(e); }
+  computingEl.textContent = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  PHASE FOLD — manual (on slider)
+// ═══════════════════════════════════════════════════════════════════════
+async function updateFold() {
+  if (!currentStar || currentPeriod === null) return;
+  computingEl.textContent = 'folding…';
+  await new Promise(r => setTimeout(r, 15));
+  try {
+    const raw = pyodide.runPython(
+      `make_folded_plot(${currentStar.id}, ${currentPeriod}, ${currentT0})`);
+    const res = JSON.parse(raw);
+    foldImg.src = 'data:image/png;base64,' + res.img;
+    document.getElementById('fold-area').style.display = 'block';
+    updateStats(res.snr, res.depth, res.chi2r);
+  } catch(e) { console.error(e); }
+  computingEl.textContent = '';
+}
+
+function updateStats(snr, depth, chi2r) {
+  snrVal.textContent   = snr.toFixed(1) + 'σ';
+  snrVal.style.color   = snr > 7 ? 'var(--accent)' : snr > 3 ? 'var(--warn)' : 'var(--danger)';
+  depthVal.textContent = (depth*100).toFixed(3) + '%';
+  chi2Val.textContent  = chi2r.toFixed(2);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  ODD / EVEN
+// ═══════════════════════════════════════════════════════════════════════
+async function updateOddEven() {
+  if (!currentStar || currentPeriod === null) return;
+  try {
+    const raw = pyodide.runPython(
+      `make_oddeven_plot(${currentStar.id}, ${currentPeriod}, ${currentT0})`);
+    oddevenImg.src = 'data:image/png;base64,' + JSON.parse(raw).img;
+    document.getElementById('oddeven-area').style.display = 'block';
+  } catch(e) { console.error(e); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  RESET & FLAG
+// ═══════════════════════════════════════════════════════════════════════
+function resetTransits() {
+  transitClicks = []; currentPeriod = null; currentT0 = null;
+  clearTimeout(foldDebounce);
+  clickCountEl.textContent = '0';
+  oCtx.clearRect(0, 0, lcOverlay.width, lcOverlay.height);
+  document.getElementById('period-box').style.display    = 'none';
+  document.getElementById('fold-area').style.display     = 'none';
+  document.getElementById('oddeven-area').style.display  = 'none';
+  periodVal.textContent  = '— d';
+  snrVal.textContent     = '—';
+  depthVal.textContent   = '—';
+  chi2Val.textContent    = '—';
+}
+
+document.getElementById('reset-btn').addEventListener('click', resetTransits);
+
+document.getElementById('flag-btn').addEventListener('click', () => {
+  if (!currentStar) return;
+  if (flagged.has(currentStar.id)) flagged.delete(currentStar.id);
+  else flagged.add(currentStar.id);
+  updateFlagBtn();
+  document.getElementById('flagged-count').textContent = flagged.size;
+  drawStars();
+});
+
+function updateFlagBtn() {
+  const btn = document.getElementById('flag-btn');
+  const on  = currentStar && flagged.has(currentStar.id);
+  btn.textContent = on ? '⚑ Flagged' : '⚑ Flag';
+  btn.classList.toggle('active', !!on);
+}
+
+// ── Go ──
+boot();
+</script>
+</body>
+</html>
