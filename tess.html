@@ -252,6 +252,7 @@
       <span class="sp-label">LC</span>
       <span id="star-id-display">— select a star</span>
       <span id="debug-info"></span>
+      <button class="hdr-btn" id="undo-btn"  style="display:none">⌫ Undo</button>
       <button class="hdr-btn" id="reset-btn" style="display:none">↺ Reset</button>
       <button class="hdr-btn" id="flag-btn"  style="display:none">⚑ Flag</button>
     </div>
@@ -784,7 +785,11 @@ async function boot() {
 // ═══════════════════════════════════════════════════════════════════════
 function initCanvas() {
   resizeCanvas();
-  window.addEventListener('resize', () => { resizeCanvas(); drawStars(); });
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    drawStars();
+    syncOverlay();
+  });
   fieldCanvas.addEventListener('mousemove', onMouseMove);
   fieldCanvas.addEventListener('click', onStarClick);
   drawStars();
@@ -873,6 +878,7 @@ async function loadLC(star) {
   document.getElementById('lc-wrapper').style.display     = 'none';
   document.getElementById('click-hint').style.display     = 'none';
   document.getElementById('reset-btn').style.display      = 'none';
+  document.getElementById('undo-btn').style.display       = 'none';
   document.getElementById('flag-btn').style.display       = 'none';
   document.getElementById('debug-info').style.display     = 'none';
   document.getElementById('star-id-display').textContent  = `Star #${star.id}  (${star.type})`;
@@ -894,6 +900,7 @@ async function loadLC(star) {
     document.getElementById('lc-wrapper').style.display  = 'block';
     document.getElementById('click-hint').style.display  = 'block';
     document.getElementById('reset-btn').style.display   = 'inline-block';
+    document.getElementById('undo-btn').style.display    = 'inline-block';
     document.getElementById('flag-btn').style.display    = 'inline-block';
     updateFlagBtn();
 
@@ -910,16 +917,17 @@ async function loadLC(star) {
   }
 }
 
-// Sync overlay canvas size to rendered image
-plotImg.addEventListener('load', () => {
-  requestAnimationFrame(() => {
-    lcOverlay.width  = plotImg.clientWidth;
-    lcOverlay.height = plotImg.clientHeight;
-    lcOverlay.style.width  = plotImg.clientWidth  + 'px';
-    lcOverlay.style.height = plotImg.clientHeight + 'px';
-    redrawOverlay();
-  });
-});
+// Sync overlay canvas dimensions to the rendered image size
+function syncOverlay() {
+  if (!plotImg.clientWidth) return;
+  lcOverlay.width  = plotImg.clientWidth;
+  lcOverlay.height = plotImg.clientHeight;
+  lcOverlay.style.width  = plotImg.clientWidth  + 'px';
+  lcOverlay.style.height = plotImg.clientHeight + 'px';
+  redrawOverlay();
+}
+
+plotImg.addEventListener('load', () => { requestAnimationFrame(syncOverlay); });
 
 // ═══════════════════════════════════════════════════════════════════════
 //  OVERLAY — transit markers
@@ -1084,6 +1092,7 @@ function resetTransits() {
   clickCountEl.textContent = '0';
   oCtx.clearRect(0, 0, lcOverlay.width, lcOverlay.height);
   document.getElementById('period-box').style.display    = 'none';
+  // undo btn stays visible (LC still shown)
   document.getElementById('fold-area').style.display     = 'none';
   document.getElementById('oddeven-area').style.display  = 'none';
   periodVal.textContent  = '— d';
@@ -1091,6 +1100,30 @@ function resetTransits() {
   depthVal.textContent   = '—';
   chi2Val.textContent    = '—';
 }
+
+document.getElementById('undo-btn').addEventListener('click', () => {
+  if (transitClicks.length === 0) return;
+  transitClicks.pop();
+  clickCountEl.textContent = transitClicks.length;
+  redrawOverlay();
+  if (transitClicks.length < 2) {
+    document.getElementById('period-box').style.display   = 'none';
+    document.getElementById('fold-area').style.display    = 'none';
+    document.getElementById('oddeven-area').style.display = 'none';
+    currentPeriod = null; currentT0 = null;
+    periodVal.textContent = '— d';
+    snrVal.textContent = '—'; depthVal.textContent = '—'; chi2Val.textContent = '—';
+  } else {
+    // Re-run fold with remaining clicks
+    currentT0 = transitClicks[0];
+    const P   = estimatePeriod();
+    clearTimeout(foldDebounce);
+    foldDebounce = setTimeout(() => findBestPeriodAndFold(P), 100);
+  }
+  if (transitClicks.length < 4) {
+    document.getElementById('oddeven-area').style.display = 'none';
+  }
+});
 
 document.getElementById('reset-btn').addEventListener('click', resetTransits);
 
