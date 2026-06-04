@@ -6,12 +6,38 @@
 <title>Dr. Davis's Battle Dice</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <style>
+  /* ── LIGHT THEME (default) ── */
   :root {
+    --bg: #faf7f2;
+    --surface: #ffffff;
+    --surface2: #f0ebe0;
+    --border: #d4c4a8;
+    --crimson: #b82020;
+    --crimson-dark: #7a1010;
+    --crimson-bright: #d63c2a;
+    --gold: #8a6a10;
+    --gold-light: #b08820;
+    --cream: #2a1f10;
+    --cream-dim: #5a4a30;
+    --muted: #9a8060;
+    --p1: #8a6a10;
+    --p2: #1a6aaa;
+    --p2-bright: #1a6aaa;
+    --win-glow: rgba(138,106,16,0.2);
+    --radius: 8px;
+    --modal-overlay: rgba(100,80,50,0.45);
+    --hist-bg: #ffffff;
+    --shadow-color: rgba(80,50,20,0.15);
+  }
+
+  /* ── DARK THEME ── */
+  body.dark {
     --bg: #0d0a08;
     --surface: #141010;
     --surface2: #1e1816;
     --border: #3a2a20;
     --crimson: #8b1a1a;
+    --crimson-dark: #4a0808;
     --crimson-bright: #c0392b;
     --gold: #c9a84c;
     --gold-light: #e8c96a;
@@ -23,6 +49,9 @@
     --p2-bright: #6baed6;
     --win-glow: rgba(201,168,76,0.3);
     --radius: 8px;
+    --modal-overlay: rgba(0,0,0,0.75);
+    --hist-bg: #1a1410;
+    --shadow-color: rgba(0,0,0,0.5);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,6 +62,14 @@
     font-family: 'Crimson Pro', Georgia, serif;
     min-height: 100vh;
     overflow-x: hidden;
+    transition: background 0.35s, color 0.35s;
+  }
+  body:not(.dark) {
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(180,60,30,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(26,106,170,0.06) 0%, transparent 60%);
+  }
+  body.dark {
     background-image:
       radial-gradient(ellipse at 20% 0%, rgba(139,26,26,0.15) 0%, transparent 60%),
       radial-gradient(ellipse at 80% 100%, rgba(74,100,160,0.1) 0%, transparent 60%);
@@ -64,7 +101,7 @@
     font-family: 'Cinzel Decorative', serif;
     font-size: clamp(2rem, 5vw, 3.5rem);
     color: var(--gold);
-    text-shadow: 0 0 40px rgba(201,168,76,0.4), 0 2px 4px rgba(0,0,0,0.8);
+    text-shadow: 0 2px 8px var(--shadow-color);
     line-height: 1.1;
     letter-spacing: 0.05em;
   }
@@ -475,7 +512,7 @@
   }
   .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
   .btn-roll {
-    background: linear-gradient(135deg, var(--crimson) 0%, #5a1010 100%);
+    background: linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dark) 100%);
     color: var(--cream);
     border-color: rgba(201,168,76,0.3);
     box-shadow: 0 3px 12px rgba(139,26,26,0.4);
@@ -509,7 +546,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.75);
+    background: var(--modal-overlay);
     z-index: 100;
     align-items: center;
     justify-content: center;
@@ -523,7 +560,7 @@
     text-align: center;
     max-width: 420px;
     width: 90%;
-    box-shadow: 0 0 60px rgba(201,168,76,0.2), 0 20px 60px rgba(0,0,0,0.6);
+    box-shadow: 0 0 30px var(--win-glow), 0 20px 60px var(--shadow-color);
     animation: pop-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
   }
   @keyframes pop-in {
@@ -570,7 +607,7 @@
   .p1 .rs-score { color: var(--p1); }
   .p2 .rs-score { color: var(--p2-bright); }
   .btn-next {
-    background: linear-gradient(135deg, var(--crimson) 0%, #5a1010 100%);
+    background: linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dark) 100%);
     color: var(--cream);
     border-color: rgba(201,168,76,0.4);
     padding: 0.7rem 2rem;
@@ -583,7 +620,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.85);
+    background: var(--modal-overlay);
     z-index: 200;
     align-items: center;
     justify-content: center;
@@ -597,7 +634,7 @@
     text-align: center;
     max-width: 500px;
     width: 90%;
-    box-shadow: 0 0 80px rgba(201,168,76,0.25), 0 30px 80px rgba(0,0,0,0.7);
+    box-shadow: 0 0 40px var(--win-glow), 0 30px 80px var(--shadow-color);
     animation: pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
   }
   .trophy { font-size: 3.5rem; margin-bottom: 0.5rem; display: block; animation: trophy-bounce 1.5s ease infinite; }
@@ -641,7 +678,7 @@
   .fs-score { font-family: 'Cinzel Decorative', serif; font-size: 2.5rem; }
   .gameover-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
   .btn-new-game {
-    background: linear-gradient(135deg, var(--crimson) 0%, #5a1010 100%);
+    background: linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dark) 100%);
     color: var(--cream);
     border-color: rgba(201,168,76,0.4);
     padding: 0.8rem 2.2rem;
@@ -787,12 +824,12 @@
   #hist-tooltip {
     position: fixed;
     z-index: 500;
-    background: #1a1410;
+    background: var(--hist-bg);
     border: 1px solid var(--gold);
     border-radius: 10px;
     padding: 0.9rem 1.1rem 0.8rem;
     width: 290px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 20px rgba(201,168,76,0.12);
+    box-shadow: 0 8px 40px var(--shadow-color), 0 0 20px rgba(138,106,16,0.12);
     pointer-events: none;
     opacity: 0;
     transform: translateY(6px);
@@ -863,7 +900,7 @@
   .hist-sum-label.target-over { color: var(--crimson-bright); }
   .hist-bar-track {
     height: 13px;
-    background: var(--surface);
+    background: var(--surface2);
     border-radius: 3px;
     overflow: hidden;
     position: relative;
@@ -966,7 +1003,64 @@
   .custom-feedback.ok   { color: #5dba6a; }
   .custom-feedback.err  { color: var(--crimson-bright); }
 
-  @media (max-width: 600px) {
+  /* Theme toggle in header */
+  .theme-toggle-wrap {
+    position: absolute;
+    top: 1.1rem;
+    right: 1.5rem;
+  }
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .theme-toggle input { display: none; }
+  .theme-track {
+    width: 42px; height: 22px;
+    background: var(--border);
+    border-radius: 11px;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.3s;
+    border: 1px solid var(--muted);
+  }
+  .theme-toggle input:checked ~ .theme-track { background: #2a3a5a; border-color: #4a6a9a; }
+  .theme-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 14px; height: 14px;
+    background: var(--gold);
+    border-radius: 50%;
+    transition: transform 0.25s cubic-bezier(0.34,1.4,0.64,1), background 0.3s;
+  }
+  .theme-toggle input:checked ~ .theme-track .theme-thumb {
+    transform: translateX(20px);
+    background: #c9d8f0;
+  }
+  .theme-icons {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+    line-height: 1;
+    gap: 0;
+  }
+  .theme-icon-light, .theme-icon-dark { transition: opacity 0.2s; }
+  .theme-icon-dark { display: none; }
+  body.dark .theme-icon-light { display: none; }
+  body.dark .theme-icon-dark  { display: block; }
+
+  header { position: relative; }
+
+  /* All transitioning elements */
+  .arena, .score-bar, .collection-card, .result-card, .gameover-card,
+  .round-history, .analysis-toggle, .custom-inputs, .sum-display,
+  .name-group input, .custom-input, .rh-cell, #hist-tooltip {
+    transition: background 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
+  }
+
+  @media (max-width: 600px) {  @media (max-width: 600px) {
     .arenas { grid-template-columns: 1fr; }
     .collection-cards { grid-template-columns: 1fr; }
     .name-inputs { grid-template-columns: 1fr; }
@@ -981,13 +1075,25 @@
   }
 </style>
 </head>
-<body>
+<body class="dark">
 
 <!-- HEADER -->
 <header>
   <div class="title-small">Dr. Davis's</div>
   <h1>Battle Dice</h1>
   <div class="title-sub">A Game of Chance &amp; Strategy</div>
+  <div class="theme-toggle-wrap">
+    <label class="theme-toggle" title="Toggle dark/light theme">
+      <input type="checkbox" id="theme-toggle-cb" onchange="toggleTheme(this.checked)" checked>
+      <span class="theme-track">
+        <span class="theme-thumb"></span>
+      </span>
+      <span class="theme-icons">
+        <span class="theme-icon-light">☀️</span>
+        <span class="theme-icon-dark">🌙</span>
+      </span>
+    </label>
+  </div>
 </header>
 
 <!-- SETUP SCREEN -->
@@ -1784,6 +1890,13 @@ function buildHistoryTable() {
     }
     grid.appendChild(cell);
   }
+}
+
+// ─── Theme ────────────────────────────────────────────────
+function toggleTheme(isDark) {
+  document.body.classList.toggle('dark', isDark);
+  // sync the checkbox in case called programmatically
+  document.getElementById('theme-toggle-cb').checked = isDark;
 }
 
 // ─── Init ─────────────────────────────────────────────────
