@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Group Sorter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root:not([data-theme="light"]) {
+    --board: #1c3226;
+    --board-line: #3a5947;
+    --panel: #23392c;
+    --panel-line: #3f5b4a;
+    --chalk: #f2ecd8;
+    --chalk-dim: #c9c2ab;
+    --accent: #e8c468;
+    --accent-ink: #2a2210;
+    --wood: #9a6a45;
+    --wood-dark: #7a4f30;
+    --good: #8fbf8a;
+  }
+  :root[data-theme="dark"] {
+    --board: #1c3226; --board-line: #3a5947; --panel: #23392c; --panel-line: #3f5b4a;
+    --chalk: #f2ecd8; --chalk-dim: #c9c2ab; --accent: #e8c468; --accent-ink: #2a2210;
+    --wood: #9a6a45; --wood-dark: #7a4f30; --good: #8fbf8a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--board);
+    color: var(--chalk);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    min-height: 100%;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.03), transparent 40%),
+      radial-gradient(ellipse at 80% 90%, rgba(255,255,255,0.025), transparent 45%);
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 28px 18px 12px; }
+
+  header h1 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: clamp(40px, 9vw, 56px);
+    margin: 0 0 2px;
+    color: var(--chalk);
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 1px rgba(242,236,216,0.25);
+  }
+  header p {
+    margin: 0 0 22px;
+    color: var(--chalk-dim);
+    font-size: 15px;
+    line-height: 1.5;
+    max-width: 56ch;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .panel h2 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 24px;
+    margin: 0 0 12px;
+    color: var(--accent);
+  }
+
+  .counts { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; }
+  .count-field { display: flex; flex-direction: column; gap: 4px; }
+  .count-field label { font-size: 12.5px; color: var(--chalk-dim); }
+  .count-field input {
+    width: 64px; padding: 6px 8px; border-radius: 6px;
+    border: 1px solid var(--panel-line); background: var(--board);
+    color: var(--chalk); font-size: 15px;
+  }
+  .rebuild-btn {
+    align-self: flex-end;
+  }
+
+  .tag-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+  .tag {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--board); border: 1px solid var(--panel-line);
+    border-radius: 999px; padding: 5px 6px 5px 12px;
+  }
+  .tag .dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+  .tag input {
+    background: transparent; border: none; color: var(--chalk);
+    font-size: 14px; width: 108px; padding: 3px 2px;
+  }
+  .tag input:focus { outline: none; }
+  .tag input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 4px; }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0 6px; }
+  button {
+    font: inherit; font-size: 15px; cursor: pointer;
+    border-radius: 8px; padding: 10px 18px; border: 1px solid transparent;
+  }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); font-weight: 600; border-color: var(--accent); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--chalk); border-color: var(--panel-line); }
+  .btn-ghost:hover { border-color: var(--chalk-dim); }
+  .hint { font-size: 13px; color: var(--chalk-dim); margin: 0 0 4px; }
+
+  .board-frame {
+    position: relative;
+    border: 1px solid var(--board-line);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--board);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.35);
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  .results { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .well-card {
+    background: var(--board); border: 1px solid var(--panel-line);
+    border-radius: 8px; padding: 10px 12px; min-height: 54px;
+  }
+  .well-card .well-name { font-size: 13.5px; color: var(--accent); margin-bottom: 6px; font-weight: 600; }
+  .well-card ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .well-card li { font-size: 14px; color: var(--chalk); }
+  .well-card .empty { color: var(--chalk-dim); font-size: 13px; }
+
+  .status-line { font-size: 13.5px; color: var(--chalk-dim); margin: 10px 2px 0; min-height: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Group Sorter</h1>
+    <p>Balls bounce around a wide chamber, then the sloped walls funnel them down into two narrow traps. Each trap is only built wide enough to physically hold its share of the balls &mdash; once one fills up, the rest have nowhere to go but the other trap.</p>
+  </header>
+
+  <div class="panel">
+    <h2>Set the numbers</h2>
+    <div class="counts">
+      <div class="count-field">
+        <label for="numStudents">Students</label>
+        <input type="number" id="numStudents" min="1" max="14" value="5">
+      </div>
+      <div class="count-field">
+        <label for="numGroups">Groups</label>
+        <input type="number" id="numGroups" min="1" max="6" value="2">
+      </div>
+      <button class="btn-ghost rebuild-btn" id="rebuildBtn">Rebuild</button>
+    </div>
+
+    <div class="hint">Student names</div>
+    <div class="tag-grid" id="studentTags"></div>
+
+    <div class="hint" style="margin-top:12px;">Group names</div>
+    <div class="tag-grid" id="groupTags"></div>
+  </div>
+
+  <div class="board-frame">
+    <canvas id="board" width="900" height="600"></canvas>
+  </div>
+  <div class="status-line" id="statusLine">Drag the balls to a starting line, then start the drop.</div>
+
+  <div class="btn-row">
+    <button class="btn-primary" id="startBtn">Start the drop</button>
+    <button class="btn-ghost" id="resetBtn">Reset</button>
+  </div>
+
+  <div class="panel">
+    <h2>Where everyone landed</h2>
+    <div class="results" id="results"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- constants ----------
+  var CW = 900, CH = 600;
+  var BALL_R = 26;
+  var GRAVITY = 700;
+  var RESTITUTION = 0.95;
+  var DRAG_START = 0.02;
+  var DRAG_RATE = 0.03;
+  var DRAG_MAX = 7.0;
+  var SETTLE_SPEED = 22;
+  var SETTLE_TIME = 0.45;
+  var CORRIDOR_DEPTH = 40;   // trap depth - shallow on purpose, so a ball can't stack a second layer
+  var SLOPE_HEIGHT = 240;    // vertical extent of the funnel walls
+  var PACK_FACTOR = 1.12;    // slack per ball in a trap's row - enough to settle, not enough to fit one more
+  var DIVIDER_HALF = 7;
+  var STILL_SPEED = 10;      // below this, an unsettled ball counts as "not moving"
+  var STILL_DURATION = 1.0;  // how long everything has to stay still before we call it stuck
+  var RESCUE_DELAY = 2.0;    // comedic pause before the hand shows up
+  var HAND_DESCEND_T = 0.35;
+  var HAND_GRAB_T = 0.15;
+  var HAND_CARRY_T = 0.55;
+  var HAND_RELEASE_T = 0.25;
+  var HAND_GAP_T = 0.35;     // pause between rescuing one straggler and the next
+  var COLORS = ["#e8c468", "#7fb37d", "#6fa8c7", "#d98ba3", "#e0895c", "#b48ead", "#7ecfc0", "#d9a441", "#8aa8d9", "#c97f7f"];
+
+  var canvas = document.getElementById("board");
+  var ctx = canvas.getContext("2d");
+  var studentTagsEl = document.getElementById("studentTags");
+  var groupTagsEl = document.getElementById("groupTags");
+  var resultsEl = document.getElementById("results");
+  var statusLine = document.getElementById("statusLine");
+  var startBtn = document.getElementById("startBtn");
+  var resetBtn = document.getElementById("resetBtn");
+  var rebuildBtn = document.getElementById("rebuildBtn");
+  var numStudentsInput = document.getElementById("numStudents");
+  var numGroupsInput = document.getElementById("numGroups");
+
+  var N = 5, M = 2;
+  var balls = [];
+  var groupNames = [];
+  var wellCapacities = [];
+  var wellCounts = [];
+  var wellBounds = [];       // [{start,end}, ...] x-range of each trap
+  var dividerCenters = [];   // x of each divider post between traps
+  var narrowLeftX = 0, narrowRightX = CW;
+  var floorY = CH - CORRIDOR_DEPTH;
+  var slopeStartY = floorY - SLOPE_HEIGHT;
+  var leftSlopeP1 = { x: 0, y: slopeStartY };
+  var rightSlopeP1 = { x: CW, y: slopeStartY };
+  var leftSlopeNormal = { x: 1, y: 0 };
+  var rightSlopeNormal = { x: -1, y: 0 };
+
+  var state = "setup"; // "setup" | "running" | "done"
+  var elapsed = 0;
+  var dragged = null;
+  var dragOffset = { x: 0, y: 0 };
+  var lastTime = null;
+
+  // straggler-rescue state
+  var stillTimer = 0;
+  var rescuePhase = null; // null | "pending" | "descend" | "grab" | "carry" | "release" | "gap"
+  var rescueTimer = 0;
+  var rescueQueue = [];
+  var rescueMove = null; // { ball, fromX, fromY, toX, toY, group, slides: [{ball,fromX,fromY,toX,toY}] }
+  var hand = { x: 0, y: 0, opacity: 0 };
+
+  function defaultName(i) { return "Student " + (i + 1); }
+  function defaultGroupName(i) { return "Group " + (i + 1); }
+
+  // ---------- geometry: capacities, trap widths, funnel slopes ----------
+  function inwardNormal(p1, p2, interiorRef) {
+    var dx = p2.x - p1.x, dy = p2.y - p1.y;
+    var len = Math.hypot(dx, dy) || 1;
+    var nx = -dy / len, ny = dx / len;
+    var rx = interiorRef.x - p1.x, ry = interiorRef.y - p1.y;
+    if (rx * nx + ry * ny < 0) { nx = -nx; ny = -ny; }
+    return { x: nx, y: ny };
+  }
+
+  function computeLayout() {
+    // near-equal capacity per trap (remainder goes to the earliest traps)
+    wellCapacities = [];
+    var base = Math.floor(N / M), rem = N % M;
+    for (var g = 0; g < M; g++) wellCapacities.push(base + (g < rem ? 1 : 0));
+
+    var factor = PACK_FACTOR;
+    var widths = wellCapacities.map(function (c) { return c * 2 * BALL_R * factor; });
+    var dividersWidth = (M - 1) * DIVIDER_HALF * 2;
+    var total = widths.reduce(function (a, b) { return a + b; }, 0) + dividersWidth;
+    var maxTotal = CW - 80;
+    if (total > maxTotal) {
+      var rawSum = wellCapacities.reduce(function (a, c) { return a + c * 2 * BALL_R; }, 0);
+      factor = Math.max(1.0, (maxTotal - dividersWidth) / rawSum);
+      widths = wellCapacities.map(function (c) { return c * 2 * BALL_R * factor; });
+      total = widths.reduce(function (a, b) { return a + b; }, 0) + dividersWidth;
+    }
+
+    narrowLeftX = CW / 2 - total / 2;
+    narrowRightX = CW / 2 + total / 2;
+
+    wellBounds = [];
+    dividerCenters = [];
+    var pos = narrowLeftX;
+    for (var i = 0; i < M; i++) {
+      wellBounds.push({ start: pos, end: pos + widths[i] });
+      pos += widths[i];
+      if (i < M - 1) {
+        dividerCenters.push(pos + DIVIDER_HALF);
+        pos += DIVIDER_HALF * 2;
+      }
+    }
+
+    floorY = CH - CORRIDOR_DEPTH;
+    slopeStartY = floorY - SLOPE_HEIGHT;
+    leftSlopeP1 = { x: 0, y: slopeStartY };
+    rightSlopeP1 = { x: CW, y: slopeStartY };
+    var leftP2 = { x: narrowLeftX, y: floorY };
+    var rightP2 = { x: narrowRightX, y: floorY };
+    var interiorRef = { x: CW / 2, y: slopeStartY + 10 };
+    leftSlopeNormal = inwardNormal(leftSlopeP1, leftP2, interiorRef);
+    rightSlopeNormal = inwardNormal(rightSlopeP1, rightP2, interiorRef);
+  }
+
+  function wellIndexForX(x) {
+    for (var g = 0; g < wellBounds.length; g++) {
+      if (x >= wellBounds[g].start && x < wellBounds[g].end) return g;
+    }
+    return x < wellBounds[0].start ? 0 : wellBounds.length - 1;
+  }
+
+  function resetWellCounts() {
+    wellCounts = [];
+    for (var g = 0; g < M; g++) wellCounts.push(0);
+  }
+
+  // ---------- balls & tags ----------
+  function makeBall(i, name) {
+    var spacing = CW / (N + 1);
+    return {
+      name: name,
+      color: COLORS[i % COLORS.length],
+      x: spacing * (i + 1),
+      y: 85,
+      startX: spacing * (i + 1),
+      startY: 85,
+      vx: 0, vy: 0,
+      settled: false,
+      settleTimer: 0,
+      group: -1
+    };
+  }
+
+  function buildTags() {
+    studentTagsEl.innerHTML = "";
+    for (var i = 0; i < N; i++) {
+      var tag = document.createElement("div");
+      tag.className = "tag";
+      var dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.background = COLORS[i % COLORS.length];
+      var input = document.createElement("input");
+      input.type = "text";
+      input.value = balls[i] ? balls[i].name : defaultName(i);
+      input.maxLength = 18;
+      input.addEventListener("input", (function (idx) {
+        return function (e) {
+          if (balls[idx]) {
+            balls[idx].name = e.target.value || defaultName(idx);
+            renderResults();
+          }
+        };
+      })(i));
+      tag.appendChild(dot);
+      tag.appendChild(input);
+      studentTagsEl.appendChild(tag);
+    }
+
+    groupTagsEl.innerHTML = "";
+    for (var g = 0; g < M; g++) {
+      var gtag = document.createElement("div");
+      gtag.className = "tag";
+      var gdot = document.createElement("span");
+      gdot.className = "dot";
+      gdot.style.background = "var(--wood)";
+      var ginput = document.createElement("input");
+      ginput.type = "text";
+      ginput.value = groupNames[g] || defaultGroupName(g);
+      ginput.maxLength = 16;
+      ginput.addEventListener("input", (function (idx) {
+        return function (e) {
+          groupNames[idx] = e.target.value || defaultGroupName(idx);
+          renderResults();
+        };
+      })(g));
+      gtag.appendChild(gdot);
+      gtag.appendChild(ginput);
+      groupTagsEl.appendChild(gtag);
+    }
+  }
+
+  function rebuild() {
+    N = Math.max(1, Math.min(14, parseInt(numStudentsInput.value, 10) || 5));
+    M = Math.max(1, Math.min(6, parseInt(numGroupsInput.value, 10) || 2));
+    numStudentsInput.value = N;
+    numGroupsInput.value = M;
+
+    var oldNames = balls.map(function (b) { return b.name; });
+    var newGroupNames = groupNames.slice();
+    balls = [];
+    for (var i = 0; i < N; i++) balls.push(makeBall(i, oldNames[i] || defaultName(i)));
+    groupNames = [];
+    for (var g = 0; g < M; g++) groupNames.push(newGroupNames[g] || defaultGroupName(g));
+
+    computeLayout();
+    resetWellCounts();
+    stillTimer = 0;
+    rescuePhase = null;
+    rescueTimer = 0;
+    rescueQueue = [];
+    rescueMove = null;
+    hand.opacity = 0;
+
+    state = "setup";
+    elapsed = 0;
+    startBtn.disabled = false;
+    statusLine.textContent = "Drag the balls to a starting line, then start the drop.";
+    buildTags();
+    renderResults();
+  }
+
+  function renderResults() {
+    resultsEl.innerHTML = "";
+    for (var g = 0; g < M; g++) {
+      var card = document.createElement("div");
+      card.className = "well-card";
+      var title = document.createElement("div");
+      title.className = "well-name";
+      title.textContent = groupNames[g] || defaultGroupName(g);
+      card.appendChild(title);
+      var list = document.createElement("ul");
+      var members = balls.filter(function (b) { return b.settled && b.group === g; });
+      if (members.length === 0) {
+        var empty = document.createElement("li");
+        empty.className = "empty";
+        empty.textContent = "still deciding\u2026";
+        list.appendChild(empty);
+      } else {
+        members.forEach(function (b) {
+          var li = document.createElement("li");
+          li.textContent = b.name;
+          list.appendChild(li);
+        });
+      }
+      card.appendChild(list);
+      resultsEl.appendChild(card);
+    }
+  }
+
+  // ---------- drag to place (setup phase) ----------
+  function canvasPoint(evt) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = CW / rect.width;
+    var scaleY = CH / rect.height;
+    return { x: (evt.clientX - rect.left) * scaleX, y: (evt.clientY - rect.top) * scaleY };
+  }
+
+  canvas.addEventListener("pointerdown", function (e) {
+    if (state !== "setup") return;
+    var p = canvasPoint(e);
+    for (var i = balls.length - 1; i >= 0; i--) {
+      var b = balls[i];
+      var dx = p.x - b.x, dy = p.y - b.y;
+      if (dx * dx + dy * dy <= (BALL_R + 6) * (BALL_R + 6)) {
+        dragged = b;
+        dragOffset.x = dx; dragOffset.y = dy;
+        canvas.setPointerCapture(e.pointerId);
+        canvas.style.cursor = "grabbing";
+        break;
+      }
+    }
+  });
+  canvas.addEventListener("pointermove", function (e) {
+    if (!dragged) return;
+    var p = canvasPoint(e);
+    var nx = p.x - dragOffset.x, ny = p.y - dragOffset.y;
+    var maxY = slopeStartY - BALL_R;
+    dragged.x = Math.max(BALL_R, Math.min(CW - BALL_R, nx));
+    dragged.y = Math.max(BALL_R, Math.min(maxY, ny));
+    dragged.startX = dragged.x; dragged.startY = dragged.y;
+  });
+  function endDrag() {
+    if (dragged) { dragged = null; canvas.style.cursor = "grab"; }
+  }
+  canvas.addEventListener("pointerup", endDrag);
+  canvas.addEventListener("pointercancel", endDrag);
+
+  // ---------- simulation ----------
+  function launch() {
+    if (state !== "setup") return;
+    resetWellCounts();
+    stillTimer = 0;
+    rescuePhase = null;
+    rescueTimer = 0;
+    rescueQueue = [];
+    rescueMove = null;
+    hand.opacity = 0;
+    balls.forEach(function (b) {
+      b.startX = b.x; b.startY = b.y;
+      var angle = Math.random() * Math.PI * 2;
+      var mag = 2000 + Math.random() * 1000;
+      b.vx = Math.cos(angle) * mag;
+      b.vy = Math.sin(angle) * mag;
+      b.settled = false;
+      b.beingCarried = false;
+      b.settleTimer = 0;
+      b.group = -1;
+    });
+    state = "running";
+    elapsed = 0;
+    startBtn.disabled = true;
+    statusLine.textContent = "Bouncing\u2026 resistance is building, they'll funnel down soon.";
+    renderResults();
+  }
+
+  function resetSetup() {
+    state = "setup";
+    elapsed = 0;
+    resetWellCounts();
+    stillTimer = 0;
+    rescuePhase = null;
+    rescueTimer = 0;
+    rescueQueue = [];
+    rescueMove = null;
+    hand.opacity = 0;
+    balls.forEach(function (b) {
+      b.x = b.startX; b.y = b.startY;
+      b.vx = 0; b.vy = 0;
+      b.settled = false;
+      b.beingCarried = false;
+      b.settleTimer = 0;
+      b.group = -1;
+    });
+    startBtn.disabled = false;
+    statusLine.textContent = "Drag the balls to a starting line, then start the drop.";
+    renderResults();
+  }
+
+  function collideSlope(b, p1, normal) {
+    var dx = b.x - p1.x, dy = b.y - p1.y;
+    var dist = dx * normal.x + dy * normal.y;
+    if (dist < BALL_R) {
+      var push = BALL_R - dist;
+      b.x += normal.x * push;
+      b.y += normal.y * push;
+      var vn = b.vx * normal.x + b.vy * normal.y;
+      if (vn < 0) {
+        b.vx -= (1 + RESTITUTION) * vn * normal.x;
+        b.vy -= (1 + RESTITUTION) * vn * normal.y;
+      }
+    }
+  }
+
+  function step(dt) {
+    elapsed += dt;
+    var dragCoef = Math.min(DRAG_MAX, DRAG_START + DRAG_RATE * elapsed);
+
+    balls.forEach(function (b) {
+      if (b.settled || b.beingCarried) return;
+
+      b.vy += GRAVITY * dt;
+      var f = Math.exp(-dragCoef * dt);
+      b.vx *= f; b.vy *= f;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+
+      // canvas side walls & top
+      if (b.x - BALL_R < 0) { b.x = BALL_R; b.vx = -b.vx * RESTITUTION; }
+      if (b.x + BALL_R > CW) { b.x = CW - BALL_R; b.vx = -b.vx * RESTITUTION; }
+      if (b.y - BALL_R < 0) { b.y = BALL_R; b.vy = -b.vy * RESTITUTION; }
+
+      if (b.y + BALL_R > floorY) {
+        // inside the narrow corridor: outer walls + divider posts
+        if (b.x - BALL_R < narrowLeftX) { b.x = narrowLeftX + BALL_R; b.vx = Math.abs(b.vx) * RESTITUTION; }
+        if (b.x + BALL_R > narrowRightX) { b.x = narrowRightX - BALL_R; b.vx = -Math.abs(b.vx) * RESTITUTION; }
+        for (var k = 0; k < dividerCenters.length; k++) {
+          var dc = dividerCenters[k];
+          var dl = dc - DIVIDER_HALF, dr = dc + DIVIDER_HALF;
+          if (b.x + BALL_R > dl && b.x - BALL_R < dr) {
+            if (b.x < dc) { b.x = dl - BALL_R; b.vx = -Math.abs(b.vx) * RESTITUTION; }
+            else { b.x = dr + BALL_R; b.vx = Math.abs(b.vx) * RESTITUTION; }
+          }
+        }
+      } else {
+        // still in the open chamber / funnel: the sloped walls
+        collideSlope(b, leftSlopeP1, leftSlopeNormal);
+        collideSlope(b, rightSlopeP1, rightSlopeNormal);
+      }
+
+      // floor
+      if (b.y + BALL_R > CH) {
+        b.y = CH - BALL_R;
+        b.vy = -b.vy * RESTITUTION;
+      }
+    });
+
+    // ball-ball collisions (settled balls act as immovable obstacles - this is
+    // what actually stops a trap from overfilling once its row is packed tight)
+    for (var i = 0; i < balls.length; i++) {
+      for (var j = i + 1; j < balls.length; j++) {
+        var a = balls[i], c = balls[j];
+        var ddx = c.x - a.x, ddy = c.y - a.y;
+        var dist = Math.sqrt(ddx * ddx + ddy * ddy);
+        var minDist = BALL_R * 2;
+        if (dist > 0 && dist < minDist) {
+          var overlap = (minDist - dist);
+          var nx = ddx / dist, ny = ddy / dist;
+          var aFixed = a.settled || a.beingCarried, cFixed = c.settled || c.beingCarried;
+          if (!aFixed && !cFixed) {
+            a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
+            c.x += nx * overlap / 2; c.y += ny * overlap / 2;
+            var avn = a.vx * nx + a.vy * ny;
+            var cvn = c.vx * nx + c.vy * ny;
+            a.vx += (cvn - avn) * nx * RESTITUTION; a.vy += (cvn - avn) * ny * RESTITUTION;
+            c.vx += (avn - cvn) * nx * RESTITUTION; c.vy += (avn - cvn) * ny * RESTITUTION;
+          } else if (!aFixed && cFixed) {
+            a.x -= nx * overlap; a.y -= ny * overlap;
+            var avn2 = a.vx * nx + a.vy * ny;
+            a.vx -= 2 * avn2 * nx * RESTITUTION; a.vy -= 2 * avn2 * ny * RESTITUTION;
+          } else if (aFixed && !cFixed) {
+            c.x += nx * overlap; c.y += ny * overlap;
+            var cvn2 = c.vx * nx + c.vy * ny;
+            c.vx -= 2 * cvn2 * nx * RESTITUTION; c.vy -= 2 * cvn2 * ny * RESTITUTION;
+          }
+        }
+      }
+    }
+
+    // settling
+    var allSettled = true;
+    balls.forEach(function (b) {
+      if (b.settled || b.beingCarried) { if (!b.settled) allSettled = false; return; }
+      var onFloor = b.y + BALL_R >= CH - 0.75;
+      var speed = Math.hypot(b.vx, b.vy);
+      if (onFloor && speed < SETTLE_SPEED) {
+        b.settleTimer += dt;
+        if (b.settleTimer >= SETTLE_TIME) {
+          b.settled = true;
+          b.vx = 0; b.vy = 0;
+          b.y = CH - BALL_R;
+          b.group = wellIndexForX(b.x);
+          wellCounts[b.group] = (wellCounts[b.group] || 0) + 1;
+        }
+      } else {
+        b.settleTimer = 0;
+      }
+      if (!b.settled) allSettled = false;
+    });
+
+    if (state === "running") {
+      if (allSettled && rescuePhase === null) {
+        state = "done";
+        statusLine.textContent = "All settled! Reset to run it again.";
+      } else {
+        updateStragglerWatch(dt);
+        updateRescue(dt);
+      }
+      renderResults();
+    }
+  }
+
+  // ---------- straggler rescue: a hand drops in once motion has fully stopped ----------
+  function shuffleArr(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function easeOut(t) { return 1 - Math.pow(1 - t, 2); }
+  function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+
+  function updateStragglerWatch(dt) {
+    if (rescuePhase !== null) return;
+    var unsettled = balls.filter(function (b) { return !b.settled; });
+    if (unsettled.length === 0) { stillTimer = 0; return; }
+    var maxSpeed = 0;
+    unsettled.forEach(function (b) { maxSpeed = Math.max(maxSpeed, Math.hypot(b.vx, b.vy)); });
+    stillTimer = maxSpeed < STILL_SPEED ? stillTimer + dt : 0;
+    if (stillTimer >= STILL_DURATION) {
+      rescuePhase = "pending";
+      rescueTimer = 0;
+      statusLine.textContent = "Hmm, looks like a couple of students are stuck\u2026";
+    }
+  }
+
+  function beginRescue() {
+    var stragglers = shuffleArr(balls.filter(function (b) { return !b.settled; }));
+    var openSlots = [];
+    for (var g = 0; g < M; g++) {
+      var open = wellCapacities[g] - (wellCounts[g] || 0);
+      for (var k = 0; k < open; k++) openSlots.push(g);
+    }
+    shuffleArr(openSlots);
+    stragglers.forEach(function (b, i) {
+      b.pendingGroup = openSlots[i] !== undefined ? openSlots[i] : wellIndexForX(b.x);
+    });
+    rescueQueue = stragglers;
+    statusLine.textContent = "Lending a hand\u2026";
+    rescuePhase = "gap";
+    rescueTimer = HAND_GAP_T;
+  }
+
+  function startNextRescueMove() {
+    if (rescueQueue.length === 0) { rescuePhase = null; hand.opacity = 0; return; }
+    var ball = rescueQueue.shift();
+    var g = ball.pendingGroup;
+    var occupants = balls.filter(function (b) { return b.settled && b.group === g && b !== ball; });
+    occupants.sort(function (a, b) { return a.x - b.x; });
+    var total = occupants.length + 1;
+    var wb = wellBounds[g];
+    var positions = [];
+    for (var i = 0; i < total; i++) positions.push(wb.start + (wb.end - wb.start) * (i + 1) / (total + 1));
+    var slides = occupants.map(function (ob, i) {
+      return { ball: ob, fromX: ob.x, fromY: ob.y, toX: positions[i], toY: CH - BALL_R };
+    });
+    ball.beingCarried = true;
+    ball.vx = 0; ball.vy = 0;
+    rescueMove = {
+      ball: ball,
+      fromX: ball.x, fromY: ball.y,
+      toX: positions[total - 1], toY: CH - BALL_R,
+      group: g,
+      slides: slides
+    };
+    rescuePhase = "descend";
+    rescueTimer = 0;
+  }
+
+  function updateRescue(dt) {
+    if (rescuePhase === null) return;
+    rescueTimer += dt;
+
+    if (rescuePhase === "pending") {
+      if (rescueTimer >= RESCUE_DELAY) beginRescue();
+      return;
+    }
+    if (rescuePhase === "gap") {
+      if (rescueTimer >= HAND_GAP_T) startNextRescueMove();
+      return;
+    }
+    var m = rescueMove;
+    if (!m) return;
+
+    if (rescuePhase === "descend") {
+      var t1 = Math.min(1, rescueTimer / HAND_DESCEND_T);
+      hand.opacity = t1;
+      hand.x = m.fromX;
+      hand.y = lerp(m.fromY - 150, m.fromY - BALL_R - 14, easeOut(t1));
+      if (rescueTimer >= HAND_DESCEND_T) { rescuePhase = "grab"; rescueTimer = 0; }
+    } else if (rescuePhase === "grab") {
+      hand.x = m.fromX; hand.y = m.fromY - BALL_R - 14;
+      if (rescueTimer >= HAND_GRAB_T) { rescuePhase = "carry"; rescueTimer = 0; }
+    } else if (rescuePhase === "carry") {
+      var t2 = Math.min(1, rescueTimer / HAND_CARRY_T);
+      var te = easeInOut(t2);
+      var lift = Math.sin(Math.PI * te) * 46;
+      m.ball.x = lerp(m.fromX, m.toX, te);
+      m.ball.y = lerp(m.fromY, m.toY, te) - lift;
+      hand.x = m.ball.x; hand.y = m.ball.y - BALL_R - 14;
+      m.slides.forEach(function (s) {
+        s.ball.x = lerp(s.fromX, s.toX, te);
+        s.ball.y = lerp(s.fromY, s.toY, te);
+      });
+      if (rescueTimer >= HAND_CARRY_T) {
+        m.ball.x = m.toX; m.ball.y = m.toY;
+        m.slides.forEach(function (s) { s.ball.x = s.toX; s.ball.y = s.toY; });
+        m.ball.settled = true;
+        m.ball.beingCarried = false;
+        m.ball.group = m.group;
+        wellCounts[m.group] = (wellCounts[m.group] || 0) + 1;
+        rescuePhase = "release"; rescueTimer = 0;
+      }
+    } else if (rescuePhase === "release") {
+      var t3 = Math.min(1, rescueTimer / HAND_RELEASE_T);
+      hand.y = (m.toY - BALL_R - 14) - t3 * 40;
+      hand.opacity = 1 - t3;
+      if (rescueTimer >= HAND_RELEASE_T) {
+        rescueMove = null;
+        if (rescueQueue.length > 0) {
+          rescuePhase = "gap"; rescueTimer = 0;
+        } else {
+          rescuePhase = null;
+          hand.opacity = 0;
+          statusLine.textContent = "All settled! Reset to run it again.";
+        }
+      }
+    }
+  }
+
+  // ---------- drawing ----------
+  function drawFace(x, y, r) {
+    ctx.strokeStyle = "rgba(0,0,0,0.55)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x - r * 0.32, y - r * 0.12, r * 0.11, 0, Math.PI * 2);
+    ctx.arc(x + r * 0.32, y - r * 0.12, r * 0.11, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x, y + r * 0.12, r * 0.42, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.stroke();
+  }
+
+  function drawRamp(p1, p2) {
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p1.x, CH);
+    ctx.lineTo(p2.x, CH);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.closePath();
+    var grad = ctx.createLinearGradient(p1.x, 0, p2.x, 0);
+    grad.addColorStop(0, "#6d4527");
+    grad.addColorStop(1, "#9a6a45");
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(242,236,216,0.35)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, CW, CH);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.035)";
+    ctx.lineWidth = 1;
+    for (var yy = 40; yy < CH; yy += 46) {
+      ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(CW, yy); ctx.stroke();
+    }
+
+    var leftP2 = { x: narrowLeftX, y: floorY };
+    var rightP2 = { x: narrowRightX, y: floorY };
+    drawRamp(leftSlopeP1, leftP2);
+    drawRamp(rightSlopeP1, rightP2);
+
+    // trap interior tint
+    ctx.fillStyle = "rgba(255,255,255,0.02)";
+    ctx.fillRect(narrowLeftX, floorY, narrowRightX - narrowLeftX, CORRIDOR_DEPTH);
+
+    ctx.font = "16px 'Caveat', cursive";
+    ctx.fillStyle = "rgba(242,236,216,0.75)";
+    ctx.textAlign = "center";
+    for (var g = 0; g < M; g++) {
+      var cx = (wellBounds[g].start + wellBounds[g].end) / 2;
+      var label = (groupNames[g] || defaultGroupName(g)) + " (" + (wellCounts[g] || 0) + "/" + wellCapacities[g] + ")";
+      ctx.fillText(label, cx, CH - 10);
+    }
+
+    // divider posts between traps
+    dividerCenters.forEach(function (dx) {
+      var grad = ctx.createLinearGradient(dx - DIVIDER_HALF, 0, dx + DIVIDER_HALF, 0);
+      grad.addColorStop(0, "#7a4f30");
+      grad.addColorStop(0.5, "#9a6a45");
+      grad.addColorStop(1, "#6d4527");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(dx - DIVIDER_HALF, floorY - 6);
+      ctx.lineTo(dx + DIVIDER_HALF, floorY - 6);
+      ctx.lineTo(dx + DIVIDER_HALF, CH);
+      ctx.lineTo(dx - DIVIDER_HALF, CH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(dx, floorY - 6, DIVIDER_HALF, Math.PI, 0);
+      ctx.fill();
+    });
+
+    // outer trap walls (short lip above the mouth, for readability)
+    ctx.strokeStyle = "rgba(154,106,69,0.9)";
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(narrowLeftX, floorY - 6); ctx.lineTo(narrowLeftX, CH - 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(narrowRightX, floorY - 6); ctx.lineTo(narrowRightX, CH - 2); ctx.stroke();
+
+    // balls
+    balls.forEach(function (b) {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, BALL_R, 0, Math.PI * 2);
+      ctx.fillStyle = b.color;
+      ctx.fill();
+      ctx.lineWidth = b.settled ? 3 : 2;
+      ctx.strokeStyle = b.settled ? "rgba(242,236,216,0.9)" : "rgba(0,0,0,0.25)";
+      ctx.stroke();
+      drawFace(b.x, b.y, BALL_R);
+
+      ctx.font = "15px 'Caveat', cursive";
+      ctx.fillStyle = "rgba(242,236,216,0.95)";
+      ctx.textAlign = "center";
+      ctx.fillText(b.name, b.x, b.y - BALL_R - 8);
+    });
+
+    if (hand.opacity > 0) {
+      ctx.save();
+      ctx.globalAlpha = hand.opacity;
+      ctx.font = (BALL_R * 2.2) + "px serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("\u270B", hand.x, hand.y);
+      ctx.restore();
+    }
+  }
+
+  function frame(t) {
+    if (lastTime == null) lastTime = t;
+    var dt = Math.min(0.032, (t - lastTime) / 1000);
+    lastTime = t;
+    if (state === "running") step(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- wire up ----------
+  startBtn.addEventListener("click", launch);
+  resetBtn.addEventListener("click", resetSetup);
+  rebuildBtn.addEventListener("click", rebuild);
+
+  rebuild();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
