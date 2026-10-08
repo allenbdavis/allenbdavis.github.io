@@ -1,0 +1,362 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Vernier Caliper Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: one column. Heading and score on top, a bench-grey panel with the full caliper, a magnified view of the sliding scales, then the answer row and explanation. */
+:root{
+  --bg:#e8ebee; --panel:#f8f9fa; --fg:#15191d; --muted:#586169; --line:#cdd3d9;
+  --accent:#1d4fa6; --accent-fg:#ffffff; --accent-soft:#dfe8f8;
+  --good:#17754a; --good-bg:#def2e7; --bad:#a8321f; --bad-bg:#fae3df; --warn:#7a5200; --warn-bg:#fbf0d3;
+  --bench:#8d949b; --plastic:#f3f2ec; --plastic-edge:#a9a79c; --print:#16181b; --tint:rgba(20,24,30,.07);
+  --mark-a:#e08a00; --on-a:#1a1100; --mark-b:#1d63e0; --on-b:#ffffff;
+  --steel:#aeb6bf; --steel-hi:#e7ebef; --steel-lo:#79828c; --brass:#c9a13b; --brass-hi:#f0d98b; --wood:#b98b5a; --glass:#bfe0ea; --pvc:#d9dde0;
+  --font-display:'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif;
+  --font-body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12161a; --panel:#1b2025; --fg:#e8ebee; --muted:#9ba4ac; --line:#303840;
+    --accent:#8fb2f2; --accent-fg:#0b1a33; --accent-soft:#1f2c44;
+    --good:#6ad39a; --good-bg:#153625; --bad:#ff9b8a; --bad-bg:#3b1d19; --warn:#f0c15f; --warn-bg:#35290d;
+    --bench:#3a4046; --mark-a:#ffb43a; --mark-b:#6aa2ff; --on-b:#06142e; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12161a; --panel:#1b2025; --fg:#e8ebee; --muted:#9ba4ac; --line:#303840;
+  --accent:#8fb2f2; --accent-fg:#0b1a33; --accent-soft:#1f2c44;
+  --good:#6ad39a; --good-bg:#153625; --bad:#ff9b8a; --bad-bg:#3b1d19; --warn:#f0c15f; --warn-bg:#35290d;
+  --bench:#3a4046; --mark-a:#ffb43a; --mark-b:#6aa2ff; --on-b:#06142e; color-scheme:dark;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.5}
+*{box-sizing:border-box}
+.wrap{max-width:900px;margin:0 auto;padding-inline:16px;padding-block:22px 48px;display:flex;flex-direction:column;gap:16px}
+.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+h1{font-family:var(--font-display);font-weight:700;font-size:2rem;line-height:1.05;margin:0;letter-spacing:.005em;text-wrap:balance}
+.sub{margin:6px 0 0;color:var(--muted);max-width:46ch}
+.score{display:flex;gap:8px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;min-width:92px}
+.chip b{display:block;font-family:var(--font-display);font-size:1.5rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.chip small{color:var(--muted);font-size:.74rem;letter-spacing:.04em;text-transform:uppercase}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{padding:7px 16px;cursor:pointer;font-weight:500;border-right:1px solid var(--line)}
+.seg label:last-of-type{border-right:0}
+.seg input:checked+label{background:var(--accent);color:var(--accent-fg)}
+.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:-3px}
+.lbl{font-family:var(--font-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:.82rem;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.task-head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.tag{font-family:var(--font-display);font-weight:700;letter-spacing:.07em;font-size:.82rem;padding:3px 10px;border-radius:4px;background:var(--accent-soft);color:var(--accent);text-transform:uppercase}
+#prompt{margin:0;font-size:1.15rem;font-weight:500;min-width:0}
+figure{margin:0;display:flex;flex-direction:column;gap:6px}
+.bench{background:var(--bench);border-radius:6px;overflow:hidden;line-height:0}
+.bench svg{display:block;width:100%;height:auto}
+figcaption{font-size:.85rem;color:var(--muted)}
+.t{fill:var(--print);font-family:Arial,Helvetica,sans-serif}
+.l{stroke:var(--print);fill:none;stroke-linecap:butt}
+.ob{stroke:var(--print);stroke-width:.25;stroke-opacity:.55}
+.answer{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.inp{display:flex;align-items:center;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding-right:12px}
+.inp:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+.inp input{font:600 1.4rem var(--font-display);font-variant-numeric:tabular-nums;border:0;background:transparent;color:var(--fg);width:8.5ch;padding:6px 6px 6px 12px;outline:0}
+.inp span{color:var(--muted);font-weight:500}
+button{font:600 1rem var(--font-body);border-radius:6px;padding:9px 18px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+#feedback{min-height:0}
+.fb{border-radius:6px;padding:10px 14px;border:1px solid transparent}
+.fb.good{background:var(--good-bg);color:var(--good);border-color:var(--good)}
+.fb.near{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.fb.bad{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.fb b{font-family:var(--font-display);font-size:1.1rem}
+h2{font-family:var(--font-display);font-size:1.3rem;margin:0}
+ol.steps{margin:0;padding-left:1.3rem;display:flex;flex-direction:column;gap:10px;max-width:68ch}
+ol.steps li::marker{font-family:var(--font-display);font-weight:700;color:var(--accent)}
+.sw{display:inline-block;width:.8em;height:.8em;border-radius:2px;margin-right:.3em;vertical-align:-.05em}
+.sw.a{background:var(--mark-a)}.sw.b{background:var(--mark-b)}
+.result{font-family:var(--font-display);font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+details summary{cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:1.05rem}
+details ul{margin:10px 0 0;padding-left:1.2rem;max-width:68ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:no-preference){.fb{animation:pop .18s ease-out}@keyframes pop{from{transform:translateY(3px);opacity:.4}}}
+</style>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Vernier Caliper Trainer</h1>
+      <p class="sub">Read the 0.1 mm vernier scale and enter the measurement in millimetres.</p>
+    </div>
+    <div class="score" aria-live="polite">
+      <div class="chip"><b id="sc-ok">0 / 0</b><small>first try</small></div>
+      <div class="chip"><b id="sc-streak">0</b><small>streak</small></div>
+    </div>
+  </header>
+  <div class="controls" role="radiogroup" aria-label="Type of measurement">
+    <span class="lbl">Practice</span>
+    <div class="seg">
+      <input type="radio" name="mode" id="m-out" value="out"><label for="m-out">Outside</label>
+      <input type="radio" name="mode" id="m-in" value="in"><label for="m-in">Inside</label>
+      <input type="radio" name="mode" id="m-mix" value="mix" checked><label for="m-mix">Mixed</label>
+    </div>
+  </div>
+  <section class="card" aria-label="Measurement task">
+    <div class="task-head"><span class="tag" id="tag"></span><p id="prompt"></p></div>
+    <figure><div class="bench" id="overview"></div></figure>
+    <figure>
+      <div class="bench" id="mag"></div>
+      <figcaption>Magnified view of the sliding scales. The dashed box on the caliper above shows this region.</figcaption>
+    </figure>
+    <form id="form" class="answer" autocomplete="off">
+      <div class="field"><label class="lbl" for="answer">Your measurement</label>
+        <div class="inp"><input id="answer" type="text" inputmode="decimal" placeholder="0.0" aria-describedby="feedback"><span>mm</span></div>
+      </div>
+      <button type="submit" class="primary" id="check">Check</button>
+      <button type="button" id="next">New object</button>
+    </form>
+    <div id="feedback" role="status" aria-live="polite"></div>
+    <div class="actions"><button type="button" id="explainBtn" hidden>Show explanation</button></div>
+  </section>
+  <section class="card" id="explain" hidden aria-label="Explanation"></section>
+  <details class="card">
+    <summary>How to read this caliper</summary>
+    <ul>
+      <li>The main scale has a line every 1 mm. The sliding vernier has 10 divisions labelled 0, .5 and 1.0, so each vernier line is worth 0.1 mm.</li>
+      <li>Outside jaws (top scales): measure the width of an object held between the large jaws. Read the top main scale at the OUTSIDE vernier.</li>
+      <li>Inside jaws (bottom scales): the small step-shaped tips measure the opening of a hole or gap. Read the bottom main scale at the INSIDE vernier.</li>
+      <li>Whole millimetres: the last main-scale line to the left of the vernier 0 line. Tenths: the vernier line that lines up exactly with a main-scale line.</li>
+    </ul>
+  </details>
+</div>
+<script>
+(function(){
+/* ---------- data ---------- */
+const OUTSIDE=[
+ {id:'block',name:'aluminum block',what:'width',min:80,max:460,draw:'block'},
+ {id:'rod',name:'steel rod',what:'diameter',min:30,max:300,draw:'rod'},
+ {id:'ball',name:'steel ball bearing',what:'diameter',min:60,max:320,draw:'ball'},
+ {id:'washer',name:'brass washer',what:'thickness',min:15,max:90,draw:'washer'},
+ {id:'nut',name:'hex nut',what:'distance across the flats',min:60,max:240,draw:'nut'},
+ {id:'ring',name:'gold ring',what:'band width',min:30,max:90,draw:'ring'},
+ {id:'dowel',name:'wooden dowel',what:'diameter',min:40,max:300,draw:'dowel'}
+];
+const INSIDE=[
+ {id:'pipe',name:'PVC pipe',what:'inner diameter',min:205,max:620,t:6,floor:false,color:'--pvc'},
+ {id:'tube',name:'glass test tube',what:'inner diameter',min:200,max:300,t:2.5,floor:true,color:'--glass'},
+ {id:'slot',name:'steel plate with a slot',what:'width of the slot',min:205,max:500,t:10,floor:true,color:'--steel'},
+ {id:'mring',name:'metal ring',what:'inner diameter',min:200,max:260,t:3,floor:false,color:'--brass'},
+ {id:'bore',name:'wooden block with a drilled hole',what:'diameter of the hole',min:205,max:480,t:8,floor:true,color:'--wood'}
+];
+const INSIDE_OFFSET=200; /* the INSIDE vernier zero sits 20.0 mm to the right of the sliding jaw */
+const fmt=v10=>(v10/10).toFixed(1);
+
+/* ---------- shared svg helpers ---------- */
+const ln=(x1,y1,x2,y2,sw,cls,extra)=>`<line class="${cls||'l'}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width="${sw}"${extra||''}/>`;
+const tickLen=(d,a,b,c)=>d%10===0?c:(d%5===0?b:a);
+
+/* ---------- overview: the whole caliper holding the object ---------- */
+function objectOut(def,s){
+  switch(def.draw){
+    case 'block': return `<rect class="ob" x="0" y="28" width="${s}" height="30" fill="url(#ovSteel)"/>`;
+    case 'rod': return `<rect class="ob" x="0" y="26" width="${s}" height="32" fill="url(#ovSteel)"/>${ln(s*.28,27,s*.28,57,.5,'',' stroke="#fff" stroke-opacity=".6"')}`;
+    case 'dowel': return `<rect class="ob" x="0" y="26" width="${s}" height="32" fill="var(--wood)"/>${ln(s*.3,27,s*.3,57,.4,'',' stroke="#fff" stroke-opacity=".35"')}${ln(s*.7,27,s*.7,57,.3,'',' stroke="#000" stroke-opacity=".25"')}`;
+    case 'ball': {const r=s/2;return `<circle class="ob" cx="${r}" cy="${58-r}" r="${r}" fill="url(#ovBall)"/>`;}
+    case 'washer': return `<rect class="ob" x="0" y="30" width="${s}" height="28" fill="url(#ovBrass)"/>`;
+    case 'ring': return `<rect class="ob" x="0" y="34" width="${s}" height="24" rx="${Math.min(s/2,3)}" fill="url(#ovBrass)"/>`;
+    case 'nut': {const R=s/Math.sqrt(3),cy=58-R,h=s/2;
+      const p=[[h,cy-R],[s,cy-R/2],[s,cy+R/2],[h,cy+R],[0,cy+R/2],[0,cy-R/2]].map(q=>q.join(',')).join(' ');
+      return `<polygon class="ob" points="${p}" fill="url(#ovSteel)"/><circle class="ob" cx="${h}" cy="${cy}" r="${s*.27}" fill="var(--bench)"/>`;}
+  }
+  return '';
+}
+function objectIn(def,s){
+  const t=def.t,xl=-10-t,xr=s+10,y0=def.floor?42:44,yb=def.floor?68:66,fill=`var(${def.color})`;
+  let o=`<g class="ob">`;
+  o+=`<rect x="${xl}" y="${y0}" width="${t}" height="${yb-y0}" fill="${fill}"/><rect x="${xr}" y="${y0}" width="${t}" height="${yb-y0}" fill="${fill}"/>`;
+  if(def.floor) o+=`<rect x="${xl}" y="62" width="${s+20+2*t}" height="6" rx="${def.id==='tube'?3:0}" fill="${fill}"/>`;
+  o+=`</g>`;
+  o+=`<g fill="url(#ovHatch)" stroke="none"><rect x="${xl}" y="${y0}" width="${t}" height="${yb-y0}"/><rect x="${xr}" y="${y0}" width="${t}" height="${yb-y0}"/>${def.floor?`<rect x="${xl}" y="62" width="${s+20+2*t}" height="6"/>`:''}</g>`;
+  return o;
+}
+function drawOverview(t){
+  const s=t.s10/10,ins=t.kind==='in',p='style="stop-color:var(';
+  let o=`<svg viewBox="-14 -15 124 87" role="img" aria-label="Vernier caliper holding the object">`;
+  o+=`<defs>
+   <filter id="ovNz" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.3 0 0 0 -0.5"/></filter>
+   <filter id="ovSh" x="-10%" y="-10%" width="125%" height="130%"><feDropShadow dx=".7" dy="1" stdDeviation="1" flood-color="#000" flood-opacity=".35"/></filter>
+   <linearGradient id="ovSteel" x1="0" x2="1"><stop offset="0" ${p}--steel-lo)"/><stop offset=".3" ${p}--steel-hi)"/><stop offset=".75" ${p}--steel)"/><stop offset="1" ${p}--steel-lo)"/></linearGradient>
+   <linearGradient id="ovBrass" x1="0" x2="1"><stop offset="0" ${p}--brass)"/><stop offset=".35" ${p}--brass-hi)"/><stop offset="1" ${p}--brass)"/></linearGradient>
+   <radialGradient id="ovBall" cx=".35" cy=".3" r=".8"><stop offset="0" ${p}--steel-hi)"/><stop offset=".6" ${p}--steel)"/><stop offset="1" ${p}--steel-lo)"/></radialGradient>
+   <pattern id="ovHatch" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="2.2" style="stroke:var(--print)" stroke-width=".35" opacity=".5"/></pattern>
+  </defs>`;
+  o+=`<rect x="-14" y="-15" width="124" height="87" fill="var(--bench)"/><rect x="-14" y="-15" width="124" height="87" filter="url(#ovNz)" opacity=".5"/>`;
+  o+= ins? objectIn(t.def,s) : objectOut(t.def,s);
+  const pl=`fill="var(--plastic)" stroke="var(--plastic-edge)" stroke-width=".3"`;
+  o+=`<g filter="url(#ovSh)">`;
+  o+=`<rect x="-6" y="0" width="111" height="24" rx="1" ${pl}/>`;
+  o+=`<path d="M -10 60 L -10 50 L -6 50 L -6 20 L 0 20 L 0 60 Z" ${pl}/>`;
+  o+=`<path d="M ${s} 24 L ${s} 60 L ${s+10} 60 L ${s+10} 50 L ${s+6} 50 L ${s+6} 24 Z" ${pl}/>`;
+  o+=`<rect x="${s}" y="24" width="45" height="12" rx="1.5" ${pl}/>`;
+  o+=`<rect x="${s-3}" y="-12" width="28" height="12" rx="1.5" ${pl}/>`;
+  o+=`</g>`;
+  /* main scales */
+  for(let d=0;d<=100;d++){
+    const L=tickLen(d,2.2,3.3,4.6),w=d%10===0?.18:.12;
+    o+=ln(d,0,d,L,w)+ln(d,24,d,24-L,w);
+    if(d%10===0) o+=`<text class="t" x="${d}" y="14" font-size="3.4" text-anchor="middle">${d}</text>`;
+  }
+  /* verniers */
+  for(let k=0;k<=10;k++){
+    const L=k%5===0?3.6:2.3,w=k%5===0?.18:.12;
+    o+=ln(s+1.9*k,0,s+1.9*k,-L,w)+ln(s+INSIDE_OFFSET/10+1.9*k,24,s+INSIDE_OFFSET/10+1.9*k,24+L,w);
+  }
+  o+=`<text class="t" x="${s+9.5}" y="-6.4" font-size="3.1" font-weight="700" text-anchor="middle">OUTSIDE</text>`;
+  o+=`<text class="t" x="${s+INSIDE_OFFSET/10+9.5}" y="33.6" font-size="3.1" font-weight="700" text-anchor="middle">INSIDE</text>`;
+  /* loupe box */
+  const x0=ins?s+16.5:s-3.5;
+  o+=`<rect x="${x0}" y="-13" width="27" height="50" fill="none" stroke="var(--mark-b)" stroke-width=".5" stroke-dasharray="1.6 1.1" rx="1"/>`;
+  o+=`<text x="${x0}" y="-13.9" font-size="2.9" font-family="Arial,sans-serif" font-weight="700" style="fill:var(--on-b)" stroke="var(--mark-b)" stroke-width=".9" paint-order="stroke">Magnified below</text>`;
+  return o+`</svg>`;
+}
+/* ---------- magnified view of the sliding scales ---------- */
+function drawMag(t,explain){
+  const s=t.s10/10,ins=t.kind==='in',W=800,span=27,K=W/span;
+  const x0=ins?s+16.5:s-3.5,X=x=>(x-x0)*K;
+  const TG=60,PT=60,A=140,B=290,PB=370,H=434;
+  const zeroPos=ins?s+INSIDE_OFFSET/10:s;
+  const pl=`fill="var(--plastic)" stroke="var(--plastic-edge)" stroke-width="1.5"`;
+  let o=`<svg viewBox="${ins?`0 ${TG} ${W} ${H-TG}`:`0 0 ${W} ${PB+8}`}" role="img" aria-label="Magnified vernier and main scales">`;
+  o+=`<rect x="0" y="0" width="${W}" height="${H}" fill="var(--bench)"/>`;
+  o+=`<rect x="${X(-6)}" y="${A}" width="${111*K}" height="${B-A}" ${pl}/>`;
+  o+=`<rect x="${X(s)}" y="${B}" width="${45*K}" height="${PB-B}" rx="10" ${pl}/>`;
+  o+=`<rect x="${X(s-3)}" y="${PT}" width="${28*K}" height="${A-PT}" rx="10" ${pl}/>`;
+  /* main scale, top and bottom rows share the numbers */
+  for(let d=Math.max(0,Math.floor(x0)-1);d<=Math.min(105,Math.ceil(x0+span)+1);d++){
+    const L=tickLen(d,22,34,48),w=d%10===0?2.6:(d%5===0?2:1.6),x=X(d);
+    o+=ln(x,A,x,A+L,w)+ln(x,B,x,B-L,w);
+    if(d%10===0&&x>-20&&x<W+20) o+=`<text class="t" x="${x}" y="${(A+B)/2+9}" font-size="25" text-anchor="middle">${d}</text>`;
+  }
+  if(X(5)>10&&X(5)<W-30) o+=`<text class="t" x="${X(5)}" y="${(A+B)/2+9}" font-size="22" text-anchor="middle">mm</text>`;
+  /* verniers: 10 divisions spaced 1.9 mm apart */
+  const labs={0:'0',5:'.5',10:'1.0'};
+  for(let k=0;k<=10;k++){
+    const L=k%5===0?32:20,w=k%5===0?2.4:1.8;
+    const xt=X(s+1.9*k),xb=X(s+INSIDE_OFFSET/10+1.9*k);
+    o+=ln(xt,A,xt,A-L,w)+ln(xb,B,xb,B+L,w);
+    if(labs[k]!==undefined){
+      o+=`<text class="t" x="${xt}" y="${A-44}" font-size="23" text-anchor="middle">${labs[k]}</text>`;
+      o+=`<text class="t" x="${xb}" y="${B+58}" font-size="23" text-anchor="middle">${labs[k]}</text>`;
+    }
+  }
+  o+=`<text class="t" x="${X(s+20.6)}" y="${A-44}" font-size="17" font-weight="700">OUTSIDE</text>`;
+  o+=`<text class="t" x="${X(s+INSIDE_OFFSET/10-1.1)}" y="${B+58}" font-size="17" font-weight="700" text-anchor="end">INSIDE</text>`;
+  if(explain){
+    const m=Math.floor(t.v10/10),k=t.v10%10,zx=X(zeroPos),ax=X(zeroPos+1.9*k),mx=X(m),bx=X(m+2*k);
+    const mark=(x,yv,ym,col,w)=>ins
+      ? ln(x,B+yv,x,B,w,'',` stroke="var(${col})"`)+ln(x,B,x,B-ym,w,'',` stroke="var(${col})"`)
+      : ln(x,A-yv,x,A,w,'',` stroke="var(${col})"`)+ln(x,A,x,A+ym,w,'',` stroke="var(${col})"`);
+    /* zero line and the main line it has passed */
+    o+=mark(mx,0,54,'--mark-a',5)+mark(zx,34,0,'--mark-a',5);
+    /* aligned vernier line and the main line it sits on */
+    const by=ins?B-56:A-36,bh=92;
+    o+=`<rect x="${ax-8}" y="${by}" width="16" height="${bh}" rx="4" fill="var(--mark-b)" opacity=".28"/>`;
+    o+=mark(bx,0,54,'--mark-b',5)+mark(ax,34,0,'--mark-b',5);
+    const pill=(txt,cx,y,col,on)=>{const w=txt.length*8.8+26,x=Math.min(W-w-4,Math.max(4,cx-w/2));
+      return `<g><rect x="${x}" y="${y}" width="${w}" height="24" rx="12" fill="var(${col})"/><text x="${x+w/2}" y="${y+17}" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial,sans-serif" style="fill:var(${on})">${txt}</text></g>`;};
+    const aTxt=`Zero line is just past ${m} mm`, bTxt=`Line ${k} matches: +0.${k} mm`;
+    const ay=ins?PB+30:4, by2=ins?PB+4:30, edge=ins?PB:PT;
+    o+=ln(zx,edge,zx,ins?ay:ay+24,2,'',' stroke="var(--mark-a)"')+ln(ax,edge,ax,ins?by2:by2+24,2,'',' stroke="var(--mark-b)"');
+    o+=pill(aTxt,zx,ay,'--mark-a','--on-a')+pill(bTxt,ax,by2,'--mark-b','--on-b');
+  }
+  return o+`</svg>`;
+}
+/* ---------- app logic ---------- */
+const $=id=>document.getElementById(id);
+const st={task:null,tries:0,counted:false,explain:false,ok:0,total:0,streak:0,last:null};
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+
+function newTask(){
+  const mode=document.querySelector('input[name=mode]:checked').value;
+  const kind=mode==='mix'?(Math.random()<.5?'out':'in'):mode;
+  const list=kind==='in'?INSIDE:OUTSIDE;
+  let def;do{def=list[rnd(0,list.length-1)];}while(list.length>1&&st.last===def.id);
+  st.last=def.id;
+  const v10=rnd(def.min,def.max);
+  st.task={kind,def,v10,s10:kind==='in'?v10-INSIDE_OFFSET:v10};
+  st.tries=0;st.counted=false;st.explain=false;
+  $('tag').textContent=kind==='in'?'Inside jaws':'Outside jaws';
+  $('prompt').textContent=`Measure the ${def.what} of the ${def.name}.`;
+  $('answer').value='';$('feedback').innerHTML='';
+  $('explainBtn').hidden=true;$('explain').hidden=true;
+  render();$('answer').focus({preventScroll:true});
+}
+function render(){
+  $('overview').innerHTML=drawOverview(st.task);
+  $('mag').innerHTML=drawMag(st.task,st.explain);
+  $('explainBtn').textContent=st.explain?'Hide explanation':'Show explanation';
+}
+function scoreUI(){
+  $('sc-ok').textContent=`${st.ok} / ${st.total}`;$('sc-streak').textContent=st.streak;
+}
+function judge(ans,t){
+  const v=t.v10/10,diff=ans-v,ad=Math.abs(diff),E=0.0501,ins=t.kind==='in';
+  if(ad<=E) return {c:'good',h:`<b>Correct.</b> ${fmt(t.v10)} mm${st.tries>1?` (on try ${st.tries})`:''}.`};
+  if(ins&&Math.abs(ans-(v-INSIDE_OFFSET/10))<=E) return {c:'bad',h:`<b>Not quite.</b> That number comes from the OUTSIDE (top) scale. This object needs the INSIDE (bottom) scale.`};
+  if(!ins&&Math.abs(ans-(v+INSIDE_OFFSET/10))<=E) return {c:'bad',h:`<b>Not quite.</b> That number comes from the INSIDE (bottom) scale. This object needs the OUTSIDE (top) scale.`};
+  if(ad<=0.1501) return {c:'near',h:`<b>Very close.</b> You are within 0.2 mm. Recheck which vernier line lines up exactly with a main-scale line.`};
+  const a10=Math.round(ans*10),dig=n=>((n%10)+10)%10;
+  if(Math.floor(a10/10)===Math.floor(t.v10/10)) return {c:'near',h:`<b>Whole millimetres match.</b> The tenths digit is off. Recheck the vernier line.`};
+  if(dig(a10)===dig(t.v10)) return {c:'near',h:`<b>Tenths digit matches.</b> The whole-millimetre number is off. Recheck which main-scale line the vernier 0 has passed.`};
+  return {c:'bad',h:`<b>Not quite.</b> Check which scale you are reading, then find the main-scale line just left of the vernier 0 and the vernier line that lines up.`};
+}
+function submit(e){
+  e.preventDefault();
+  const raw=$('answer').value.trim().replace(',','.').replace(/mm$/i,'').trim();
+  const ans=parseFloat(raw);
+  if(raw===''||!isFinite(ans)){$('feedback').innerHTML=`<div class="fb bad">Enter a number in millimetres, for example 14.6.</div>`;return;}
+  st.tries++;
+  const r=judge(ans,st.task);
+  if(!st.counted){st.counted=true;st.total++;if(r.c==='good'){st.ok++;st.streak++;}else st.streak=0;scoreUI();}
+  $('feedback').innerHTML=`<div class="fb ${r.c}">${r.h}</div>`;
+  $('explainBtn').hidden=false;
+  if(r.c!=='good'){$('answer').select();}
+}
+function explainHTML(t){
+  const v=t.v10,m=Math.floor(v/10),k=v%10,ins=t.kind==='in',row=ins?'INSIDE (bottom)':'OUTSIDE (top)';
+  const slip=ins?`If you used the top OUTSIDE scale by mistake you would read ${fmt(v-INSIDE_OFFSET)} mm, which is 20.0 mm too small.`
+                :`If you used the bottom INSIDE scale by mistake you would read ${fmt(v+INSIDE_OFFSET)} mm, which is 20.0 mm too large.`;
+  const what=ins?`You are measuring the ${t.def.what} of the ${t.def.name}. The small step-shaped inside jaws push outward against the walls, so use the ${row} scales.`
+                :`You are measuring the ${t.def.what} of the ${t.def.name} between the large jaws, so use the ${row} scales.`;
+  const match=k===0
+    ?`No other vernier line fits better than the 0 line, so the tenths digit is 0. The 10 line also lines up. That is normal when the reading is a whole number of millimetres.`
+    :`Scan along the vernier for the line that sits exactly on a main-scale line. Here it is line ${k} (${k} lines to the right of the 0 line${k===5?', the one labelled .5':''}). It lines up with the ${m+2*k} mm line. The lines on either side miss by about 0.1 mm in opposite directions. Line ${k} means ${k} tenths, so 0.${k} mm.`;
+  return `<h2>Explanation for this ${t.def.name}</h2>
+  <p class="result">${fmt(v)} mm</p>
+  <ol class="steps">
+   <li><strong>Pick the scale.</strong> ${what}</li>
+   <li><strong>Whole millimetres.</strong> <span class="sw a"></span>Find the vernier 0 line on the ${row} scale. It sits just past the ${m} mm line and before the ${m+1} mm line. Read ${m} mm, even if the 0 line looks close to the next line.</li>
+   <li><strong>Tenths of a millimetre.</strong> <span class="sw b"></span>${match}</li>
+   <li><strong>Add them.</strong> ${m} mm + 0.${k} mm = ${fmt(v)} mm.</li>
+   <li><strong>Why this works.</strong> Each vernier division is 1.9 mm, which is 0.1 mm short of two main-scale divisions. Moving one vernier line to the right shifts the alignment by 0.1 mm, so the line that matches counts the tenths.</li>
+   <li><strong>Common slip.</strong> ${slip} Look straight at the scale so the lines are not shifted by viewing angle.</li>
+  </ol>`;
+}
+function toggleExplain(){
+  st.explain=!st.explain;
+  const box=$('explain');
+  if(st.explain){box.innerHTML=explainHTML(st.task);box.hidden=false;}else box.hidden=true;
+  render();
+}
+$('form').addEventListener('submit',submit);
+$('next').addEventListener('click',newTask);
+$('explainBtn').addEventListener('click',toggleExplain);
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',newTask));
+scoreUI();newTask();
+})();
+</script>
+
+</body></html>
