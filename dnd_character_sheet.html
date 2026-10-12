@@ -675,12 +675,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
  function safeName(){
   var n=(document.querySelector('[data-f="char_name"]').value||'').trim();
   n=n.replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_').slice(0,60);
-  return (n||'character')+'.dndsheet.json';
+  return n||'character';
  }
+ // saved-file name carries today's date from the computer's clock, as YYMMDD
+ function stamp(){
+  var d=new Date();
+  function p(v){return (v<10?'0':'')+v;}
+  return p(d.getFullYear()%100)+p(d.getMonth()+1)+p(d.getDate());
+ }
+ function saveName(){return safeName()+'_'+stamp()+'.dndsheet.json';}
  document.getElementById('btn-save').addEventListener('click',function(){
   var data={app:APP,version:VER,savedAt:new Date().toISOString(),fields:collect(),images:imgs,layout:{lists:getOrders()}};
   var blob=new Blob([JSON.stringify(data)],{type:'application/json'});
-  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=safeName();
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=saveName();
   document.body.appendChild(a); a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
   dirty=false; setStatus('Saved '+a.download,'ok');
@@ -919,7 +926,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   });
   Promise.all(jobs).then(function(){
    var pdf=new window.jspdf.jsPDF({unit:'pt',format:'letter',orientation:'portrait',compress:true});
-   var name=safeName().replace(/\.dndsheet\.json$/,'');
+   var name=safeName();
    pdf.setProperties({title:name+' - Character Sheet'});
    var overflow=buildPdf(pdf,pages);
    pdf.save(name+'.pdf');
