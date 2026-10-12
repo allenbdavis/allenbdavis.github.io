@@ -1,0 +1,219 @@
+<!DOCTYPE HTML>
+<!--
+	Spectral by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Allen B. Davis - Classroom Resources</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<style>
+			.resource-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+				gap: 2em;
+				margin: 2em 0 1em 0;
+			}
+			.resource-card {
+				display: flex;
+				flex-direction: column;
+				border: solid 1px rgba(160, 160, 160, 0.3);
+				border-radius: 0.375em;
+				overflow: hidden;
+				text-decoration: none;
+				border-bottom: solid 1px rgba(160, 160, 160, 0.3);
+				color: inherit;
+				background: rgba(255, 255, 255, 0.03);
+				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			}
+			.resource-card:hover {
+				transform: translateY(-4px);
+				box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+				color: inherit;
+			}
+			.resource-thumb {
+				position: relative;
+				width: 100%;
+				aspect-ratio: 16 / 10;
+				background: linear-gradient(135deg, #2e3842, #5a6b7b);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				overflow: hidden;
+			}
+			.resource-thumb span {
+				color: rgba(255, 255, 255, 0.85);
+				font-size: 1.1em;
+				font-weight: 600;
+				text-align: center;
+				padding: 0 1em;
+			}
+			.resource-thumb img {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				display: block;
+			}
+			.resource-body {
+				padding: 1.25em 1.5em 1.5em 1.5em;
+			}
+			.resource-body h3 {
+				margin: 0 0 0.5em 0;
+			}
+			.resource-body p {
+				margin: 0;
+				font-size: 0.95em;
+			}
+		</style>
+	</head>
+	<body class="is-preload">
+
+		<!-- Page Wrapper -->
+			<div id="page-wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<h1><a href="index.html">Allen B. Davis</a></h1>
+						<nav id="nav">
+							<ul>
+								<li class="special">
+									<a href="#menu" class="menuToggle"><span>Menu</span></a>
+									<div id="menu">
+									<ul>
+											<li><a href="index.html">Home</a></li>
+											<li><a href="teaching.html">Teaching</a></li>
+											<li><a href="resources.html">Resources</a></li>
+											<li><a href="eclipse.html">Eclipses</a></li>
+										<li><a href="exoplanets.html">Exoplanets</a></li>
+										</ul>
+								</div>
+								</li>
+							</ul>
+						</nav>
+					</header>
+
+				<!-- Main -->
+					<article id="main">
+						<header style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('images/allen_prism.jpg'); background-size: cover; background-position: center center; background-attachment: fixed;">
+							<h2>Classroom Resources</h2>
+						</header>
+						<section class="wrapper style5">
+							<div class="inner">
+
+								<p>These are interactive tools I have built for my physics classes. They run right in your browser, so there is nothing to install. Click a card to open a tool.</p>
+
+								<div class="resource-grid">
+
+									<a class="resource-card" href="battle_dice.html">
+										<div class="resource-thumb">
+											<span>Battle Dice</span>
+											<img src="images/thumb_battle_dice.png" alt="Screenshot of the Battle Dice game." onerror="this.style.display='none'" />
+										</div>
+										<div class="resource-body">
+											<h3>Battle Dice</h3>
+											<p>A two-player dice game for exploring probability. Choose a dice collection, roll against an opponent, and use the analysis mode to see how the odds play out.</p>
+										</div>
+									</a>
+
+									<a class="resource-card" href="group-sorter.html">
+										<div class="resource-thumb">
+											<span>Group Sorter</span>
+											<img src="images/thumb_group_sorter.png" alt="Screenshot of the Group Sorter simulation." onerror="this.style.display='none'" />
+										</div>
+										<div class="resource-body">
+											<h3>Group Sorter</h3>
+											<p>Balls bounce around a chamber and funnel into two traps, each sized to hold only its share. A physics-based way to split a class into groups at random.</p>
+										</div>
+									</a>
+
+									<a class="resource-card" href="physh_bowl.html">
+										<div class="resource-thumb">
+											<span>Physh Bowl</span>
+											<img src="images/thumb_physh_bowl.png" alt="Screenshot of the Physh Bowl timer." onerror="this.style.display='none'" />
+										</div>
+										<div class="resource-body">
+											<h3>Physh Bowl</h3>
+											<p>A countdown timer for our IB Physics review game. Set the duration, start the clock, and add extra seconds on the fly.</p>
+										</div>
+									</a>
+
+									<a class="resource-card" href="vernier.html">
+										<div class="resource-thumb">
+											<span>Vernier Caliper</span>
+											<img src="images/thumb_vernier.png" alt="Screenshot of the Vernier Caliper tool." onerror="this.style.display='none'" />
+										</div>
+										<div class="resource-body">
+											<h3>Vernier Caliper</h3>
+											<p>Practice reading a vernier caliper. Read the 0.1 mm scale, enter the measurement in millimetres, and get an explanation of each answer.</p>
+										</div>
+									</a>
+
+									<a class="resource-card" href="tess.html">
+										<div class="resource-thumb">
+											<span>TESS Explorer</span>
+											<img src="images/thumb_tess.png" alt="Screenshot of the TESS Explorer planet-hunting simulation." onerror="this.style.display='none'" />
+										</div>
+										<div class="resource-body">
+											<h3>TESS Explorer</h3>
+											<p>Hunt for planets like a NASA scientist. Click a star to view its light curve, refine the orbital period, check odd and even transits, and flag the stars that host planets.</p>
+										</div>
+									</a>
+
+									<a class="resource-card" href="test_timer.html">
+										<div class="resource-thumb">
+											<span>Test Timer</span>
+											<img src="images/thumb_timer.png" alt="Screenshot of the Test Timer." onerror="this.style.display='none'" />
+										</div>
+										<div class="resource-body">
+											<h3>Test Timer</h3>
+											<p>Project one large timer for each group during a test. Set the test length and optional reading time, add +25% or +50% timers for students with extra time, and watch each bar run out on the same scale.</p>
+										</div>
+									</a>
+
+									<a class="resource-card" href="unit_conversion.html">
+										<div class="resource-thumb">
+											<span>Unit Conversion</span>
+											<img src="images/thumb_unit_conversion.png" alt="Screenshot of the Unit Conversion Practice tool." onerror="this.style.display='none'" />
+										</div>
+										<div class="resource-body">
+											<h3>Unit Conversion</h3>
+											<p>Practice converting units by multiplying by fractions that equal 1. Choose from four difficulty levels, from single metric prefixes to compound units, get worked solutions, and print a worksheet with an answer key.</p>
+										</div>
+									</a>
+
+								</div>
+
+							</div>
+						</section>
+					</article>
+
+				<!-- Footer -->
+					<footer id="footer">
+						<ul class="icons">
+							<li><a href="mailto:allen.b.davis@gmail.com" class="icon solid fa-envelope"><span class="label">Email</span></a></li>
+						</ul>
+						<ul class="copyright">
+							<li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+						</ul>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>

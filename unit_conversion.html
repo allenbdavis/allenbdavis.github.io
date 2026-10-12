@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit Conversion Practice</title>
+<style>
+:root{
+  --bg:#f4f7f2; --card:#ffffff; --ink:#1c2a1f; --muted:#5a6b5d; --line:#d6e0d2;
+  --brand:#3d8b37; --brand-d:#2b6428; --brand-l:#e8f3e5; --brand-ll:#f3f9f1;
+  --ok:#16703a; --ok-bg:#e4f5ea; --bad:#a8221b; --bad-bg:#fdecea; --warn:#7d5200; --warn-bg:#fff3d6; --info-bg:#e9f0fb; --info:#23467d;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+.hero{background:linear-gradient(135deg,var(--brand-d),var(--brand));color:#fff;padding:1.3rem 1rem 1.2rem}
+.hero-in{max-width:980px;margin:0 auto;display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;align-items:center;justify-content:space-between}
+.hero h1{margin:0;font-size:1.65rem;letter-spacing:.2px}
+.hero p{margin:.2rem 0 0;opacity:.92;max-width:42rem}
+.wrap{max-width:980px;margin:0 auto;padding:1rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;margin:0 0 1rem;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card>h2,.card>summary{font-size:1.1rem;margin:0 0 .6rem;font-weight:650}
+details.card>summary{cursor:pointer;margin:0;padding:.1rem 0;list-style-position:inside}
+details.card[open]>summary{margin-bottom:.7rem}
+button{font:inherit;cursor:pointer}
+.btn{border:1.5px solid var(--brand);background:#fff;color:var(--brand-d);padding:.5rem .95rem;border-radius:9px;font-weight:600}
+.btn:hover{background:var(--brand-l)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #ffbf47;outline-offset:2px}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.primary:hover{background:var(--brand-d)}
+.btn.ghost{border-color:var(--line);color:var(--ink)}
+.btn.light{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.7)}
+.btn.light:hover{background:rgba(255,255,255,.25)}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn.sm{padding:.3rem .65rem;font-size:.9rem}
+
+/* level + settings */
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-weight:650;padding:0;margin-bottom:.45rem}
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.55rem}
+.lvl{position:relative}
+.lvl input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.lvl .body{display:block;border:1.5px solid var(--line);border-radius:10px;padding:.55rem .7rem;height:100%;background:#fff}
+.lvl .body b{display:block}
+.lvl .body span{font-size:.88rem;color:var(--muted)}
+.lvl input:checked + .body{border-color:var(--brand);background:var(--brand-l);box-shadow:inset 0 0 0 1px var(--brand)}
+.lvl input:focus-visible + .body{outline:3px solid #ffbf47;outline-offset:2px}
+.settings{display:grid;gap:.5rem;margin-top:.9rem}
+.opt{display:flex;gap:.6rem;align-items:flex-start}
+.opt input{margin-top:.28rem;width:1.1rem;height:1.1rem;accent-color:var(--brand)}
+.opt small{display:block;color:var(--muted)}
+
+/* tables */
+.ptables{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.9rem}
+.ptable{border-collapse:collapse;width:100%;font-size:.97rem}
+.ptable caption{text-align:left;font-weight:650;color:var(--muted);padding:0 0 .25rem}
+.ptable th{background:var(--brand);color:#fff;padding:.3rem .5rem;text-align:center;font-weight:600}
+.ptable td{padding:.22rem .5rem;text-align:center;border-bottom:1px solid #e3ebe0}
+.ptable tbody tr:nth-child(odd){background:var(--brand-ll)}
+.ptable td.sym{font-family:"Cambria Math","Times New Roman",serif;font-size:1.15rem;font-weight:600}
+.reftime{margin-top:.8rem;display:flex;flex-wrap:wrap;gap:.3rem 1.4rem;font-size:.97rem;background:var(--brand-ll);border:1px solid var(--line);border-radius:9px;padding:.5rem .8rem}
+.cc{color:var(--c);font-weight:700}
+.nostrike .cx::after{display:none}
+
+/* practice */
+.topline{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:space-between;align-items:center;margin-bottom:.4rem}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{background:var(--brand-l);border:1px solid var(--line);border-radius:999px;padding:.12rem .7rem;font-size:.9rem}
+.chip b{font-variant-numeric:tabular-nums}
+.pnum{color:var(--muted);font-weight:600}
+.prompt{font-size:1.35rem;margin:.5rem 0 .3rem}
+.qty,.tgt{font-family:"Cambria Math","Latin Modern Math","STIX Two Math","Times New Roman",serif;background:var(--brand-ll);border:1px solid var(--line);border-radius:8px;padding:.05rem .5rem;white-space:nowrap}
+.names{font-size:.92rem;color:var(--muted);margin:.2rem 0 .6rem}
+.answerrow{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.7rem}
+#answer{flex:1 1 15rem;min-width:0;font-size:1.2rem;padding:.55rem .7rem;border:2px solid #b9c8b5;border-radius:9px;font-family:"Cambria Math","Latin Modern Math","Times New Roman",serif}
+#answer[readonly]{background:#f0f6ee}
+.kbd{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.5rem;font-size:.9rem;color:var(--muted)}
+.kbd button{min-width:2.6rem;padding:.2rem .6rem;border:1.5px solid #b9c8b5;border-radius:7px;background:#fff;font-size:1.15rem;font-family:"Cambria Math","Times New Roman",serif}
+.kbd button:hover{background:var(--brand-l)}
+.help{font-size:.88rem;color:var(--muted);margin:.45rem 0 0}
+.actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem}
+#feedback{margin-top:.8rem}
+.fb{border-radius:9px;padding:.65rem .85rem;border:1px solid}
+.fb ul{margin:.3rem 0 0 1.1rem;padding:0}
+.fb.ok{background:var(--ok-bg);border-color:#9bd3ad;color:#0e4a26}
+.fb.bad{background:var(--bad-bg);border-color:#efb1ac;color:#6d1611}
+.fb.warn{background:var(--warn-bg);border-color:#ecd18d;color:#503400}
+.fb.info{background:var(--info-bg);border-color:#b6c9ea;color:var(--info)}
+
+/* math layout */
+.unit,.u,.eq,.term{font-family:"Cambria Math","Latin Modern Math","STIX Two Math","Times New Roman",serif}
+.u{display:inline-block;position:relative}
+.cx{color:var(--c);font-weight:700}
+.cx::after{content:"";position:absolute;left:-.12em;right:-.12em;top:-.1em;bottom:-.1em;
+  background:linear-gradient(to top right,transparent calc(50% - 1.6px),var(--c) calc(50% - 1.6px),var(--c) calc(50% + 1.6px),transparent calc(50% + 1.6px));
+  pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.dot{margin:0 .12em}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 .1em;line-height:1.3}
+.frac>.top{padding:0 .3em .1em;border-bottom:1.6px solid currentColor;white-space:nowrap}
+.frac>.bot{padding:.1em .3em 0;white-space:nowrap}
+.factor{display:inline-flex;align-items:center}
+.paren{font-size:2.5em;line-height:.8;font-weight:100;transform:scaleX(.75);display:inline-block}
+sup.rep{font-size:.7em;align-self:flex-start;margin-top:-.2em}
+.eq{display:flex;flex-wrap:wrap;align-items:center;gap:.25em .2em;font-size:1.3rem;padding:.35rem 0;line-height:1.2}
+.eq .eqs{margin:0 .35em}
+.eq .res{font-weight:700}
+.sol{margin-top:.8rem;border-top:3px solid var(--brand);padding-top:.7rem}
+.sol h3{margin:.1rem 0 .3rem;font-size:1.15rem}
+.sol h4{margin:1rem 0 .25rem;font-size:1rem;color:var(--brand-d)}
+.sol ol.plan{padding-left:1.3rem;margin:.3rem 0}
+.sol ol.plan li{margin:.4rem 0}
+.sol .scroll{overflow-x:auto;padding-bottom:.2rem}
+.sol .note{font-size:.92rem;color:var(--muted)}
+.sol .final{font-size:1.2rem;font-weight:650}
+.legend{display:inline-block;font-size:.88rem;color:var(--muted)}
+
+/* worksheet */
+.wsform{display:flex;flex-wrap:wrap;gap:.8rem 1.2rem;align-items:flex-end}
+.wsform label{display:block;font-size:.92rem;font-weight:600}
+.wsform select{font:inherit;padding:.35rem .5rem;border-radius:7px;border:1.5px solid #b9c8b5;display:block;margin-top:.15rem}
+.wsform .chk{display:flex;gap:.4rem;align-items:center;font-weight:500}
+#worksheet-view{display:none}
+body.ws-mode #app{display:none}
+body.ws-mode #worksheet-view{display:block}
+.ws-bar{max-width:980px;margin:0 auto;padding:.8rem 1rem;display:flex;gap:.5rem;flex-wrap:wrap}
+.ws-page{max-width:820px;margin:0 auto 2rem;background:#fff;border:1px solid var(--line);padding:1.6rem 1.8rem}
+.ws-page h2{margin:0 0 .2rem}
+.ws-meta{display:flex;justify-content:space-between;gap:1rem;margin:.6rem 0 .8rem}
+.ws-meta span{flex:1;border-bottom:1.5px solid #333;padding-bottom:.1rem}
+.ws-inst{font-size:.95rem;margin:.2rem 0 .9rem}
+ol.ws-list{padding-left:1.4rem;margin:0}
+.ws-item{margin:0 0 .4rem;padding:.35rem 0 .2rem;min-height:5.2rem;break-inside:avoid}
+.ws-q{font-size:1.1rem}
+.ws-ans{margin-top:2.1rem;font-size:.95rem}
+.ws-ans i{display:inline-block;border-bottom:1.3px solid #333;width:16rem;vertical-align:bottom;margin-left:.3rem}
+.key-item{margin:.3rem 0 .8rem;break-inside:avoid}
+.key-item .sol{border-top:1px solid #bbb}
+.ws-refs{margin:.8rem 0 1rem}
+
+@media (max-width:560px){
+  .hero h1{font-size:1.35rem}
+  .prompt{font-size:1.15rem}
+  .eq{font-size:1.1rem}
+  .ws-page{padding:1rem}
+}
+@media print{
+  body{background:#fff}
+  .hero,.ws-bar,.no-print{display:none!important}
+  .ws-page{border:0;padding:0;margin:0 auto;max-width:none}
+  .page-break{break-before:page}
+  .ptable th{background:#ddd!important;color:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="hero">
+    <div class="hero-in">
+      <div>
+        <h1>Unit Conversion Practice</h1>
+        <p>Start with the given quantity, then multiply by fractions that equal 1. Each fraction cancels the units you have and brings in the units you want.</p>
+      </div>
+      <button class="btn light" id="wsJump" type="button">Make a printable worksheet</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card" aria-labelledby="lvlLegend">
+      <fieldset>
+        <legend id="lvlLegend">Difficulty</legend>
+        <div class="levels" id="levels">
+          <label class="lvl"><input type="radio" name="level" value="1" checked><span class="body"><b>Level 1</b><span>One step: a single prefix, or one neighboring time unit</span></span></label>
+          <label class="lvl"><input type="radio" name="level" value="2"><span class="body"><b>Level 2</b><span>Prefix to prefix, and multi-step time conversions</span></span></label>
+          <label class="lvl"><input type="radio" name="level" value="3"><span class="body"><b>Level 3</b><span>Compound units, like m/s and kg·m/s², including time</span></span></label>
+          <label class="lvl"><input type="radio" name="level" value="4"><span class="body"><b>Level 4</b><span>Powers (m³, cm²) and unfamiliar units (Jy, b, Gy, …)</span></span></label>
+        </div>
+      </fieldset>
+      <div class="settings" role="group" aria-label="Answer settings">
+        <label class="opt"><input type="checkbox" id="optSci"><span>Require proper scientific notation<small>One non-zero digit before the decimal point, like 6.023 × 10³. When off, 6023, 6.023e3 and 60.23 × 10² are all accepted.</small></span></label>
+        <label class="opt"><input type="checkbox" id="optSf"><span>Require correct significant figures<small>The answer must have the same number of significant figures as the given quantity. When off, any answer within 1% is accepted.</small></span></label>
+        <label class="opt"><input type="checkbox" id="optUnits" checked><span>Include the unit in the answer<small>Type the number followed by its unit, like 4.5e3 μm. Turn off to check the number only.</small></span></label>
+      </div>
+    </section>
+
+    <details class="card" id="refCard" open>
+      <summary>Metric prefixes and time conversions</summary>
+      <div id="refBody"></div>
+    </details>
+
+    <section class="card" aria-labelledby="pTitle">
+      <div class="topline">
+        <h2 id="pTitle" style="margin:0">Problem <span class="pnum" id="pnum"></span></h2>
+        <div class="chips" aria-label="Score">
+          <span class="chip" title="Problems solved without viewing the worked solution">Score <b id="stScore">0 / 0</b></span>
+          <span class="chip" title="Problems in a row answered correctly on the first try">Streak <b id="stStreak">0</b></span>
+          <span class="chip">Best <b id="stBest">0</b></span>
+          <button class="btn ghost sm" id="resetStats" type="button">Reset</button>
+        </div>
+      </div>
+
+      <p class="prompt" id="prompt"></p>
+      <p class="names" id="names"></p>
+
+      <label for="answer" class="help" style="margin:0;color:var(--ink);font-weight:600">Your answer</label>
+      <div class="answerrow">
+        <input id="answer" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="ansHelp">
+        <button class="btn primary" id="checkBtn" type="button">Check answer</button>
+      </div>
+      <div class="kbd" role="group" aria-label="Special characters">
+        <span>Insert:</span>
+        <button type="button" data-ins="μ" title="Greek letter mu (the micro prefix, 10⁻⁶)" aria-label="Insert Greek letter mu">μ</button>
+        <button type="button" data-ins="×10^" title="Times ten to the power" aria-label="Insert times ten to the power of">×10^</button>
+        <button type="button" data-ins="^" title="Exponent (for units, like m^3 or s^-2)" aria-label="Insert caret for exponent">^</button>
+      </div>
+      <p class="help" id="ansHelp"></p>
+
+      <div id="feedback" role="status" aria-live="polite"></div>
+
+      <div class="actions">
+        <button class="btn" id="solBtn" type="button" aria-expanded="false" aria-controls="solution">Show worked solution</button>
+        <button class="btn ghost" id="nextBtn" type="button">Skip problem</button>
+      </div>
+      <div id="solution" hidden></div>
+    </section>
+
+    <details class="card" id="wsMaker">
+      <summary>Printable worksheet</summary>
+      <p class="help" style="margin-top:0">Generates a set of problems on one page and an answer key on the next. It uses your answer settings above (scientific notation, significant figures, units).</p>
+      <div class="wsform">
+        <label>Number of problems
+          <select id="wsCount"><option>5</option><option>8</option><option selected>10</option><option>12</option><option>15</option><option>20</option></select>
+        </label>
+        <label>Difficulty
+          <select id="wsLevel"><option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option><option value="4">Level 4</option><option value="mixed" selected>Mixed (easy to hard)</option></select>
+        </label>
+        <label class="chk"><input type="checkbox" id="wsTable" checked> Include the prefix table</label>
+        <label class="chk"><input type="checkbox" id="wsSols"> Include worked solutions in the key</label>
+        <button class="btn primary" id="wsGo" type="button">Generate worksheet</button>
+      </div>
+    </details>
+  </main>
+</div>
+
+<div id="worksheet-view">
+  <div class="ws-bar">
+    <button class="btn primary" id="wsPrint" type="button">Print</button>
+    <button class="btn" id="wsAgain" type="button">New set of problems</button>
+    <button class="btn ghost" id="wsBack" type="button">Back to practice</button>
+  </div>
+  <div id="wsBody"></div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Data
+   ===================================================================== */
+const PREFIXES = [
+  ['yotta','Y',24],['zetta','Z',21],['exa','E',18],['peta','P',15],['tera','T',12],['giga','G',9],['mega','M',6],['kilo','k',3],['hecto','h',2],['deka','da',1],
+  ['deci','d',-1],['centi','c',-2],['milli','m',-3],['micro','\u03BC',-6],['nano','n',-9],['pico','p',-12],['femto','f',-15],['atto','a',-18],['zepto','z',-21],['yocto','y',-24]
+].map(([name,sym,exp]) => ({name,sym,exp}));
+const PFX = {}; PREFIXES.forEach(p => { PFX[p.sym] = p; });
+
+const TIME_ORDER = ['yr','day','h','min','s'];
+const TIME_N = [365,24,60,60];            // 1 TIME_ORDER[i] = TIME_N[i] TIME_ORDER[i+1]
+
+const SYMS_COMMON = ['k','c','m','\u03BC','n','M','G'];
+const SYMS_MORE   = ['T','p','h','da','d','f'];
+const SYMS_ALL    = PREFIXES.map(p => p.sym);
+
+const L1_UNITS = ['m','g','s','N','J','W','Hz','A','V','Pa'];
+const L2_UNITS = ['m','g','s','N','J','W','Hz','A','V','Pa','C','mol','K','F'];
+
+/* compound-unit templates: [base unit, exponent]; a negative exponent means the unit is in the denominator */
+const T3 = [
+  [['m',1],['s',-1]], [['m',1],['s',-1]], [['m',1],['s',-2]],
+  [['g',1],['m',1],['s',-2]], [['g',1],['m',1],['s',-1]],
+  [['J',1],['g',-1],['K',-1]], [['W',1],['m',-2]], [['N',1],['m',1]],
+  [['V',1],['m',-1]], [['mol',1],['s',-1]], [['N',1],['m',-2]],
+  [['Hz',1],['s',-1]], [['g',1],['mol',-1]], [['C',1],['g',-1]],
+  [['W',1],['m',-1],['K',-1]], [['g',1],['s',-1]], [['m',2],['s',-1]],
+  [['A',1],['m',-2]], [['J',1],['mol',-1],['K',-1]]
+];
+const T4 = [
+  [['m',3]], [['m',3]], [['m',2]], [['g',1],['m',-3]], [['g',1],['m',-3]],
+  [['Jy',1]], [['Jy',1]], [['b',1]], [['b',1]], [['b',-1]],
+  [['Gy',1],['s',-1]], [['Sv',1],['s',-1]], [['Bq',1],['m',-3]], [['Bq',1],['g',-1]],
+  [['T',1],['s',-1]], [['T',1],['m',2]], [['F',1],['m',-1]], [['J',1],['m',-3]],
+  [['W',1],['m',-2],['Hz',-1]], [['m',3],['s',-1]], [['m',3],['g',-1],['s',-2]],
+  [['g',1],['m',2],['s',-2]], [['mol',1],['m',-3]], [['N',1],['m',2],['g',-2]],
+  [['Pa',1],['s',1]], [['g',1],['m',-1],['s',-1]], [['Wb',1],['m',-1]]
+];
+
+const UNIT_NAMES = {
+  N:'newton', J:'joule', W:'watt', Pa:'pascal', Hz:'hertz', C:'coulomb', V:'volt', A:'ampere', F:'farad', T:'tesla', Wb:'weber',
+  K:'kelvin', mol:'mole', Gy:'gray (a unit of absorbed radiation dose)', Sv:'sievert (a unit of radiation dose equivalent)',
+  Bq:'becquerel (one decay per second)', Jy:'jansky (a unit of radio flux density used in astronomy)',
+  b:'barn (a unit of area used in nuclear and particle physics)'
+};
+
+const PALETTE = ['#d62728','#1f5cff','#11883a','#e07b00','#8e3fb5','#0a8f9c','#c2185b'];
+
+/* =====================================================================
+   Small helpers
+   ===================================================================== */
+function rnd(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function weightedPick(pairs){
+  let t = 0; pairs.forEach(p => { t += p[1]; });
+  let r = Math.random()*t;
+  for (const p of pairs){ r -= p[1]; if (r <= 0) return p[0]; }
+  return pairs[pairs.length-1][0];
+}
+function minus(s){ return String(s).replace('-','\u2212'); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* coefficient: {i: integer part, e: power of ten}  -> i * 10^e */
+const ONE = {i:1,e:0};
+function P10(e){ return {i:1,e}; }
+function INT(n){ return {i:n,e:0}; }
+function coefHTML(c){
+  if (c.e === 0) return String(c.i);
+  return (c.i === 1 ? '' : c.i + ' \u00D7 ') + '10<sup>' + minus(c.e) + '</sup>';
+}
+
+/* =====================================================================
+   Conversion engine
+   ===================================================================== */
+/* A step cancels the unit `cur` (written with coefficient cur.c) and brings in `nw`.
+   cur.c cur.sym  ==  nw.c nw.sym   (e.g. 1 km = 10^3 m, or 1 min = 60 s) */
+function buildSteps(src,tgt){
+  const steps = [];
+  const srcSym = src.p + src.b, tgtSym = tgt.p + tgt.b;
+  if (srcSym === tgtSym) return steps;
+  if (src.p) steps.push({cur:{sym:srcSym,c:ONE}, nw:{sym:src.b,c:P10(PFX[src.p].exp)}});
+  if (src.b !== tgt.b){
+    let i = TIME_ORDER.indexOf(src.b); const j = TIME_ORDER.indexOf(tgt.b);
+    while (i !== j){
+      if (i < j){ steps.push({cur:{sym:TIME_ORDER[i],c:ONE}, nw:{sym:TIME_ORDER[i+1],c:INT(TIME_N[i])}}); i++; }
+      else      { steps.push({cur:{sym:TIME_ORDER[i],c:INT(TIME_N[i-1])}, nw:{sym:TIME_ORDER[i-1],c:ONE}}); i--; }
+    }
+  }
+  if (tgt.p) steps.push({cur:{sym:tgt.b,c:P10(PFX[tgt.p].exp)}, nw:{sym:tgtSym,c:ONE}});
+  return steps;
+}
+function stepValue(s){ return (s.nw.c.i / s.cur.c.i) * Math.pow(10, s.nw.c.e - s.cur.c.e); }
+function mkSlot(src,tgt,exp){
+  const steps = buildSteps(src,tgt);
+  let m = 1; steps.forEach(s => { m *= stepValue(s); });
+  return {src,tgt,exp,steps,m};
+}
+function multiplier(slots){
+  let Ti=1,Te=0,Bi=1,Be=0;
+  slots.forEach(sl => {
+    const n = Math.abs(sl.exp);
+    sl.steps.forEach(st => {
+      const top = sl.exp > 0 ? st.nw.c : st.cur.c;
+      const bot = sl.exp > 0 ? st.cur.c : st.nw.c;
+      for (let r=0;r<n;r++){ Ti*=top.i; Te+=top.e; Bi*=bot.i; Be+=bot.e; }
+    });
+  });
+  return {Ti,Te,Bi,Be};
+}
+
+/* ---------- prefix choice ---------- */
+function okCombo(p,b){
+  if (b === 'Pa' && p === 'P') return false;
+  if (b === 'T' && p === 'T') return false;
+  if (b === 'yr') return p === 'k' || p === 'M' || p === 'G';
+  if (b === 'min' || b === 'h' || b === 'day') return false;
+  return true;
+}
+function pickPrefix(pool,b,not){
+  const opts = pool.filter(p => okCombo(p,b) && p !== not);
+  return pick(opts);
+}
+function prefixPool(level,abs){
+  let pool;
+  if (level <= 1) pool = SYMS_COMMON;
+  else if (level === 2) pool = SYMS_COMMON.concat(SYMS_MORE);
+  else if (level === 3) pool = Math.random() < .85 ? SYMS_COMMON.concat(SYMS_MORE) : SYMS_ALL;
+  else pool = Math.random() < .55 ? SYMS_COMMON.concat(SYMS_MORE) : SYMS_ALL;
+  if (abs >= 3) pool = pool.filter(s => Math.abs(PFX[s].exp) <= 9);
+  return pool;
+}
+
+/* ---------- Level 1 & 2: single quantity ---------- */
+function genSingle(level){
+  const r = Math.random();
+  if (level === 1){
+    if (r < .6){
+      const b = pick(L1_UNITS), p = pickPrefix(SYMS_COMMON,b);
+      const a = {p,b}, z = {p:'',b};
+      return Math.random() < .5 ? [mkSlot(a,z,1)] : [mkSlot(z,a,1)];
+    }
+    const i = rnd(0,3);
+    const A = {p:'',b:TIME_ORDER[i]}, B = {p:'',b:TIME_ORDER[i+1]};
+    return Math.random() < .5 ? [mkSlot(A,B,1)] : [mkSlot(B,A,1)];
+  }
+  if (r < .6){
+    const b = pick(L2_UNITS), pool = SYMS_COMMON.concat(SYMS_MORE);
+    const p1 = pickPrefix(pool,b), p2 = pickPrefix(pool,b,p1);
+    return [mkSlot({p:p1,b},{p:p2,b},1)];
+  }
+  if (r < .88){
+    let i = rnd(0,4), j = rnd(0,4);
+    while (Math.abs(i-j) < 2){ i = rnd(0,4); j = rnd(0,4); }
+    return [mkSlot({p:'',b:TIME_ORDER[i]},{p:'',b:TIME_ORDER[j]},1)];
+  }
+  const opts = [
+    () => [mkSlot({p:pick(['m','\u03BC','n','k']),b:'s'},{p:'',b:pick(['min','h'])},1)],
+    () => [mkSlot({p:'',b:pick(['min','h','day'])},{p:pick(['m','\u03BC','n','k']),b:'s'},1)],
+    () => [mkSlot({p:pick(['k','M','G']),b:'yr'},{p:'',b:pick(['day','h'])},1)],
+    () => [mkSlot({p:'',b:pick(['day','h'])},{p:pick(['k','M','G']),b:'yr'},1)]
+  ];
+  return pick(opts)();
+}
+
+/* ---------- Level 3 & 4: compound units ---------- */
+function pickTimeBase(){ return weightedPick([['s',3],['min',2],['h',3],['day',1],['yr',.5]]); }
+function makeTimeSlot(exp){
+  const a = pickTimeBase(); let b = pickTimeBase(), tries = 0;
+  while (a === b && tries++ < 20) b = pickTimeBase();
+  const A = {p:'',b:a}, B = {p:'',b:b};
+  if (a === 's' && Math.random() < .3) A.p = pickPrefix(['m','\u03BC','n','k','M'],'s');
+  if (b === 's' && Math.random() < .3) B.p = pickPrefix(['m','\u03BC','n','k','M'],'s',A.p);
+  return mkSlot(A,B,exp);
+}
+function makeSlot(b,e,level){
+  const abs = Math.abs(e);
+  if (b === 's' && Math.random() < .65) return makeTimeSlot(e);
+  const pool = prefixPool(level,abs);
+  if (Math.random() < .22){
+    const p = Math.random() < .5 ? pickPrefix(pool,b) : '';
+    const n = {p,b};
+    return mkSlot(n,n,e);
+  }
+  const p1 = Math.random() < .75 ? pickPrefix(pool,b) : '';
+  let p2 = Math.random() < .75 ? pickPrefix(pool,b,p1) : '';
+  if (p1 === p2) p2 = (p1 === '') ? pickPrefix(pool,b) : '';
+  return mkSlot({p:p1,b},{p:p2,b},e);
+}
+function genCompound(level){
+  const list = level === 3 ? T3 : T4;
+  for (let k=0;k<100;k++){
+    const t = pick(list);
+    const slots = t.map(([b,e]) => makeSlot(b,e,level));
+    if (slots.some(s => s.steps.length)) return slots;
+  }
+  return [mkSlot({p:'k',b:'m'},{p:'',b:'m'},1)];
+}
+
+/* ---------- the given quantity ---------- */
+function genValue(level){
+  const N = pick(level === 1 ? [2,3] : [2,3,3,4]);
+  const d = [rnd(1,9)];
+  for (let i=1;i<N-1;i++) d.push(rnd(0,9));
+  d.push(rnd(1,9));                         // last digit is never 0, so the sig-fig count is unambiguous
+  const D = d.join('');
+  const mant = D[0] + '.' + D.slice(1);
+  const sciDisp = level >= 3 && Math.random() < .18;
+  let p;
+  if (sciDisp) p = Math.random() < .5 ? rnd(N,7) : -rnd(4,7);
+  else p = rnd(-3, N-1);
+  const x = parseFloat(mant + 'e' + p);
+  let html, text;
+  if (sciDisp){
+    html = mant + ' \u00D7 10<sup>' + minus(p) + '</sup>';
+    text = mant + ' \u00D7 10^' + p;
+  } else {
+    let s;
+    if (p >= 0){ const ip = D.slice(0,p+1), fp = D.slice(p+1); s = ip + (fp ? '.' + fp : ''); }
+    else s = '0.' + '0'.repeat(-p-1) + D;
+    html = text = s;
+  }
+  return {x,N,mant,p,html,text};
+}
+
+function makeProblem(level){
+  for (;;){
+    const slots = level <= 2 ? genSingle(level) : genCompound(level);
+    const mult = multiplier(slots);
+    const lm = Math.log10(mult.Ti/mult.Bi) + (mult.Te - mult.Be);
+    if (Math.abs(lm) > 27) continue;
+    const g = genValue(level);
+    const c = g.x * mult.Ti / mult.Bi * Math.pow(10, mult.Te - mult.Be);
+    if (!(Math.abs(Math.log10(c)) <= 30)) continue;
+    return {
+      level, slots, mult, c,
+      x:g.x, N:g.N, xHTML:g.html, xText:g.text,
+      srcParts: slots.map(s => ({sym:s.src.p + s.src.b, exp:s.exp})),
+      tgtParts: slots.map(s => ({sym:s.tgt.p + s.tgt.b, exp:s.exp}))
+    };
+  }
+}
+
+/* =====================================================================
+   Formatting
+   ===================================================================== */
+function unitHTML(parts){
+  const num = parts.filter(p => p.exp > 0), den = parts.filter(p => p.exp < 0);
+  const f = p => p.sym + (Math.abs(p.exp) > 1 ? '<sup>' + Math.abs(p.exp) + '</sup>' : '');
+  const join = a => a.map(f).join('<span class="dot">\u00B7</span>');
+  let h = num.length ? join(num) : '1';
+  if (den.length) h += '/' + (den.length > 1 ? '(' + join(den) + ')' : join(den));
+  return '<span class="unit">' + h + '</span>';
+}
+function sciParts(v){
+  const t = v.toExponential(11).split('e');
+  return {m:t[0].replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,''), e:parseInt(t[1],10)};
+}
+function sciHTML(m,e){ return e === 0 ? m : m + ' \u00D7 10<sup>' + minus(e) + '</sup>'; }
+/* the correct answer, formatted for display */
+function answerParts(prob,st){
+  if (st && st.sf){
+    const t = prob.c.toExponential(prob.N-1).split('e');
+    return {m:t[0], e:parseInt(t[1],10), approx:false};
+  }
+  const sp = sciParts(prob.c);
+  if (sp.m.replace('.','').length > 9){
+    const t = prob.c.toExponential(5).split('e');
+    return {m:t[0].replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,''), e:parseInt(t[1],10), approx:true};
+  }
+  return {m:sp.m, e:sp.e, approx:false};
+}
+function answerHTML(prob,st){
+  const a = answerParts(prob,st);
+  return (a.approx ? '\u2248 ' : '') + sciHTML(a.m,a.e);
+}
+function namesNote(prob){
+  const seen = [];
+  prob.slots.forEach(s => { const b = s.src.b; if (UNIT_NAMES[b] && !seen.includes(b)) seen.push(b); });
+  if (!seen.length) return '';
+  return 'Unit names: ' + seen.map(b => '<b>' + b + '</b> = ' + UNIT_NAMES[b]).join('; ') + '.';
+}
+function promptHTML(prob){
+  return 'Convert <span class="qty">' + prob.xHTML + ' ' + unitHTML(prob.srcParts) + '</span> to <span class="tgt">' + unitHTML(prob.tgtParts) + '</span>.';
+}
+function prefixTablesHTML(){
+  const mk = (arr,cap) => '<table class="ptable"><caption>' + cap + '</caption><thead><tr><th scope="col">Factor</th><th scope="col">Name</th><th scope="col">Symbol</th></tr></thead><tbody>' +
+    arr.map(p => '<tr><td>10<sup>' + minus(p.exp) + '</sup></td><td>' + p.name + '</td><td class="sym">' + p.sym + '</td></tr>').join('') + '</tbody></table>';
+  return '<div class="ptables">' + mk(PREFIXES.filter(p => p.exp > 0),'Larger than 1') + mk(PREFIXES.filter(p => p.exp < 0),'Smaller than 1') + '</div>';
+}
+function timeBoxHTML(){
+  return '<div class="reftime"><b>Time:</b> <span>1 min = 60 s</span> <span>1 h = 60 min</span> <span>1 day = 24 h</span> <span>1 yr = 365 day</span></div>';
+}
+
+/* =====================================================================
+   Worked solution
+   ===================================================================== */
+function buildModel(prob){
+  let ci = 0; const reps = [];
+  const states = prob.slots.map(slot => {
+    const n = Math.abs(slot.exp), start = [];
+    for (let k=0;k<n;k++) start.push({sym:slot.src.p + slot.src.b, color:null, struck:false});
+    return {slot, n, start, current:start};
+  });
+  states.forEach((st,si) => {
+    st.slot.steps.forEach(step => {
+      const color = PALETTE[ci++ % PALETTE.length];
+      const inst = [], next = [];
+      for (let r=0;r<st.n;r++){
+        const target = st.current[r]; target.color = color; target.struck = true;
+        const cur = {sym:step.cur.sym, c:step.cur.c, color, struck:true};
+        const nw  = {sym:step.nw.sym,  c:step.nw.c,  color:null, struck:false};
+        inst.push({cur,nw}); next.push(nw);
+      }
+      reps.push({si, step, color, exp:st.slot.exp, n:st.n, inst});
+      st.current = next;
+    });
+  });
+  return {states, reps};
+}
+function tokHTML(t,sup){
+  const inner = t.sym + (sup > 1 ? '<sup>' + sup + '</sup>' : '');
+  return t.struck ? '<span class="u cx" style="--c:' + t.color + '">' + inner + '</span>' : '<span class="u">' + inner + '</span>';
+}
+function termHTML(t,sup){ return '<span class="term">' + coefHTML(t.c) + '&thinsp;' + tokHTML(t,sup) + '</span>'; }
+function fracHTML(top,bot){ return '<span class="frac"><span class="top">' + top + '</span><span class="bot">' + bot + '</span></span>'; }
+function oneFactorHTML(rep,inst,pow){
+  const top = rep.exp > 0 ? termHTML(inst.nw) : termHTML(inst.cur);
+  const bot = rep.exp > 0 ? termHTML(inst.cur) : termHTML(inst.nw);
+  return '<span class="factor"><span class="paren">(</span>' + fracHTML(top,bot) + '<span class="paren">)</span>' +
+         (pow > 1 ? '<sup class="rep">' + pow + '</sup>' : '') + '</span>';
+}
+function startHTML(model,compact){
+  const num = [], den = [];
+  model.states.forEach(st => {
+    const toks = compact ? [Object.assign({sup:st.n}, st.start[0])] : st.start.map(t => Object.assign({sup:1}, t));
+    (st.slot.exp > 0 ? num : den).push(...toks);
+  });
+  const j = a => a.map(t => tokHTML(t,t.sup)).join('<span class="dot">\u00B7</span>');
+  if (!den.length) return '<span class="u-run">' + j(num) + '</span>';
+  return fracHTML(num.length ? j(num) : '1', j(den));
+}
+function equationHTML(prob,model,st,compact,resultHTML){
+  let h = '<span class="val">' + prob.xHTML + '</span>&nbsp;' + startHTML(model,compact);
+  model.reps.forEach(rep => {
+    if (compact) h += oneFactorHTML(rep, rep.inst[0], rep.n);
+    else rep.inst.forEach(inst => { h += oneFactorHTML(rep, inst, 1); });
+  });
+  h += '<span class="eqs">=</span><span class="res">' + resultHTML + '</span>';
+  return '<div class="scroll"><div class="eq">' + h + '</div></div>';
+}
+function arithmeticHTML(prob,model,st){
+  const m = prob.mult;
+  const tops = [], bots = [];
+  model.reps.forEach(rep => { for (let r=0;r<rep.n;r++){
+    tops.push(rep.exp > 0 ? rep.step.nw.c : rep.step.cur.c);
+    bots.push(rep.exp > 0 ? rep.step.cur.c : rep.step.nw.c);
+  }});
+  const lst = a => a.map(c => coefHTML(c)).join(' \u00D7 ');
+  const xs = prob.xHTML.includes('<sup>') ? '(' + prob.xHTML + ')' : prob.xHTML;
+  const fmtC = (i,e) => coefHTML({i,e});
+  const topS = fmtC(m.Ti,m.Te), botS = fmtC(m.Bi,m.Be);
+  const botIsOne = (m.Bi === 1 && m.Be === 0);
+  const a = answerParts(prob,{sf:false});
+  const resHTML = (a.approx ? '\u2248 ' : '= ') ;
+  let h = '<div class="scroll"><div class="eq"><span>' + xs + '</span><span class="eqs">\u00D7</span>' + fracHTML(lst(tops),lst(bots)) + '</div></div>';
+  h += '<div class="scroll"><div class="eq"><span class="eqs" style="margin-left:0">=</span><span>' + xs + '</span><span class="eqs">\u00D7</span>' +
+       (botIsOne ? '<span>' + topS + '</span>' : fracHTML(topS,botS)) + '</div></div>';
+  h += '<div class="scroll"><div class="eq"><span class="eqs" style="margin-left:0">' + (a.approx ? '\u2248' : '=') + '</span><span class="res">' + sciHTML(a.m,a.e) + '&nbsp;' + unitHTML(prob.tgtParts) + '</span></div></div>';
+  return h;
+}
+function solutionHTML(prob,st){
+  const model = buildModel(prob);
+  const a = answerParts(prob,{sf:false});
+  const resExpanded = answerHTML(prob,{sf:false}) + '&nbsp;' + unitHTML(prob.tgtParts);
+  const hasPower = prob.slots.some(s => Math.abs(s.exp) > 1 && s.steps.length);
+  let h = '<div class="sol"><h3>Worked solution</h3>';
+  h += '<p>Start with the given quantity. Multiply by fractions that each equal 1. Choose each fraction so that its <b>cancelling unit</b> is on the opposite side (top vs. bottom) from the unit you want to get rid of. Matching colors show which units cancel.</p>';
+
+  h += '<h4>1. Plan the cancellations</h4><ol class="plan">';
+  model.reps.forEach(rep => {
+    const s = rep.step;
+    const rel = coefHTML(s.cur.c) + '&nbsp;' + s.cur.sym + ' = ' + coefHTML(s.nw.c) + '&nbsp;' + s.nw.sym;
+    const curTok = '<span class="cc" style="--c:' + rep.color + '">' + s.cur.sym + '</span>';
+    h += '<li>To cancel ' + curTok + ', which is in the ' + (rep.exp > 0 ? 'numerator' : 'denominator') +
+         ', put it in the ' + (rep.exp > 0 ? 'denominator' : 'numerator') + ' of a fraction. Use ' + rel + ' to write ' +
+         '<span class="eq nostrike" style="display:inline-flex;font-size:1.15rem;padding:0 .2rem">' + oneFactorHTML(rep,rep.inst[0],1) + '</span>.' +
+         (rep.n > 1 ? ' The unit is raised to the power ' + rep.n + ', so use this fraction <b>' + rep.n + ' times</b>: each copy cancels one ' + curTok + '.' : '') + '</li>';
+  });
+  h += '</ol>';
+
+  h += '<h4>2. Set up the conversion' + (hasPower ? ' (every unit cancels one at a time)' : '') + '</h4>';
+  h += equationHTML(prob,model,st,false,resExpanded);
+  if (hasPower){
+    h += '<h4>Same setup, written with exponents</h4>';
+    h += equationHTML(prob,model,st,true,resExpanded);
+  }
+
+  h += '<h4>3. Do the arithmetic</h4>';
+  h += '<p class="note" style="margin:.1rem 0">Multiply the numbers on top, divide by the numbers on the bottom.</p>';
+  h += arithmeticHTML(prob,model,st);
+
+  h += '<h4>4. Check the units and state the answer</h4>';
+  h += '<p style="margin:.1rem 0">After the cancellations, only ' + unitHTML(prob.tgtParts) + ' remains, which is the unit we wanted.</p>';
+  if (st.sf){
+    h += '<p style="margin:.3rem 0">The given quantity has <b>' + prob.N + ' significant figures</b> (the conversion factors are exact), so the answer keeps ' + prob.N + '.</p>';
+  }
+  h += '<p class="final">Answer: ' + answerHTML(prob,st) + '&nbsp;' + unitHTML(prob.tgtParts) + '</p>';
+  h += '</div>';
+  return h;
+}
+
+/* =====================================================================
+   Reading and checking the student's answer
+   ===================================================================== */
+const SUP_MAP = {'\u2070':'0','\u00B9':'1','\u00B2':'2','\u00B3':'3','\u2074':'4','\u2075':'5','\u2076':'6','\u2077':'7','\u2078':'8','\u2079':'9','\u207B':'-','\u207A':'+'};
+function supToAscii(m){ return m.split('').map(ch => SUP_MAP[ch] || ch).join(''); }
+const SUP_RE = /[\u2070\u00B9\u00B2\u00B3\u2074-\u207B]+/g;
+
+function normSym(t){
+  t = t.replace(/[\u00B5\u03BC]/g,'\u03BC');
+  const alias = {sec:'s',secs:'s',second:'s',seconds:'s',hr:'h',hrs:'h',hour:'h',hours:'h',minute:'min',minutes:'min',mins:'min',days:'day',year:'yr',years:'yr',yrs:'yr',barn:'b',barns:'b'};
+  if (alias[t]) return alias[t];
+  if (/^u(?=[A-Za-z])/.test(t)) t = '\u03BC' + t.slice(1);
+  return t;
+}
+function parseUnitString(str){
+  let s = String(str).replace(/[\u00B7\u22C5\u2022*\u00D7]/g,' ').replace(/[\u2212\u2013\u2014]/g,'-').replace(/-(?!\d)/g,' ');
+  s = s.replace(SUP_RE, m => '^' + supToAscii(m)).trim();
+  if (!s) return {err:1};
+  const re = /\s*(?:(\()|(\))|(\/)|([A-Za-z\u03BC\u00B5]+)(\^\(\s*[+-]?\d+\s*\)|\^?[+-]?\d+)?)/y;
+  const map = {}; let cur = 1, pos = 0; const baseStack = [1], curStack = [];
+  while (pos < s.length){
+    re.lastIndex = pos;
+    const m = re.exec(s);
+    if (!m || m[0].length === 0) return {err:1};
+    pos = re.lastIndex;
+    if (m[1]){ curStack.push(cur); baseStack.push(cur); }
+    else if (m[2]){ if (baseStack.length < 2) return {err:1}; baseStack.pop(); cur = curStack.pop(); }
+    else if (m[3]){ cur = -baseStack[baseStack.length-1]; }
+    else {
+      const sym = normSym(m[4]);
+      const e = m[5] ? parseInt(m[5].replace(/[\^()\s]/g,''),10) : 1;
+      map[sym] = (map[sym] || 0) + cur*e;
+    }
+  }
+  if (baseStack.length !== 1 || !Object.keys(map).length) return {err:1};
+  return {map};
+}
+function partsMap(parts){ const m = {}; parts.forEach(p => { m[p.sym] = (m[p.sym] || 0) + p.exp; }); return m; }
+function mapsEqual(a,b){
+  const keys = new Set(Object.keys(a).concat(Object.keys(b)));
+  for (const k of keys) if ((a[k] || 0) !== (b[k] || 0)) return false;
+  return true;
+}
+
+/* number + optional unit.  Accepts 6023, 6.023e3, 60.23 x 10^2, 6.023×10³, 10^3, ... */
+function parseStudent(raw){
+  let s = String(raw).trim();
+  if (!s) return {err:'Type an answer first.'};
+  s = s.replace(/[\u2212\u2013\u2014]/g,'-').replace(/\*\*/g,'^').replace(SUP_RE, m => '^' + supToAscii(m));
+  const bad = 'I couldn\u2019t read the number. Try something like <b>4.5e3</b> or <b>4.5 x 10^3</b>, followed by the unit.';
+  let sign = 1, mantStr, expo = 0, hasExp = false, rest;
+  let m = s.match(/^([+-]?)\s*10\s*\^\s*\(?\s*([+-]?\d+)\s*\)?/);
+  if (m){
+    sign = m[1] === '-' ? -1 : 1; mantStr = '1'; expo = parseInt(m[2],10); hasExp = true; rest = s.slice(m[0].length);
+  } else {
+    m = s.match(/^([+-]?)\s*(\d[\d,]*\.?\d*|\.\d+)\s*(?:(?:[x\u00D7*\u00B7\u22C5]\s*)?10\s*\^\s*\(?\s*([+-]?\d+)\s*\)?|[eE]\s*([+-]?\d+))?/);
+    if (!m) return {err:bad};
+    sign = m[1] === '-' ? -1 : 1;
+    mantStr = m[2];
+    if (mantStr.includes(',')){
+      if (!/^\d{1,3}(,\d{3})+(\.\d*)?$/.test(mantStr)) return {err:'Use a decimal point (not a comma) in your number.'};
+      mantStr = mantStr.replace(/,/g,'');
+    }
+    if (m[3] !== undefined){ expo = parseInt(m[3],10); hasExp = true; }
+    else if (m[4] !== undefined){ expo = parseInt(m[4],10); hasExp = true; }
+    rest = s.slice(m[0].length);
+  }
+  const mantVal = parseFloat(mantStr);
+  if (!isFinite(mantVal) || Math.abs(expo) > 400) return {err:bad};
+  return {value:sign*mantVal*Math.pow(10,expo), sign, mantStr, hasExp, unitStr:rest.trim()};
+}
+function properSci(pr){ return /^[1-9](\.\d*)?$/.test(pr.mantStr); }
+function sigRange(pr){
+  const s = pr.mantStr;
+  if (s.includes('.')){ const n = s.replace('.','').replace(/^0+/,'').length; return {min:n,max:n}; }
+  const d = s.replace(/^0+/,''), t = d.replace(/0+$/,'');
+  return {min:Math.max(t.length,1), max:Math.max(d.length,1)};
+}
+function expOf(v){ return parseInt(Math.abs(v).toExponential(14).split('e')[1],10); }
+
+function slotLabel(sl){ return sl.src.p + sl.src.b + ' \u2192 ' + sl.tgt.p + sl.tgt.b; }
+function diagnose(s,prob){
+  const c = prob.c, x = prob.x;
+  const close = (a,b) => Math.abs(a-b) <= 0.01*Math.abs(b);
+  if (!(s > 0)) return 'Your answer should be a positive number.';
+  if (close(s,x)) return 'That\u2019s the number you started with. The conversion fractions have to change it. Check that each fraction has the unit you are cancelling on the opposite side.';
+  const sl = prob.slots, ms = sl.map(q => q.m), es = sl.map(q => q.exp);
+  const changed = [];
+  sl.forEach((q,i) => { if (q.steps.length && ms[i] !== 1) changed.push(i); });
+  for (const i of changed){
+    const e = es[i];
+    if (Math.abs(e) >= 2){
+      const t = c * Math.pow(ms[i], Math.sign(e) - e);
+      if (close(s,t)) return 'It looks like the fraction(s) for <b>' + slotLabel(sl[i]) + '</b> were used only once. That unit is raised to the power ' + Math.abs(e) + ', so you need ' + Math.abs(e) + ' copies of the fraction, one for each copy of the unit that has to cancel.';
+    }
+  }
+  const n = changed.length;
+  for (let size=1; size<=n; size++){
+    for (let mask=1; mask < (1<<n); mask++){
+      let bits = 0; for (let b=0;b<n;b++) if (mask & (1<<b)) bits++;
+      if (bits !== size) continue;
+      let t = c; const names = [];
+      for (let b=0;b<n;b++) if (mask & (1<<b)){ const i = changed[b]; t *= Math.pow(ms[i], -2*es[i]); names.push('<b>' + slotLabel(sl[i]) + '</b>'); }
+      if (close(s,t)) return (size === 1 ? 'One of your fractions looks upside-down: check the conversion for ' + names[0] + '.' : 'Some of your fractions look upside-down: check the conversions for ' + names.join(' and ') + '.') +
+        ' The unit you want to cancel must sit on the opposite side (top vs. bottom) from where it currently is.';
+    }
+  }
+  const ints = new Set();
+  sl.forEach(q => q.steps.forEach(st => { [st.cur.c.i, st.nw.c.i].forEach(v => { if (v > 1) ints.add(v); }); }));
+  for (const v of ints){
+    for (const k of [1,-1,2,-2]){
+      if (close(s, c*Math.pow(v,k))) return 'Your answer is off by a factor of ' + (k > 0 ? '' : '1/') + (Math.abs(k) === 2 ? v + '<sup>2</sup>' : v) + '. Check the time conversions: did you multiply where you should divide, or skip or repeat a step?';
+    }
+  }
+  const lr = Math.log10(s/c), k = Math.round(lr);
+  if (k !== 0 && Math.abs(lr - k) < 0.0044){
+    return 'Your digits are right, but the power of ten is off: your answer is 10<sup>' + minus(Math.abs(k)) + '</sup> times too ' + (k > 0 ? 'large' : 'small') + '. Re-check the exponent of each prefix in the table, and whether each prefix is on the top or the bottom of its fraction.';
+  }
+  return 'Check that each fraction cancels the unit before it, and re-read the prefix exponents in the table. You can open the worked solution at any time.';
+}
+function checkUnit(unitStr,prob){
+  const tgt = unitHTML(prob.tgtParts);
+  if (!unitStr) return 'Include the unit with your answer (the problem asks for ' + tgt + ').';
+  const m = parseUnitString(unitStr);
+  if (m.err) return 'I couldn\u2019t read your unit. Use symbols like m, kg, \u03BCm, s^-2 or m/s, with a space or \u00B7 between units. The problem asks for ' + tgt + '.';
+  if (!mapsEqual(m.map, partsMap(prob.tgtParts))) return 'Check your unit: you wrote <em>' + esc(unitStr) + '</em>, but the problem asks for ' + tgt + '. (Unit symbols are case-sensitive.)';
+  return null;
+}
+function evaluate(raw,prob,st){
+  const pr = parseStudent(raw);
+  if (pr.err) return {status:'error', html:pr.err};
+  const s = pr.value, c = prob.c;
+  const unitIssue = st.units ? checkUnit(pr.unitStr,prob) : null;
+  /* within 1%, or a correct rounding to the given number of sig figs (which can be slightly more than 1% off) */
+  const halfUlp = 0.5*Math.pow(10, expOf(c) - prob.N + 1)*(1+1e-9);
+  const within = Math.abs(s-c) <= 0.01*Math.abs(c) || Math.abs(s-c) <= halfUlp;
+  if (!within){
+    let h = '<b>Not quite.</b> ' + diagnose(s,prob);
+    if (unitIssue) h += '<br>Also: ' + unitIssue;
+    return {status:'wrong', html:h};
+  }
+  const issues = [];
+  if (unitIssue) issues.push(unitIssue);
+  if (st.sci && !properSci(pr)){
+    issues.push('Write it in proper scientific notation: exactly one non-zero digit before the decimal point, like <b>6.023 \u00D7 10<sup>3</sup></b>.');
+  }
+  if (st.sf){
+    const rng = sigRange(pr);
+    const ulp = Math.pow(10, expOf(c) - prob.N + 1);
+    const roundedOK = Math.abs(s-c) <= 0.5*ulp*(1+1e-9);
+    const countOK = prob.N >= rng.min && prob.N <= rng.max;
+    if (!countOK){
+      issues.push('Check significant figures: the given quantity has ' + prob.N + ', so your answer should have ' + prob.N + '.' +
+        (rng.min === rng.max ? ' Yours has ' + rng.min + '.' : '') + (rng.min < prob.N ? ' (A zero at the end of a decimal number still counts, like 4.50.)' : ''));
+    } else if (!roundedOK){
+      issues.push('Check your rounding: round to ' + prob.N + ' significant figures.');
+    }
+  }
+  if (!issues.length){
+    return {status:'correct', html:'<b>\u2713 Correct!</b> ' + answerHTML(prob,st) + (st.units ? '&nbsp;' + unitHTML(prob.tgtParts) : '')};
+  }
+  return {status:'close', html:'<b>Your number is right!</b> Now fix this:<ul>' + issues.map(i => '<li>' + i + '</li>').join('') + '</ul>'};
+}
+
+/* =====================================================================
+   Worksheet
+   ===================================================================== */
+function worksheetHTML(opts,st){
+  const probs = [];
+  for (let i=0;i<opts.count;i++){
+    const lvl = opts.level === 'mixed' ? Math.min(4, 1 + Math.floor(i*4/opts.count)) : parseInt(opts.level,10);
+    probs.push(makeProblem(lvl));
+  }
+  let inst = 'Convert each quantity to the unit shown. ';
+  inst += st.units ? 'Write your answer with its unit. ' : '';
+  inst += st.sci ? 'Give your answers in scientific notation. ' : '';
+  inst += st.sf ? 'Use the correct number of significant figures. ' : '';
+  inst += 'Use fractions equal to 1 and show your cancelling units.';
+  let h = '<div class="ws-page"><h2>Unit Conversions</h2>' +
+          '<div class="ws-meta"><span>Name:</span><span>Date:</span></div>' +
+          '<p class="ws-inst">' + inst + '</p>';
+  if (opts.table) h += '<div class="ws-refs">' + prefixTablesHTML() + timeBoxHTML() + '</div>';
+  h += '<ol class="ws-list">' + probs.map(p => '<li class="ws-item"><div class="ws-q">' + promptHTML(p) + '</div><div class="ws-ans">Answer: <i></i></div></li>').join('') + '</ol></div>';
+  h += '<div class="ws-page page-break"><h2>Answer key</h2><ol class="ws-list">' + probs.map(p =>
+    '<li class="key-item"><div>' + promptHTML(p) + '</div><div><b>' + answerHTML(p,st) + '&nbsp;' + unitHTML(p.tgtParts) + '</b></div>' +
+    (opts.sols ? solutionHTML(p,st) : '') + '</li>').join('') + '</ol></div>';
+  return h;
+}
+
+/* =====================================================================
+   Page behaviour
+   ===================================================================== */
+function initPage(){
+  const $ = id => document.getElementById(id);
+  const settings = {level:1, sci:false, sf:false, units:true};
+  const stats = {correct:0,total:0,streak:0,best:0};
+  let prob = null, ps = null;
+
+  $('refBody').innerHTML = prefixTablesHTML() + timeBoxHTML();
+
+  function updateStats(){
+    $('stScore').textContent = stats.correct + ' / ' + stats.total;
+    $('stStreak').textContent = stats.streak;
+    $('stBest').textContent = stats.best;
+  }
+  function updateHelp(){
+    $('ansHelp').innerHTML = (settings.units
+      ? 'Type the number, then the unit: <b>4.5e3 \u03BCm</b>, <b>4.5 x 10^3 \u03BCm</b>, or <b>4500 \u03BCm</b>. For compound units write something like <b>kg m/s^2</b> or <b>mg*cm/min^2</b>.'
+      : 'Type just the number: <b>4.5e3</b>, <b>4.5 x 10^3</b>, or <b>4500</b>.') +
+      ' Use the buttons to insert \u03BC and exponents.';
+    $('answer').placeholder = settings.units ? 'e.g. 4.5e3 \u03BCm' : 'e.g. 4.5e3';
+  }
+  function setFeedback(cls,html){
+    $('feedback').innerHTML = html ? '<div class="fb ' + cls + '">' + html + '</div>' : '';
+  }
+  function refreshButtons(){
+    $('nextBtn').textContent = ps.solved ? 'Next problem \u2192' : 'Skip problem';
+    $('nextBtn').className = ps.solved ? 'btn primary' : 'btn ghost';
+    $('checkBtn').disabled = ps.solved;
+    $('solBtn').textContent = ps.solOpen ? 'Hide worked solution' : 'Show worked solution';
+    $('solBtn').setAttribute('aria-expanded', ps.solOpen ? 'true' : 'false');
+  }
+  function renderSolution(){
+    const sol = $('solution');
+    if (!ps.solOpen){ sol.hidden = true; sol.innerHTML = ''; return; }
+    let pre = '';
+    if (!ps.solved) pre = '<div class="fb info" style="margin-top:.8rem">Heads up: viewing the solution before you solve this problem means it won\u2019t count toward your score. You can still type your answer to practice.</div>';
+    sol.innerHTML = pre + solutionHTML(prob,settings);
+    sol.hidden = false;
+  }
+  function newProblem(){
+    prob = makeProblem(settings.level);
+    ps = {wrong:0, solved:false, viewed:false, solOpen:false};
+    $('pnum').textContent = '#' + (stats.total + 1);
+    $('prompt').innerHTML = promptHTML(prob);
+    $('names').innerHTML = namesNote(prob);
+    $('names').style.display = $('names').innerHTML ? '' : 'none';
+    const a = $('answer'); a.value = ''; a.readOnly = false;
+    setFeedback('', '');
+    renderSolution();
+    refreshButtons();
+    a.focus({preventScroll:true});
+  }
+  function onCheck(){
+    if (ps.solved){ onNext(); return; }
+    const res = evaluate($('answer').value, prob, settings);
+    if (res.status === 'error'){ setFeedback('warn', res.html); return; }
+    if (res.status === 'correct'){
+      ps.solved = true;
+      stats.total++;
+      if (!ps.viewed) stats.correct++;
+      if (ps.wrong === 0 && !ps.viewed){ stats.streak++; if (stats.streak > stats.best) stats.best = stats.streak; }
+      $('answer').readOnly = true;
+      setFeedback('ok', res.html);
+      refreshButtons();
+      if (ps.solOpen) renderSolution();
+      $('nextBtn').focus();
+    } else {
+      ps.wrong++; stats.streak = 0;
+      setFeedback(res.status === 'close' ? 'warn' : 'bad', res.html);
+    }
+    updateStats();
+  }
+  function onNext(){
+    if (!ps.solved){ stats.total++; stats.streak = 0; }
+    updateStats();
+    newProblem();
+  }
+  function onSolution(){
+    ps.solOpen = !ps.solOpen;
+    if (ps.solOpen && !ps.solved && !ps.viewed){ ps.viewed = true; stats.streak = 0; updateStats(); }
+    renderSolution(); refreshButtons();
+  }
+  function insertAtCaret(el,txt){
+    const s = el.selectionStart == null ? el.value.length : el.selectionStart;
+    const e = el.selectionEnd == null ? s : el.selectionEnd;
+    el.setRangeText(txt, s, e, 'end');
+    el.focus();
+  }
+
+  document.querySelectorAll('input[name=level]').forEach(r => r.addEventListener('change', () => {
+    settings.level = parseInt(r.value,10); newProblem();
+  }));
+  $('optSci').addEventListener('change', e => { settings.sci = e.target.checked; if (ps.solOpen) renderSolution(); });
+  $('optSf').addEventListener('change', e => { settings.sf = e.target.checked; if (ps.solOpen) renderSolution(); });
+  $('optUnits').addEventListener('change', e => { settings.units = e.target.checked; updateHelp(); });
+  $('checkBtn').addEventListener('click', onCheck);
+  $('nextBtn').addEventListener('click', onNext);
+  $('solBtn').addEventListener('click', onSolution);
+  $('answer').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); onCheck(); } });
+  document.querySelectorAll('.kbd button').forEach(b => b.addEventListener('click', () => insertAtCaret($('answer'), b.dataset.ins)));
+  $('resetStats').addEventListener('click', () => { stats.correct = stats.total = stats.streak = stats.best = 0; updateStats(); $('pnum').textContent = '#1'; });
+
+  function showWorksheet(){
+    const opts = {count:parseInt($('wsCount').value,10), level:$('wsLevel').value, table:$('wsTable').checked, sols:$('wsSols').checked};
+    $('wsBody').innerHTML = worksheetHTML(opts, settings);
+    document.body.classList.add('ws-mode');
+    window.scrollTo(0,0);
+  }
+  $('wsGo').addEventListener('click', showWorksheet);
+  $('wsAgain').addEventListener('click', showWorksheet);
+  $('wsBack').addEventListener('click', () => { document.body.classList.remove('ws-mode'); });
+  $('wsPrint').addEventListener('click', () => window.print());
+  $('wsJump').addEventListener('click', () => { const d = $('wsMaker'); d.open = true; d.scrollIntoView({behavior:'smooth',block:'center'}); });
+
+  updateHelp(); updateStats(); newProblem();
+}
+
+if (typeof document === 'undefined'){
+  globalThis.__UC = {makeProblem,evaluate,solutionHTML,buildModel,parseStudent,parseUnitString,partsMap,mapsEqual,answerParts,answerHTML,promptHTML,worksheetHTML,unitHTML,genValue,diagnose,namesNote,prefixTablesHTML};
+} else {
+  initPage();
+}
+</script>
+</body>
+</html>
