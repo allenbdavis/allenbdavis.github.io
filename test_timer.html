@@ -1,0 +1,839 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Extra Time Test Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: a setup sheet (form beside a scaled preview of each timer), then a
+   full-viewport stack of timer lanes. Each lane is one huge numeral over a bar
+   that is spent from left to right, so the reading segment at the start goes first. */
+:root {
+  --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --bg: #0b1215;
+  --surface: #121c20;
+  --surface-2: #1a282d;
+  --line: #28393f;
+  --fg: #eef4f2;
+  --fg-dim: #9fb3b7;
+  --read: #5aa9ff;
+  --write: #34d399;
+  --warn: #ffb224;
+  --done: #ff5d5d;
+  --spent: rgba(11, 18, 21, 0.8);
+  --on-color: #07110f;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eef3f2;
+    --surface: #ffffff;
+    --surface-2: #e3ebe9;
+    --line: #c5d3d0;
+    --fg: #0b191c;
+    --fg-dim: #4a5f64;
+    --read: #1769d6;
+    --write: #0b8a5c;
+    --warn: #b36b00;
+    --done: #c62828;
+    --spent: rgba(238, 243, 242, 0.82);
+    --on-color: #ffffff;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #eef3f2;
+  --surface: #ffffff;
+  --surface-2: #e3ebe9;
+  --line: #c5d3d0;
+  --fg: #0b191c;
+  --fg-dim: #4a5f64;
+  --read: #1769d6;
+  --write: #0b8a5c;
+  --warn: #b36b00;
+  --done: #c62828;
+  --spent: rgba(238, 243, 242, 0.82);
+  --on-color: #ffffff;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+  padding-inline: clamp(16px, 2.5vw, 40px);
+  padding-block: 0;
+}
+h1, h2, p { margin: 0; }
+button, input { font: inherit; }
+:focus-visible { outline: 3px solid var(--read); outline-offset: 2px; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  font-weight: 600;
+  font-size: 16px;
+  padding: 0.6em 1.1em;
+  border-radius: 4px;
+  border: 1.5px solid var(--line);
+  background: var(--surface-2);
+  color: var(--fg);
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { border-color: var(--fg-dim); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.primary {
+  background: var(--write);
+  color: var(--on-color);
+  border-color: transparent;
+  font-size: 22px;
+  padding: 0.7em 1.6em;
+  align-self: flex-start;
+}
+.btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+
+/* ---------- Setup ---------- */
+.setup {
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-block: clamp(24px, 6vh, 64px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 4vh, 40px);
+}
+.setup h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(44px, 8vw, 84px);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+.lede { color: var(--fg-dim); font-size: 18px; max-width: 52ch; margin-top: 12px; }
+.setup-body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 24px;
+  align-items: start;
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: clamp(18px, 3vw, 32px);
+  min-width: 0;
+}
+.form { display: flex; flex-direction: column; gap: 30px; }
+.field { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.field-label {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+.hint { color: var(--fg-dim); font-size: 15px; max-width: 46ch; }
+.num { display: flex; align-items: baseline; gap: 0.6em; color: var(--fg-dim); font-size: 18px; }
+.num input {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(34px, 5vw, 48px);
+  width: 3.4em;
+  padding: 0.1em 0.3em;
+  background: var(--bg);
+  color: var(--fg);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.num input:focus { border-color: var(--read); outline: none; }
+.num input:disabled { opacity: 0.4; }
+.num.sm input { font-size: 32px; width: 3em; }
+.check-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.check { display: flex; align-items: center; gap: 0.6em; font-size: 22px; font-weight: 600; cursor: pointer; }
+.check input { width: 1.4em; height: 1.4em; accent-color: var(--write); cursor: pointer; margin: 0; }
+.checks { display: flex; flex-wrap: wrap; gap: 14px 32px; }
+.error { color: var(--done); font-weight: 600; min-height: 1.45em; margin-top: -12px; }
+
+/* ---------- Preview ---------- */
+.preview { display: flex; flex-direction: column; gap: 6px; }
+.prow { display: grid; gap: 8px; padding-block: 16px; border-top: 1px solid var(--line); }
+.prow:first-of-type { border-top: 0; padding-top: 10px; }
+.prow-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pbar { display: flex; height: 22px; border-radius: 3px; overflow: hidden; background: var(--surface-2); }
+.pbar .r { background: var(--read); }
+.pbar .t { background: var(--write); }
+.pbar .r + .t { border-left: 3px solid var(--surface); }
+.prow-sum { color: var(--fg-dim); font-size: 15px; font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--fg-dim); font-size: 14px; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 14px; height: 14px; border-radius: 2px; display: inline-block; }
+.legend .lr { background: var(--read); }
+.legend .lt { background: var(--write); }
+.note { color: var(--fg-dim); font-size: 15px; max-width: 52ch; padding-top: 6px; }
+
+/* ---------- Run view ---------- */
+.run {
+  --gap: clamp(8px, 1.4vh, 16px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding-block: var(--gap);
+}
+.run.idle { cursor: none; }
+
+.banner {
+  --banner-bg: var(--read);
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s ease;
+  flex: none;
+}
+.banner[data-open="true"] { grid-template-rows: 1fr; }
+.banner[data-kind="begin"] { --banner-bg: var(--write); }
+.banner[data-kind="paused"] { --banner-bg: var(--fg); }
+.banner-clip { overflow: hidden; min-height: 0; }
+.banner-box {
+  background: var(--banner-bg);
+  color: var(--on-color);
+  border-radius: 6px;
+  padding: clamp(10px, 2vh, 24px) clamp(16px, 2.5vw, 40px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.1em 1.2em;
+}
+.banner[data-kind="paused"] .banner-box { color: var(--bg); }
+.banner-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(40px, 11vh, 120px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.banner-sub { font-weight: 600; font-size: clamp(16px, 3.2vh, 34px); }
+
+.cards {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  gap: var(--gap);
+}
+.card {
+  --digit: var(--fg);
+  --test-c: var(--write);
+  container-type: size;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 6px;
+}
+.card[data-state="reading"] { --digit: var(--read); border-color: var(--read); }
+.card[data-state="warn"] { --digit: var(--warn); --test-c: var(--warn); border-color: var(--warn); }
+.card[data-state="done"] {
+  --digit: var(--done);
+  --test-c: var(--done);
+  border-color: var(--done);
+  background: color-mix(in srgb, var(--done) 12%, var(--surface));
+}
+.card-in {
+  height: 100%;
+  padding: clamp(10px, 2.2cqh, 28px) clamp(14px, 2.6cqw, 40px);
+  display: grid;
+  grid-template-columns: minmax(0, 26cqw) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  column-gap: 2cqw;
+  row-gap: clamp(8px, 3cqh, 24px);
+}
+.card-head { display: flex; flex-direction: column; gap: clamp(4px, 2cqh, 12px); align-self: center; min-width: 0; }
+.card-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(20px, 11cqh, 56px);
+  line-height: 1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.chip {
+  align-self: flex-start;
+  font-weight: 600;
+  font-size: clamp(12px, 5cqh, 24px);
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--digit);
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  padding: 0.4em 0.7em;
+}
+.card-meta { color: var(--fg-dim); font-size: clamp(13px, 6cqh, 26px); font-variant-numeric: tabular-nums; }
+.time {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  align-self: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: min(60cqh, 19cqw);
+  line-height: 0.82;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--digit);
+}
+.bar {
+  grid-column: 1 / -1;
+  position: relative;
+  display: flex;
+  height: clamp(18px, 13cqh, 56px);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.seg {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding-inline: 0.9em;
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: clamp(11px, 5.5cqh, 22px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--on-color);
+}
+.seg-read { background: var(--read); transition: flex 0.8s ease, padding 0.8s ease, opacity 0.6s ease; }
+.seg-read.gone { padding-inline: 0; opacity: 0; }
+.seg-test { background: var(--test-c); }
+.seg-read + .seg-test { border-left: 3px solid var(--surface); transition: border-left-width 0.8s ease; }
+.seg-read.gone + .seg-test { border-left-width: 0; }
+.spent {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: var(--spent);
+  transition: width var(--tx, 0.12s) ease;
+}
+.needle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  transform: translateX(-50%);
+  background: var(--fg);
+  transition: left var(--tx, 0.12s) ease;
+}
+
+.elapsed {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 3em;
+  padding-inline: 4px;
+}
+.stat { display: flex; align-items: baseline; gap: 0.8em; }
+.stat-label {
+  font-weight: 600;
+  font-size: clamp(11px, 2vh, 18px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+.stat-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(22px, 5vh, 48px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--fg);
+}
+.elapsed.pending .stat-elapsed .stat-value { color: var(--fg-dim); }
+
+.controls {
+  flex: none;
+  min-height: 48px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  transition: opacity 0.3s ease;
+}
+.controls .hint { margin-left: auto; font-size: 14px; }
+.run.idle .controls { opacity: 0; }
+.run.idle .controls:focus-within { opacity: 1; }
+
+@media (max-width: 820px) {
+  .setup-body { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .card-in { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; }
+  .card-head { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+  .time { grid-column: 1; grid-row: 2; justify-self: start; font-size: min(46cqh, 24cqw); }
+  .controls .hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .banner, .spent, .needle, .controls, .seg-read, .seg-read + .seg-test { transition: none; }
+}
+</style>
+
+<section id="setup" class="setup">
+  <header>
+    <h1>Extra Time Test Timer</h1>
+    <p class="lede">Set the test length once. Standard and extra-time students each get their own timer to project.</p>
+  </header>
+  <div class="setup-body">
+    <form id="setupForm" class="panel form" novalidate>
+      <div class="field">
+        <label class="field-label" for="testMin">Test time</label>
+        <div class="num">
+          <input id="testMin" type="number" inputmode="decimal" min="1" step="any" value="45" required>
+          <span>minutes</span>
+        </div>
+        <p class="hint">The standard length, before any extra time is added.</p>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Reading time</span>
+        <div class="check-row">
+          <label class="check" for="useReading"><input id="useReading" type="checkbox" checked>Include reading time</label>
+          <div class="num sm">
+            <input id="readMin" type="number" inputmode="decimal" min="0" step="any" value="5" aria-label="Reading time in minutes">
+            <span>minutes</span>
+          </div>
+        </div>
+        <p class="hint">Everyone reads together at the start. Extra-time students get this same reading time, then their longer test time.</p>
+      </div>
+
+      <div class="field" role="group" aria-labelledby="extraLabel">
+        <span id="extraLabel" class="field-label">Extra time timers</span>
+        <div class="checks">
+          <label class="check" for="x25"><input id="x25" type="checkbox">+25%</label>
+          <label class="check" for="x50"><input id="x50" type="checkbox">+50%</label>
+        </div>
+        <p class="hint">The standard timer is always shown.</p>
+      </div>
+
+      <p id="formError" class="error" role="alert"></p>
+      <button id="startBtn" type="submit" class="btn primary">Start timers</button>
+    </form>
+
+    <aside class="panel preview" aria-label="Preview of the timers">
+      <span class="field-label">Timers on screen</span>
+      <div id="previewRows"></div>
+      <div class="legend">
+        <span id="legendRead"><i class="lr"></i>Reading time</span>
+        <span><i class="lt"></i>Test time</span>
+        <span>Bars are drawn to the same scale</span>
+      </div>
+      <p class="note">During reading time a banner across the top of the screen tells students not to start writing. The bar for each timer starts with a blue reading segment.</p>
+    </aside>
+  </div>
+</section>
+
+<main id="run" class="run" hidden>
+  <div id="banner" class="banner" data-open="false" role="status">
+    <div class="banner-clip">
+      <div class="banner-box">
+        <div id="bannerTitle" class="banner-title"></div>
+        <div id="bannerSub" class="banner-sub"></div>
+      </div>
+    </div>
+  </div>
+  <div id="cards" class="cards"></div>
+  <div id="elapsed" class="elapsed" aria-live="off">
+    <div class="stat stat-elapsed">
+      <span class="stat-label">Elapsed test time</span>
+      <span id="elapsedTime" class="stat-value">0:00</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Current time</span>
+      <span id="clockTime" class="stat-value"></span>
+    </div>
+  </div>
+  <div class="controls">
+    <button id="pauseBtn" type="button" class="btn">Pause</button>
+    <button id="fsBtn" type="button" class="btn">Full screen</button>
+    <button id="backBtn" type="button" class="btn">New test</button>
+    <span class="hint">Space pauses &middot; F toggles full screen</span>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var STORE = 'extra-time-timer-settings';
+  var BEGIN_MS = 8000;
+  var DEFS = [
+    { key: 'std', label: 'Standard time', factor: 1 },
+    { key: 'x25', label: '+25% extra time', factor: 1.25 },
+    { key: 'x50', label: '+50% extra time', factor: 1.5 }
+  ];
+  var CHIP = { reading: 'Reading', ok: 'Writing', warn: 'Ending soon', done: 'Time’s up' };
+  var BANNER = {
+    reading: ['Reading time', 'Read through the questions. Do not start writing yet.'],
+    begin: ['Begin', 'Reading time is over. You may start the test.'],
+    paused: ['Paused', 'Timers are stopped.']
+  };
+
+  var timers = [], refs = [];
+  var run = { running: false, startedAt: 0, before: 0, finished: false };
+  var tickId = null, idleId = null, confirmId = null, wake = null;
+  var bannerKind = null, backArmed = false;
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function fmt(ms) {
+    var s = Math.max(0, Math.ceil(ms / 1000));
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    return h > 0 ? h + ':' + pad(m) + ':' + pad(sec) : m + ':' + pad(sec);
+  }
+  function fmtUp(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000));
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    return h > 0 ? h + ':' + pad(m) + ':' + pad(sec) : m + ':' + pad(sec);
+  }
+  function clock(ms) {
+    return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  /* ---------- Setup ---------- */
+  function readForm() {
+    return {
+      test: parseFloat($('testMin').value),
+      useReading: $('useReading').checked,
+      read: parseFloat($('readMin').value),
+      x25: $('x25').checked,
+      x50: $('x50').checked
+    };
+  }
+  function validate(c) {
+    if (!(c.test > 0)) return 'Enter a test time greater than 0 minutes.';
+    if (c.useReading && !(c.read >= 0)) return 'Enter a reading time of 0 minutes or more, or turn reading time off.';
+    return '';
+  }
+  function makeTimers(c) {
+    var readMs = c.useReading && c.read > 0 ? Math.round(c.read * 60000) : 0;
+    return DEFS.filter(function (d) {
+      return d.key === 'std' || (d.key === 'x25' && c.x25) || (d.key === 'x50' && c.x50);
+    }).map(function (d) {
+      var testMs = Math.round(c.test * 60000 * d.factor);
+      return {
+        label: d.label,
+        readMs: readMs,
+        testMs: testMs,
+        totalMs: readMs + testMs,
+        warnMs: Math.min(300000, testMs * 0.2)
+      };
+    });
+  }
+  function renderPreview() {
+    var c = readForm();
+    var err = validate(c);
+    $('formError').textContent = err;
+    $('startBtn').disabled = !!err;
+    var host = $('previewRows');
+    host.textContent = '';
+    if (err) { $('legendRead').hidden = true; return; }
+    var rows = makeTimers(c);
+    var max = Math.max.apply(null, rows.map(function (r) { return r.totalMs; }));
+    $('legendRead').hidden = rows[0].readMs === 0;
+    rows.forEach(function (r) {
+      var row = el('div', 'prow');
+      row.appendChild(el('div', 'prow-name', r.label));
+      var bar = el('div', 'pbar');
+      bar.style.width = (r.totalMs / max * 100) + '%';
+      if (r.readMs > 0) {
+        var pr = el('div', 'r');
+        pr.style.flex = r.readMs + ' 1 0px';
+        bar.appendChild(pr);
+      }
+      var pt = el('div', 't');
+      pt.style.flex = r.testMs + ' 1 0px';
+      bar.appendChild(pt);
+      row.appendChild(bar);
+      var sum = r.readMs > 0
+        ? fmt(r.readMs) + ' reading + ' + fmt(r.testMs) + ' test = ' + fmt(r.totalMs)
+        : fmt(r.testMs) + ' test';
+      row.appendChild(el('div', 'prow-sum', sum));
+      host.appendChild(row);
+    });
+  }
+  function loadSaved() {
+    try {
+      var s = JSON.parse(localStorage.getItem(STORE) || 'null');
+      if (!s) return;
+      if (s.test > 0) $('testMin').value = s.test;
+      if (typeof s.useReading === 'boolean') $('useReading').checked = s.useReading;
+      if (s.read >= 0) $('readMin').value = s.read;
+      $('x25').checked = !!s.x25;
+      $('x50').checked = !!s.x50;
+    } catch (e) { /* storage unavailable */ }
+  }
+  function saveSettings(c) {
+    try { localStorage.setItem(STORE, JSON.stringify(c)); } catch (e) { /* storage unavailable */ }
+  }
+  function syncReading() { $('readMin').disabled = !$('useReading').checked; }
+
+  /* ---------- Run view ---------- */
+  function buildCards() {
+    var host = $('cards');
+    host.textContent = '';
+    refs = timers.map(function (r) {
+      var card = el('article', 'card');
+      card.dataset.state = 'ok';
+      var inn = el('div', 'card-in');
+      var head = el('div', 'card-head');
+      var chip = el('span', 'chip', CHIP.ok);
+      var meta = el('p', 'card-meta', '');
+      head.appendChild(el('h2', 'card-name', r.label));
+      head.appendChild(chip);
+      head.appendChild(meta);
+      var time = el('div', 'time', fmt(r.readMs || r.testMs));
+      time.setAttribute('role', 'timer');
+      time.setAttribute('aria-label', r.label + ' remaining');
+      var bar = el('div', 'bar');
+      if (r.readMs > 0) {
+        var sr = el('div', 'seg seg-read');
+        sr.style.flex = r.readMs + ' 1 0px';
+        sr.appendChild(el('span', null, 'Reading time'));
+        bar.appendChild(sr);
+      }
+      var st = el('div', 'seg seg-test');
+      st.style.flex = r.testMs + ' 1 0px';
+      st.appendChild(el('span', null, 'Test time'));
+      bar.appendChild(st);
+      var spent = el('div', 'spent');
+      var needle = el('div', 'needle');
+      bar.appendChild(spent);
+      bar.appendChild(needle);
+      inn.appendChild(head);
+      inn.appendChild(time);
+      inn.appendChild(bar);
+      card.appendChild(inn);
+      host.appendChild(card);
+      return { r: r, card: card, chip: chip, meta: meta, time: time, spent: spent, needle: needle, bar: bar, rseg: sr || null, gone: false, txId: null, t: '', state: '', m: '' };
+    });
+  }
+
+  function elapsed() { return run.before + (run.running ? Date.now() - run.startedAt : 0); }
+
+  function setBanner(kind) {
+    if (kind === bannerKind) return;
+    bannerKind = kind;
+    var b = $('banner');
+    if (kind) {
+      $('bannerTitle').textContent = BANNER[kind][0];
+      $('bannerSub').textContent = BANNER[kind][1];
+      b.dataset.kind = kind;
+      b.dataset.open = 'true';
+    } else {
+      b.dataset.open = 'false';
+    }
+  }
+
+  function tick() {
+    var e = elapsed();
+    var now = Date.now();
+    var allDone = true;
+    refs.forEach(function (o) {
+      var r = o.r, phase, remain;
+      if (e < r.readMs) { phase = 'reading'; remain = r.readMs - e; }
+      else if (e < r.totalMs) { phase = 'writing'; remain = r.totalMs - e; }
+      else { phase = 'done'; remain = 0; }
+      if (phase !== 'done') allDone = false;
+      var state = phase === 'writing' ? (r.totalMs - e <= r.warnMs ? 'warn' : 'ok') : phase;
+      var t = fmt(remain);
+      if (t !== o.t) { o.t = t; o.time.textContent = t; }
+      if (state !== o.state) {
+        o.state = state;
+        o.card.dataset.state = state;
+        o.chip.textContent = CHIP[state];
+      }
+      var gone = r.readMs > 0 && e >= r.readMs + BEGIN_MS;
+      if (gone !== o.gone) {
+        o.gone = gone;
+        if (o.rseg) {
+          o.bar.style.setProperty('--tx', '0.8s');
+          o.rseg.style.flex = gone ? '0 1 0px' : r.readMs + ' 1 0px';
+          o.rseg.classList.toggle('gone', gone);
+          clearTimeout(o.txId);
+          o.txId = setTimeout(function () { o.bar.style.removeProperty('--tx'); }, 900);
+        }
+      }
+      var frac = gone ? (e - r.readMs) / r.testMs : e / r.totalMs;
+      var pct = (Math.min(1, Math.max(0, frac)) * 100).toFixed(3) + '%';
+      o.spent.style.width = pct;
+      o.needle.style.left = pct;
+      var m = phase === 'done' ? 'Finished' : (!run.running ? 'Paused' : 'Test ends ' + clock(now + (r.totalMs - e)));
+      if (m !== o.m) { o.m = m; o.meta.textContent = m; }
+    });
+    run.finished = allDone;
+
+    var readFirst = timers[0].readMs;
+    var written = Math.max(0, e - readFirst);
+    var wt = fmtUp(written);
+    if (wt !== $('elapsedTime').textContent) $('elapsedTime').textContent = wt;
+    $('elapsed').classList.toggle('pending', e < readFirst);
+    var ct = clock(now);
+    if (ct !== $('clockTime').textContent) $('clockTime').textContent = ct;
+
+    var readMs = timers[0].readMs, kind = '';
+    if (!run.running && !allDone) kind = 'paused';
+    else if (e < readMs) kind = 'reading';
+    else if (readMs > 0 && e < readMs + BEGIN_MS) kind = 'begin';
+    setBanner(kind);
+  }
+
+  function togglePause() {
+    if (run.running) {
+      run.before += Date.now() - run.startedAt;
+      run.running = false;
+    } else {
+      run.startedAt = Date.now();
+      run.running = true;
+    }
+    $('pauseBtn').textContent = run.running ? 'Pause' : 'Resume';
+    tick();
+  }
+
+  function lockScreen() {
+    try {
+      if (wake || !('wakeLock' in navigator)) return;
+      navigator.wakeLock.request('screen').then(function (w) {
+        wake = w;
+        w.addEventListener('release', function () { wake = null; });
+      }).catch(function () {});
+    } catch (e) { /* not available */ }
+  }
+  function unlockScreen() {
+    try { if (wake) { wake.release().catch(function () {}); wake = null; } } catch (e) { /* ignore */ }
+  }
+
+  function start(c) {
+    timers = makeTimers(c);
+    buildCards();
+    run.before = 0;
+    run.startedAt = Date.now();
+    run.running = true;
+    run.finished = false;
+    bannerKind = null;
+    $('banner').dataset.open = 'false';
+    $('pauseBtn').textContent = 'Pause';
+    $('pauseBtn').disabled = false;
+    $('setup').hidden = true;
+    $('run').hidden = false;
+    tick();
+    clearInterval(tickId);
+    tickId = setInterval(tick, 100);
+    lockScreen();
+    poke();
+  }
+
+  function disarm() {
+    backArmed = false;
+    clearTimeout(confirmId);
+    $('backBtn').textContent = 'New test';
+  }
+  function goSetup() {
+    clearInterval(tickId);
+    clearTimeout(idleId);
+    unlockScreen();
+    disarm();
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* ignore */ }
+    $('run').hidden = true;
+    $('setup').hidden = false;
+    $('testMin').focus();
+  }
+
+  function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) { document.exitFullscreen(); return; }
+      var p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+      if (p && p.catch) p.catch(function () {});
+    } catch (e) { /* not available */ }
+  }
+
+  function poke() {
+    var r = $('run');
+    r.classList.remove('idle');
+    clearTimeout(idleId);
+    idleId = setTimeout(function () { r.classList.add('idle'); }, 3500);
+  }
+
+  /* ---------- Wiring ---------- */
+  var form = $('setupForm');
+  form.addEventListener('input', renderPreview);
+  form.addEventListener('change', function () { syncReading(); renderPreview(); });
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var c = readForm();
+    if (validate(c)) return;
+    saveSettings(c);
+    start(c);
+  });
+
+  $('pauseBtn').addEventListener('click', togglePause);
+  $('fsBtn').addEventListener('click', toggleFullscreen);
+  $('backBtn').addEventListener('click', function () {
+    if (run.finished || backArmed) { goSetup(); return; }
+    backArmed = true;
+    $('backBtn').textContent = 'Click again to end this test';
+    clearTimeout(confirmId);
+    confirmId = setTimeout(disarm, 4000);
+  });
+
+  document.addEventListener('keydown', function (ev) {
+    if ($('run').hidden) return;
+    poke();
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    var tag = ev.target && ev.target.tagName;
+    if (ev.code === 'Space' && tag !== 'BUTTON' && tag !== 'INPUT') {
+      ev.preventDefault();
+      togglePause();
+    } else if (ev.key === 'f' || ev.key === 'F') {
+      toggleFullscreen();
+    }
+  });
+  ['pointermove', 'pointerdown'].forEach(function (name) {
+    document.addEventListener(name, function () { if (!$('run').hidden) poke(); });
+  });
+  document.addEventListener('fullscreenchange', function () {
+    $('fsBtn').textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && !$('run').hidden) lockScreen();
+  });
+
+  $('fsBtn').hidden = !document.fullscreenEnabled;
+  loadSaved();
+  syncReading();
+  renderPreview();
+  $('testMin').focus();
+})();
+</script>
+
+</body></html>
