@@ -16,7 +16,7 @@
     --warn:     #f3c84a;
     --danger:   #f35a4a;
     --text:     #ffffff;
-    --text-dim: #8aa8c8;
+    --text-dim: #ffffff;
     --mono: 'Share Tech Mono', monospace;
     --sans: 'Exo 2', sans-serif;
   }
@@ -42,10 +42,10 @@
     flex-shrink: 0;
   }
   header h1 {
-    font-family: var(--mono); font-size: 13px;
+    font-family: var(--mono); font-size: 16px;
     letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase;
   }
-  #status { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--warn); }
+  #status { font-family: var(--mono); font-size: 14px; letter-spacing: 0.08em; color: var(--warn); }
   #status.ready { color: var(--accent); }
   #status.error { color: var(--danger); }
 
@@ -84,21 +84,21 @@
     background: var(--panel-bg);
   }
   .sp-label {
-    font-family: var(--mono); font-size: 9px;
+    font-family: var(--mono); font-size: 12px;
     letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase;
   }
   #star-id-display {
-    font-family: var(--mono); font-size: 12px; color: var(--accent2); flex: 1;
+    font-family: var(--mono); font-size: 15px; color: var(--accent2); flex: 1;
   }
   #debug-info {
     display: none;
-    font-family: var(--mono); font-size: 10px; color: var(--warn);
+    font-family: var(--mono); font-size: 13px; color: var(--warn);
     letter-spacing: 0.05em;
   }
 
   .hdr-btn {
     background: none; border: 1px solid var(--border); color: var(--text-dim);
-    font-family: var(--mono); font-size: 10px; padding: 3px 9px;
+    font-family: var(--mono); font-size: 13px; padding: 5px 12px;
     cursor: pointer; border-radius: 2px; transition: all 0.12s; white-space: nowrap;
     letter-spacing: 0.05em;
   }
@@ -124,7 +124,7 @@
     align-items: center; justify-content: center;
     height: 200px;
     color: var(--text-dim); font-family: var(--mono);
-    font-size: 11px; letter-spacing: 0.08em;
+    font-size: 14px; letter-spacing: 0.08em;
     text-align: center; line-height: 2.2;
   }
   #placeholder .icon { font-size: 28px; opacity: 0.2; margin-bottom: 10px; }
@@ -143,14 +143,14 @@
   }
 
   .click-hint {
-    font-family: var(--mono); font-size: 10px;
+    font-family: var(--mono); font-size: 13px;
     color: var(--text-dim); letter-spacing: 0.05em; padding: 3px 0;
   }
   .click-hint b { color: var(--accent); font-weight: normal; }
 
   /* ── Section divider label ── */
   .sec-label {
-    font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em;
     color: var(--text-dim); text-transform: uppercase;
     border-top: 1px solid var(--border); padding-top: 8px;
     margin-top: 2px;
@@ -174,21 +174,21 @@
   }
   .nudge {
     background: none; border: 1px solid var(--border); color: var(--text-dim);
-    font-family: var(--mono); font-size: 9px; padding: 3px 7px;
+    font-family: var(--mono); font-size: 13px; padding: 5px 10px;
     cursor: pointer; border-radius: 2px; transition: all 0.1s; white-space: nowrap;
   }
   .nudge:hover { border-color: var(--accent); color: var(--accent); }
   #period-val {
-    font-family: var(--mono); font-size: 14px; color: var(--accent);
-    min-width: 85px; text-align: right; letter-spacing: 0.05em;
+    font-family: var(--mono); font-size: 16px; color: var(--accent);
+    min-width: 95px; text-align: right; letter-spacing: 0.05em;
   }
   .stats-row {
     display: flex; gap: 18px;
-    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+    font-family: var(--mono); font-size: 13px; color: var(--text-dim);
   }
   .stats-row span { color: var(--text); }
-  #computing { font-family: var(--mono); font-size: 10px; color: var(--warn);
-               letter-spacing: 0.08em; min-height: 14px; }
+  #computing { font-family: var(--mono); font-size: 13px; color: var(--warn);
+               letter-spacing: 0.08em; min-height: 16px; }
 
   /* ── Sub-plot images ── */
   .sub-img { display: block; width: 100%; height: auto; border-radius: 3px; margin-top: 6px; }
@@ -201,10 +201,10 @@
     z-index: 100; gap: 16px;
   }
   #loading-overlay h2 {
-    font-family: var(--mono); font-size: 12px;
+    font-family: var(--mono); font-size: 16px;
     letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase;
   }
-  #loading-msg { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; }
+  #loading-msg { font-family: var(--mono); font-size: 14px; color: var(--text-dim); letter-spacing: 0.08em; }
   .spinner {
     width: 32px; height: 32px;
     border: 2px solid var(--border); border-top-color: var(--accent);
@@ -215,7 +215,7 @@
   /* ── Footer ── */
   footer {
     padding: 6px 20px; border-top: 1px solid var(--border);
-    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+    font-family: var(--mono); font-size: 13px; color: var(--text-dim);
     flex-shrink: 0; display: flex; gap: 20px;
   }
   footer span { color: var(--accent2); }
@@ -316,7 +316,6 @@
   <div>Stars: <span id="star-count">—</span></div>
   <div>Seed: <span id="seed-display">—</span></div>
   <div>Flagged: <span id="flagged-count">0</span></div>
-  <div>Backend: <span>Pyodide / Python</span></div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
@@ -339,7 +338,7 @@ S = dict(
     fig_bg   = '#0a0e1a',
     ax_bg    = '#05080f',
     line     = '#4af3c8',
-    ax_col   = '#8aa8c8',
+    ax_col   = '#ffffff',
     title    = '#ffffff',
     grid     = '#1a2340',
     fit      = '#f3c84a',
