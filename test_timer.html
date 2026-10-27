@@ -57,6 +57,7 @@
   color-scheme: light;
 }
 
+[hidden] { display: none !important; }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
@@ -311,22 +312,24 @@ button, input { font: inherit; }
   background: var(--surface-2);
 }
 .seg {
+  flex: none;
   display: flex;
   align-items: center;
   min-width: 0;
-  padding-inline: 0.9em;
+  padding-inline: 0;
   overflow: hidden;
   white-space: nowrap;
   font-weight: 600;
-  font-size: clamp(11px, 5.5cqh, 22px);
+  font-size: clamp(11px, 4.5cqh, 18px);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--on-color);
 }
-.seg-read { background: var(--read); transition: flex 0.8s ease, padding 0.8s ease, opacity 0.6s ease; }
-.seg-read.gone { padding-inline: 0; opacity: 0; }
+.seg span { margin-inline-start: 0.7em; }
+.seg-read { background: var(--read); transition: width 0.8s ease, opacity 0.6s ease; }
+.seg-read.gone { opacity: 0; }
 .seg-test { background: var(--test-c); }
-.seg-read + .seg-test { border-left: 3px solid var(--surface); transition: border-left-width 0.8s ease; }
+.seg-read + .seg-test { border-left: 3px solid var(--surface); transition: width 0.8s ease, border-left-width 0.8s ease; }
 .seg-read.gone + .seg-test { border-left-width: 0; }
 .spent {
   position: absolute;
@@ -493,6 +496,8 @@ button, input { font: inherit; }
   var $ = function (id) { return document.getElementById(id); };
   var STORE = 'extra-time-timer-settings';
   var BEGIN_MS = 8000;
+  var READ_OPTS = ['Reading time', 'Reading', 'Read', ''];
+  var TEST_OPTS = ['Test time', 'Test', ''];
   var DEFS = [
     { key: 'std', label: 'Standard time', factor: 1 },
     { key: 'x25', label: '+25% extra time', factor: 1.25 },
@@ -621,6 +626,23 @@ button, input { font: inherit; }
   function syncReading() { $('readMin').disabled = !$('useReading').checked; }
 
   /* ---------- Run view ---------- */
+  function fitSeg(seg, opts) {
+    if (!seg) return;
+    var s = seg.firstChild;
+    var pad = parseFloat(getComputedStyle(s).marginLeft) || 0;
+    for (var i = 0; i < opts.length; i++) {
+      s.textContent = opts[i];
+      if (s.offsetWidth + pad * 2 <= seg.clientWidth) return;
+    }
+  }
+  function fitLabels() {
+    if ($('run').hidden) return;
+    refs.forEach(function (o) {
+      if (!o.gone) fitSeg(o.rseg, READ_OPTS);
+      fitSeg(o.tseg, TEST_OPTS);
+    });
+  }
+
   function buildCards() {
     var host = $('cards');
     host.textContent = '';
@@ -640,12 +662,12 @@ button, input { font: inherit; }
       var bar = el('div', 'bar');
       if (r.readMs > 0) {
         var sr = el('div', 'seg seg-read');
-        sr.style.flex = r.readMs + ' 1 0px';
+        sr.style.width = (r.readMs / r.totalMs * 100) + '%';
         sr.appendChild(el('span', null, 'Reading time'));
         bar.appendChild(sr);
       }
       var st = el('div', 'seg seg-test');
-      st.style.flex = r.testMs + ' 1 0px';
+      st.style.width = (r.testMs / r.totalMs * 100) + '%';
       st.appendChild(el('span', null, 'Test time'));
       bar.appendChild(st);
       var spent = el('div', 'spent');
@@ -657,7 +679,7 @@ button, input { font: inherit; }
       inn.appendChild(bar);
       card.appendChild(inn);
       host.appendChild(card);
-      return { r: r, card: card, chip: chip, meta: meta, time: time, spent: spent, needle: needle, bar: bar, rseg: sr || null, gone: false, txId: null, t: '', state: '', m: '' };
+      return { r: r, card: card, chip: chip, meta: meta, time: time, spent: spent, needle: needle, bar: bar, rseg: sr || null, tseg: st, gone: false, txId: null, t: '', state: '', m: '' };
     });
   }
 
@@ -705,7 +727,8 @@ button, input { font: inherit; }
         o.gone = gone;
         if (o.rseg) {
           o.bar.style.setProperty('--tx', '0.8s');
-          o.rseg.style.flex = gone ? '0 1 0px' : r.readMs + ' 1 0px';
+          o.rseg.style.width = gone ? '0%' : (r.readMs / r.totalMs * 100) + '%';
+          o.tseg.style.width = gone ? '100%' : (r.testMs / r.totalMs * 100) + '%';
           o.rseg.classList.toggle('gone', gone);
           clearTimeout(o.txId);
           o.txId = setTimeout(function () { o.bar.style.removeProperty('--tx'); }, 900);
@@ -775,6 +798,8 @@ button, input { font: inherit; }
     $('pauseBtn').disabled = false;
     $('setup').hidden = true;
     $('run').hidden = false;
+    fitLabels();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitLabels);
     tick();
     clearInterval(tickId);
     tickId = setInterval(tick, 100);
@@ -850,6 +875,7 @@ button, input { font: inherit; }
   ['pointermove', 'pointerdown'].forEach(function (name) {
     document.addEventListener(name, function () { if (!$('run').hidden) poke(); });
   });
+  window.addEventListener('resize', fitLabels);
   document.addEventListener('fullscreenchange', function () {
     $('fsBtn').textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
   });
