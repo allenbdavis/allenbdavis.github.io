@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Extra Time Test Timer</title>
+<title>Test Timer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
@@ -113,7 +113,6 @@ button, input { font: inherit; }
   text-transform: uppercase;
   text-wrap: balance;
 }
-.lede { color: var(--fg-dim); font-size: 18px; max-width: 52ch; margin-top: 12px; }
 .setup-body {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
@@ -295,6 +294,13 @@ button, input { font: inherit; }
   white-space: nowrap;
   color: var(--digit);
 }
+.time .unit {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.3em;
+  letter-spacing: 0.04em;
+  margin-left: 0.3em;
+}
 .bar {
   grid-column: 1 / -1;
   position: relative;
@@ -396,8 +402,7 @@ button, input { font: inherit; }
 
 <section id="setup" class="setup">
   <header>
-    <h1>Extra Time Test Timer</h1>
-    <p class="lede">Set the test length once. Standard and extra-time students each get their own timer to project.</p>
+    <h1>Test Timer</h1>
   </header>
   <div class="setup-body">
     <form id="setupForm" class="panel form" novalidate>
@@ -413,13 +418,13 @@ button, input { font: inherit; }
       <div class="field">
         <span class="field-label">Reading time</span>
         <div class="check-row">
-          <label class="check" for="useReading"><input id="useReading" type="checkbox" checked>Include reading time</label>
+          <label class="check" for="useReading"><input id="useReading" type="checkbox">Include reading time</label>
           <div class="num sm">
             <input id="readMin" type="number" inputmode="decimal" min="0" step="any" value="5" aria-label="Reading time in minutes">
             <span>minutes</span>
           </div>
         </div>
-        <p class="hint">Everyone reads together at the start. Extra-time students get this same reading time, then their longer test time.</p>
+        <p class="hint">Extra-time students get this same reading time, then their longer test time.</p>
       </div>
 
       <div class="field" role="group" aria-labelledby="extraLabel">
@@ -429,6 +434,12 @@ button, input { font: inherit; }
           <label class="check" for="x50"><input id="x50" type="checkbox">+50%</label>
         </div>
         <p class="hint">The standard timer is always shown.</p>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Display</span>
+        <label class="check" for="hideSec"><input id="hideSec" type="checkbox">Hide seconds</label>
+        <p class="hint">Timers show whole minutes remaining. The bars still move smoothly.</p>
       </div>
 
       <p id="formError" class="error" role="alert"></p>
@@ -495,7 +506,7 @@ button, input { font: inherit; }
   };
 
   var timers = [], refs = [];
-  var run = { running: false, startedAt: 0, before: 0, finished: false };
+  var run = { running: false, startedAt: 0, before: 0, finished: false, hideSec: false };
   var tickId = null, idleId = null, confirmId = null, wake = null;
   var bannerKind = null, backArmed = false;
 
@@ -510,6 +521,15 @@ button, input { font: inherit; }
     var s = Math.max(0, Math.ceil(ms / 1000));
     var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
     return h > 0 ? h + ':' + pad(m) + ':' + pad(sec) : m + ':' + pad(sec);
+  }
+  function minParts(ms, up) {
+    var m = Math.max(0, up ? Math.ceil(ms / 60000) : Math.floor(ms / 60000));
+    if (m >= 60) return { n: Math.floor(m / 60) + ':' + pad(m % 60), u: 'h:min' };
+    return { n: String(m), u: 'min' };
+  }
+  function remParts(ms) {
+    if (ms < 60000) return { n: String(Math.min(59, Math.max(0, Math.ceil(ms / 1000)))), u: 'sec' };
+    return minParts(ms, false);
   }
   function fmtUp(ms) {
     var s = Math.max(0, Math.floor(ms / 1000));
@@ -527,7 +547,8 @@ button, input { font: inherit; }
       useReading: $('useReading').checked,
       read: parseFloat($('readMin').value),
       x25: $('x25').checked,
-      x50: $('x50').checked
+      x50: $('x50').checked,
+      hideSec: $('hideSec').checked
     };
   }
   function validate(c) {
@@ -591,6 +612,7 @@ button, input { font: inherit; }
       if (s.read >= 0) $('readMin').value = s.read;
       $('x25').checked = !!s.x25;
       $('x50').checked = !!s.x50;
+      $('hideSec').checked = !!s.hideSec;
     } catch (e) { /* storage unavailable */ }
   }
   function saveSettings(c) {
@@ -666,8 +688,13 @@ button, input { font: inherit; }
       else { phase = 'done'; remain = 0; }
       if (phase !== 'done') allDone = false;
       var state = phase === 'writing' ? (r.totalMs - e <= r.warnMs ? 'warn' : 'ok') : phase;
-      var t = fmt(remain);
-      if (t !== o.t) { o.t = t; o.time.textContent = t; }
+      var p = run.hideSec ? remParts(remain) : null;
+      var t = p ? p.n + ' ' + p.u : fmt(remain);
+      if (t !== o.t) {
+        o.t = t;
+        o.time.textContent = p ? p.n : t;
+        if (p) o.time.appendChild(el('span', 'unit', p.u));
+      }
       if (state !== o.state) {
         o.state = state;
         o.card.dataset.state = state;
@@ -695,7 +722,8 @@ button, input { font: inherit; }
 
     var readFirst = timers[0].readMs;
     var written = Math.max(0, e - readFirst);
-    var wt = fmtUp(written);
+    var wp = run.hideSec ? minParts(written, false) : null;
+    var wt = wp ? wp.n + ' ' + wp.u : fmtUp(written);
     if (wt !== $('elapsedTime').textContent) $('elapsedTime').textContent = wt;
     $('elapsed').classList.toggle('pending', e < readFirst);
     var ct = clock(now);
@@ -735,6 +763,7 @@ button, input { font: inherit; }
 
   function start(c) {
     timers = makeTimers(c);
+    run.hideSec = !!c.hideSec;
     buildCards();
     run.before = 0;
     run.startedAt = Date.now();
