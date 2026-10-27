@@ -16,7 +16,7 @@
     --warn:     #f3c84a;
     --danger:   #f35a4a;
     --text:     #ffffff;
-    --text-dim: #8aa8c8;
+    --text-dim: #ffffff;
     --mono: 'Share Tech Mono', monospace;
     --sans: 'Exo 2', sans-serif;
   }
@@ -42,10 +42,10 @@
     flex-shrink: 0;
   }
   header h1 {
-    font-family: var(--mono); font-size: 13px;
+    font-family: var(--mono); font-size: 16px;
     letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase;
   }
-  #status { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--warn); }
+  #status { font-family: var(--mono); font-size: 14px; letter-spacing: 0.08em; color: var(--warn); }
   #status.ready { color: var(--accent); }
   #status.error { color: var(--danger); }
 
@@ -84,21 +84,21 @@
     background: var(--panel-bg);
   }
   .sp-label {
-    font-family: var(--mono); font-size: 9px;
+    font-family: var(--mono); font-size: 12px;
     letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase;
   }
   #star-id-display {
-    font-family: var(--mono); font-size: 12px; color: var(--accent2); flex: 1;
+    font-family: var(--mono); font-size: 15px; color: var(--accent2); flex: 1;
   }
   #debug-info {
     display: none;
-    font-family: var(--mono); font-size: 10px; color: var(--warn);
+    font-family: var(--mono); font-size: 13px; color: var(--warn);
     letter-spacing: 0.05em;
   }
 
   .hdr-btn {
     background: none; border: 1px solid var(--border); color: var(--text-dim);
-    font-family: var(--mono); font-size: 10px; padding: 3px 9px;
+    font-family: var(--mono); font-size: 13px; padding: 5px 12px;
     cursor: pointer; border-radius: 2px; transition: all 0.12s; white-space: nowrap;
     letter-spacing: 0.05em;
   }
@@ -124,7 +124,7 @@
     align-items: center; justify-content: center;
     height: 200px;
     color: var(--text-dim); font-family: var(--mono);
-    font-size: 11px; letter-spacing: 0.08em;
+    font-size: 14px; letter-spacing: 0.08em;
     text-align: center; line-height: 2.2;
   }
   #placeholder .icon { font-size: 28px; opacity: 0.2; margin-bottom: 10px; }
@@ -143,14 +143,14 @@
   }
 
   .click-hint {
-    font-family: var(--mono); font-size: 10px;
+    font-family: var(--mono); font-size: 13px;
     color: var(--text-dim); letter-spacing: 0.05em; padding: 3px 0;
   }
   .click-hint b { color: var(--accent); font-weight: normal; }
 
   /* ── Section divider label ── */
   .sec-label {
-    font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em;
     color: var(--text-dim); text-transform: uppercase;
     border-top: 1px solid var(--border); padding-top: 8px;
     margin-top: 2px;
@@ -174,21 +174,21 @@
   }
   .nudge {
     background: none; border: 1px solid var(--border); color: var(--text-dim);
-    font-family: var(--mono); font-size: 9px; padding: 3px 7px;
+    font-family: var(--mono); font-size: 13px; padding: 5px 10px;
     cursor: pointer; border-radius: 2px; transition: all 0.1s; white-space: nowrap;
   }
   .nudge:hover { border-color: var(--accent); color: var(--accent); }
   #period-val {
-    font-family: var(--mono); font-size: 14px; color: var(--accent);
-    min-width: 85px; text-align: right; letter-spacing: 0.05em;
+    font-family: var(--mono); font-size: 16px; color: var(--accent);
+    min-width: 95px; text-align: right; letter-spacing: 0.05em;
   }
   .stats-row {
     display: flex; gap: 18px;
-    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+    font-family: var(--mono); font-size: 13px; color: var(--text-dim);
   }
   .stats-row span { color: var(--text); }
-  #computing { font-family: var(--mono); font-size: 10px; color: var(--warn);
-               letter-spacing: 0.08em; min-height: 14px; }
+  #computing { font-family: var(--mono); font-size: 13px; color: var(--warn);
+               letter-spacing: 0.08em; min-height: 16px; }
 
   /* ── Sub-plot images ── */
   .sub-img { display: block; width: 100%; height: auto; border-radius: 3px; margin-top: 6px; }
@@ -201,10 +201,10 @@
     z-index: 100; gap: 16px;
   }
   #loading-overlay h2 {
-    font-family: var(--mono); font-size: 12px;
+    font-family: var(--mono); font-size: 16px;
     letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase;
   }
-  #loading-msg { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; }
+  #loading-msg { font-family: var(--mono); font-size: 14px; color: var(--text-dim); letter-spacing: 0.08em; }
   .spinner {
     width: 32px; height: 32px;
     border: 2px solid var(--border); border-top-color: var(--accent);
@@ -215,10 +215,86 @@
   /* ── Footer ── */
   footer {
     padding: 6px 20px; border-top: 1px solid var(--border);
-    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+    font-family: var(--mono); font-size: 13px; color: var(--text-dim);
     flex-shrink: 0; display: flex; gap: 20px;
   }
   footer span { color: var(--accent2); }
+  footer button#candidates-toggle,
+  footer button#stars-toggle {
+    background: none; border: none; color: var(--text-dim);
+    font-family: var(--mono); font-size: 13px; cursor: pointer;
+    padding: 0; letter-spacing: 0.05em;
+  }
+  footer button#candidates-toggle:hover,
+  footer button#stars-toggle:hover { color: var(--accent); }
+  footer button#candidates-toggle .ct-count,
+  footer button#stars-toggle .ct-count { color: var(--accent2); }
+
+  /* ── Candidates panel (slides over star field) ── */
+  #candidates-panel {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--panel-bg);
+    border-right: 1px solid var(--border);
+    display: none;
+    flex-direction: column;
+    z-index: 10;
+  }
+  #candidates-panel.open { display: flex; }
+  #cp-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #cp-header span {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.15em;
+    color: var(--accent); text-transform: uppercase;
+  }
+  #cp-close {
+    background: none; border: none; color: var(--text-dim);
+    font-family: var(--mono); font-size: 16px; cursor: pointer; line-height: 1;
+  }
+  #cp-close:hover { color: var(--accent); }
+  #cp-list {
+    flex: 1; overflow-y: auto; padding: 8px 0;
+  }
+  #cp-list::-webkit-scrollbar { width: 4px; }
+  #cp-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .cp-empty {
+    font-family: var(--mono); font-size: 12px; color: var(--text-dim);
+    text-align: center; padding: 30px 14px; letter-spacing: 0.06em;
+  }
+  .cp-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .cp-row:hover { background: #0f1525; }
+  .cp-row.active { background: #101828; }
+
+  .cp-name-block {
+    display: flex; flex-direction: column; flex: 1; gap: 2px;
+  }
+  .cp-name {
+    font-family: var(--mono); font-size: 13px; color: var(--text);
+  }
+  .cp-meta {
+    font-family: var(--mono); font-size: 10px; color: var(--accent); letter-spacing: 0.04em;
+  }
+  .cp-section-label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    color: var(--accent); text-transform: uppercase;
+    padding: 6px 14px 4px; border-bottom: 1px solid var(--border);
+  }
+  .cp-unflag, .cp-reflag {
+    background: none; border: 1px solid var(--border); color: var(--text-dim);
+    font-family: var(--mono); font-size: 11px; padding: 2px 7px;
+    cursor: pointer; border-radius: 2px; flex-shrink: 0;
+    transition: all 0.1s;
+  }
+  .cp-unflag:hover { border-color: var(--danger); color: var(--danger); }
+  .cp-reflag:hover { border-color: var(--warn); color: var(--warn); }
 </style>
 </head>
 <body>
@@ -242,6 +318,16 @@
   <!-- Star field strip -->
   <div id="field-panel">
     <canvas id="starCanvas"></canvas>
+    <!-- Candidates panel (overlays star field) -->
+    <div id="candidates-panel">
+      <div id="cp-header">
+        <span>Candidates</span>
+        <button id="cp-close">✕</button>
+      </div>
+      <div id="cp-list">
+        <div class="cp-empty">No flagged targets yet.</div>
+      </div>
+    </div>
   </div>
 
   <!-- Right panel -->
@@ -313,10 +399,9 @@
 
 <!-- Footer -->
 <footer>
-  <div>Stars: <span id="star-count">—</span></div>
-  <div>Seed: <span id="seed-display">—</span></div>
-  <div>Flagged: <span id="flagged-count">0</span></div>
-  <div>Backend: <span>Pyodide / Python</span></div>
+  <button id="stars-toggle">Stars: <span class="ct-count" id="star-count">—</span></button>
+  <div>Examined: <span id="examined-count">0</span> / <span id="star-total">—</span></div>
+  <button id="candidates-toggle">Candidates: <span class="ct-count" id="flagged-count">0</span></button>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
@@ -339,7 +424,7 @@ S = dict(
     fig_bg   = '#0a0e1a',
     ax_bg    = '#05080f',
     line     = '#4af3c8',
-    ax_col   = '#8aa8c8',
+    ax_col   = '#ffffff',
     title    = '#ffffff',
     grid     = '#1a2340',
     fit      = '#f3c84a',
@@ -727,6 +812,8 @@ def make_oddeven_plot(star_id, period, t0):
 //  STATE
 // ═══════════════════════════════════════════════════════════════════════
 let pyodide = null, stars = [], flagged = new Set();
+let examined = new Set();   // star IDs clicked at least once
+let starCache = new Map();  // star ID → saved LC state
 let currentStar = null, axBounds = null;
 let transitClicks = [], currentPeriod = null, currentT0 = null;
 let foldDebounce = null;
@@ -766,8 +853,8 @@ async function boot() {
     pyodide.runPython(PYTHON);
     msg.textContent = 'Generating star field…';
     stars = JSON.parse(pyodide.runPython(`generate_starfield(seed=${SEED}, n_stars=${N_STARS})`));
-    document.getElementById('star-count').textContent   = stars.length;
-    document.getElementById('seed-display').textContent = SEED;
+    document.getElementById('star-count').textContent = stars.length;
+    document.getElementById('star-total').textContent  = stars.length;
     statusEl.textContent = '● READY';
     statusEl.className   = 'ready';
     overlay.style.display = 'none';
@@ -824,6 +911,10 @@ function drawStars() {
     glow.addColorStop(0, c+'44'); glow.addColorStop(1,'transparent');
     fCtx.beginPath(); fCtx.arc(x,y,r*5,0,Math.PI*2); fCtx.fillStyle=glow; fCtx.fill();
     fCtx.beginPath(); fCtx.arc(x,y,r,0,Math.PI*2);   fCtx.fillStyle=c;    fCtx.fill();
+    if (examined.has(s.id) && !flagged.has(s.id)) {
+      fCtx.beginPath(); fCtx.arc(x,y,r+4,0,Math.PI*2);
+      fCtx.strokeStyle='#44444888'; fCtx.lineWidth=1; fCtx.stroke();
+    }
     if (flagged.has(s.id)) {
       fCtx.beginPath(); fCtx.arc(x,y,r+5,0,Math.PI*2);
       fCtx.strokeStyle='#f3c84a88'; fCtx.lineWidth=1; fCtx.stroke();
@@ -864,10 +955,30 @@ async function onStarClick(e) {
   const r    = fieldCanvas.getBoundingClientRect();
   const star = hitTest(e.clientX-r.left, e.clientY-r.top);
   if (!star || (currentStar && currentStar.id === star.id)) return;
+  await selectStar(star);
+}
+
+async function selectStar(star) {
+  // Save current star state before switching
+  if (currentStar) saveStarCache(currentStar.id);
+
   currentStar = star;
-  resetTransits();
+
+  // Mark examined
+  if (!examined.has(star.id)) {
+    examined.add(star.id);
+    document.getElementById('examined-count').textContent = examined.size;
+  }
+
   drawStars();
-  await loadLC(star);
+
+  // Restore from cache or load fresh
+  if (starCache.has(star.id)) {
+    restoreStarCache(star.id);
+  } else {
+    resetTransits();
+    await loadLC(star);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -915,6 +1026,76 @@ async function loadLC(star) {
     document.getElementById('placeholder').innerHTML =
       '<div style="color:var(--danger)">Error loading light curve</div>';
   }
+}
+
+// ── Star cache: save/restore LC state per star ──
+function saveStarCache(id) {
+  starCache.set(id, {
+    lcSrc:        document.getElementById('plot-img').src,
+    axBounds:     axBounds ? {...axBounds} : null,
+    transitClicks: [...transitClicks],
+    currentPeriod,
+    currentT0,
+    foldSrc:      document.getElementById('fold-img').src,
+    oddevenSrc:   document.getElementById('oddeven-img').src,
+    periodBoxDisplay:  document.getElementById('period-box').style.display,
+    foldAreaDisplay:   document.getElementById('fold-area').style.display,
+    oddEvenDisplay:    document.getElementById('oddeven-area').style.display,
+    clickCount:   document.getElementById('click-count').textContent,
+    periodVal:    document.getElementById('period-val').textContent,
+    snrVal:       document.getElementById('snr-val').textContent,
+    depthVal:     document.getElementById('depth-val').textContent,
+    chi2Val:      document.getElementById('chi2-val').textContent,
+    debugText:    document.getElementById('debug-info').textContent,
+    debugDisplay: document.getElementById('debug-info').style.display,
+  });
+}
+
+function restoreStarCache(id) {
+  const c = starCache.get(id);
+  if (!c) return;
+
+  // Restore global state
+  axBounds      = c.axBounds;
+  transitClicks = [...c.transitClicks];
+  currentPeriod = c.currentPeriod;
+  currentT0     = c.currentT0;
+
+  // LC image
+  const plotImg = document.getElementById('plot-img');
+  plotImg.src = c.lcSrc;
+  document.getElementById('placeholder').style.display  = 'none';
+  document.getElementById('lc-wrapper').style.display   = 'block';
+  document.getElementById('click-hint').style.display   = 'block';
+  document.getElementById('reset-btn').style.display    = 'inline-block';
+  document.getElementById('undo-btn').style.display     = 'inline-block';
+  document.getElementById('flag-btn').style.display     = 'inline-block';
+  updateFlagBtn();
+
+  document.getElementById('star-id-display').textContent =
+    `Star #${currentStar.id}  (${currentStar.type})`;
+  document.getElementById('click-count').textContent = c.clickCount;
+
+  // Period box
+  document.getElementById('period-box').style.display     = c.periodBoxDisplay;
+  document.getElementById('period-val').textContent        = c.periodVal;
+  document.getElementById('snr-val').textContent           = c.snrVal;
+  document.getElementById('depth-val').textContent         = c.depthVal;
+  document.getElementById('chi2-val').textContent          = c.chi2Val;
+
+  // Sub-plots
+  document.getElementById('fold-area').style.display      = c.foldAreaDisplay;
+  document.getElementById('fold-img').src                 = c.foldSrc;
+  document.getElementById('oddeven-area').style.display   = c.oddEvenDisplay;
+  document.getElementById('oddeven-img').src              = c.oddevenSrc;
+
+  // Debug
+  document.getElementById('debug-info').textContent       = c.debugText;
+  document.getElementById('debug-info').style.display     = c.debugDisplay;
+
+  // Redraw overlay after image loads
+  plotImg.addEventListener('load', () => { requestAnimationFrame(syncOverlay); }, {once:true});
+  if (plotImg.complete) requestAnimationFrame(syncOverlay);
 }
 
 // Sync overlay canvas dimensions to the rendered image size
@@ -1134,6 +1315,8 @@ document.getElementById('flag-btn').addEventListener('click', () => {
   updateFlagBtn();
   document.getElementById('flagged-count').textContent = flagged.size;
   drawStars();
+  if (document.getElementById('candidates-panel').classList.contains('open'))
+    updateCandidatesPanel();
 });
 
 function updateFlagBtn() {
@@ -1142,6 +1325,144 @@ function updateFlagBtn() {
   btn.textContent = on ? '⚑ Flagged' : '⚑ Flag';
   btn.classList.toggle('active', !!on);
 }
+
+// ── Candidates panel ──
+const spectralColors = {O:'#a0c8ff',B:'#c8d8ff',A:'#ffffff',F:'#fff8e0',G:'#ffe080',K:'#ffb050',M:'#ff6030'};
+
+function makeStarThumb(s) {
+  const r   = starR(s);
+  const col = starColor(s);
+  const sz  = 24; // canvas size in px
+  const cx  = sz / 2;
+  const cvs = document.createElement('canvas');
+  cvs.width = cvs.height = sz;
+  cvs.style.cssText = 'width:24px;height:24px;flex-shrink:0;';
+  const ctx = cvs.getContext('2d');
+  // glow
+  const glow = ctx.createRadialGradient(cx,cx,0,cx,cx,r*4);
+  glow.addColorStop(0, col + '55');
+  glow.addColorStop(1, 'transparent');
+  ctx.beginPath(); ctx.arc(cx,cx,r*4,0,Math.PI*2);
+  ctx.fillStyle = glow; ctx.fill();
+  // core
+  ctx.beginPath(); ctx.arc(cx,cx,r,0,Math.PI*2);
+  ctx.fillStyle = col; ctx.fill();
+  return cvs;
+}
+
+function makeRow(s, showUnflag) {
+  const active = currentStar && currentStar.id === s.id ? ' active' : '';
+  const btn    = showUnflag
+    ? `<button class="cp-unflag" data-id="${s.id}">✕ unflag</button>`
+    : `<button class="cp-reflag" data-id="${s.id}">⚑ flag</button>`;
+
+  // Pull measurements from cache if available
+  let meta = '';
+  if (showUnflag && starCache.has(s.id)) {
+    const c = starCache.get(s.id);
+    const p = c.periodVal && c.periodVal !== '— d' ? c.periodVal : null;
+    const d = c.depthVal  && c.depthVal  !== '—'   ? c.depthVal  : null;
+    if (p || d) {
+      const parts = [];
+      if (p) parts.push(`P = ${p}`);
+      if (d) parts.push(`depth = ${d}`);
+      meta = `<span class="cp-meta">${parts.join('  ·  ')}</span>`;
+    }
+  }
+
+  // Build row as a real DOM element so we can append the canvas
+  const row = document.createElement('div');
+  row.className = 'cp-row' + active;
+  row.dataset.id = s.id;
+  row.innerHTML = `
+    <span class="cp-name-block">
+      <span class="cp-name">Star ${s.id}</span>
+      ${meta}
+    </span>
+    ${btn}`;
+  row.insertBefore(makeStarThumb(s), row.firstChild);
+  return row;
+}
+
+function updateCandidatesPanel() {
+  const list = document.getElementById('cp-list');
+
+  const candidateStars   = stars.filter(s => flagged.has(s.id)).sort((a,b) => a.id - b.id);
+  const nonCandidateStars = stars.filter(s => examined.has(s.id) && !flagged.has(s.id)).sort((a,b) => a.id - b.id);
+
+  if (candidateStars.length === 0 && nonCandidateStars.length === 0) {
+    list.innerHTML = '<div class="cp-empty">No examined targets yet.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+
+  function appendSection(label, starArr, showUnflag) {
+    const hdr = document.createElement('div');
+    hdr.className = 'cp-section-label';
+    if (label.includes('Non')) hdr.style.marginTop = '10px';
+    hdr.textContent = label;
+    list.appendChild(hdr);
+    starArr.forEach(s => list.appendChild(makeRow(s, showUnflag)));
+  }
+
+  if (candidateStars.length > 0)
+    appendSection(`Candidates (${candidateStars.length})`, candidateStars, true);
+  if (nonCandidateStars.length > 0)
+    appendSection(`Non-candidates (${nonCandidateStars.length})`, nonCandidateStars, false);
+
+  // Row click → select star and close panel
+  list.querySelectorAll('.cp-row').forEach(row => {
+    row.addEventListener('click', async e => {
+      if (e.target.classList.contains('cp-unflag') ||
+          e.target.classList.contains('cp-reflag')) return;
+      const id   = parseInt(row.dataset.id);
+      const star = stars.find(s => s.id === id);
+      if (star) {
+        document.getElementById('candidates-panel').classList.remove('open');
+        await selectStar(star);
+      }
+    });
+  });
+
+  // Unflag button
+  list.querySelectorAll('.cp-unflag').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = parseInt(btn.dataset.id);
+      flagged.delete(id);
+      document.getElementById('flagged-count').textContent = flagged.size;
+      if (currentStar && currentStar.id === id) updateFlagBtn();
+      drawStars();
+      updateCandidatesPanel();
+    });
+  });
+
+  // Re-flag button (on non-candidates)
+  list.querySelectorAll('.cp-reflag').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = parseInt(btn.dataset.id);
+      flagged.add(id);
+      document.getElementById('flagged-count').textContent = flagged.size;
+      if (currentStar && currentStar.id === id) updateFlagBtn();
+      drawStars();
+      updateCandidatesPanel();
+    });
+  });
+}
+
+document.getElementById('candidates-toggle').addEventListener('click', () => {
+  if (currentStar) saveStarCache(currentStar.id); // capture latest before display
+  updateCandidatesPanel();
+  document.getElementById('candidates-panel').classList.add('open');
+});
+document.getElementById('cp-close').addEventListener('click', () => {
+  document.getElementById('candidates-panel').classList.remove('open');
+});
+document.getElementById('stars-toggle').addEventListener('click', () => {
+  document.getElementById('candidates-panel').classList.remove('open');
+});
 
 // ── Go ──
 boot();
