@@ -88,12 +88,13 @@
     letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase;
   }
   #star-id-display {
-    font-family: var(--mono); font-size: 15px; color: var(--accent2); flex: 1;
+    font-family: var(--mono); font-size: 15px; color: var(--accent2); flex: 1 0 auto;
+    white-space: nowrap;
   }
   #debug-info {
     display: none;
-    font-family: var(--mono); font-size: 13px; color: var(--warn);
-    letter-spacing: 0.05em;
+    font-family: var(--mono); font-size: 12px; color: var(--warn);
+    letter-spacing: 0.02em;
     white-space: pre-line; text-align: right; line-height: 1.35;
   }
   .hdr-btn:disabled { opacity: 0.55; cursor: default; }
@@ -145,6 +146,7 @@
   #p2-list .cp-row:hover { background: transparent; }
   .cp-debug {
     font-family: var(--mono); font-size: 10px; color: var(--warn); letter-spacing: 0.04em;
+    white-space: pre-line;
   }
   #cp-lock-note {
     display: none; font-family: var(--mono); font-size: 11px;
@@ -519,41 +521,117 @@ def _to_b64(fig):
     return base64.b64encode(buf.read()).decode()
 
 # ─────────────────────────────────────────────────────────────────────────────
-def _make_companion(brng, frac=0.25):
-    """
-    Hidden-binary truth for one star (used by Phase 2 imaging).
-    Always consumes the same number of draws per star, so changing frac
-    never reshuffles the companion parameters of other stars.
-    Returns None for a single star, else:
-      sep_arcsec : projected separation, log-uniform 0.1-3.0"
-      pa_deg     : position angle (deg, east of north)
-      dmag       : magnitude difference, companion minus primary (0 = equal)
-    """
-    has  = brng.random() < frac
-    sep  = 10 ** brng.uniform(np.log10(0.1), np.log10(3.0))
-    pa   = brng.uniform(0.0, 360.0)
-    dmag = brng.uniform(0.0, 5.0)
-    if not has:
+# Companion / distance model. Ground truth lives here (and in the star dicts);
+# what a student is allowed to see is decided by the UI, not by this module.
+#
+# Calibration notes (sources: Raghavan+2010; Ziegler+2020,2021 SOAR TESS surveys):
+#   - Physical separation: log-normal in a, peak ~50 AU (Raghavan: orbital-period
+#     peak ~300 yr).  Angular sep = a / distance, so nearer stars look wider.
+#   - Mass ratio q ~ flat on [0.1, 1];  delta-mag(I) ~ 7.5*log10(1/q)  (0..7.5)
+#   - Imaging window: 0.03" .. 4" (speckle FOV ~6").  Companions inside the
+#     window are real and dilute the light curve whether or not they resolve.
+#   - Detectability: SOAR-like contrast curve; ~5 mag beyond ~0.5", worse
+#     closer in and for fainter hosts; unresolved below ~0.04".
+COMP_FRAC      = 0.30
+LOGA_MEAN      = 1.7      # log10(a/AU)
+LOGA_SIGMA     = 1.5
+SEP_MIN, SEP_MAX = 0.03, 4.0     # arcsec
+RESOLVE_MIN    = 0.04            # arcsec
+DMAG_PER_DEX   = 7.5
+DIST_MEDIAN_PC = 200.0           # typical TESS planet host (Ziegler+2021)
+DIST_SIGMA_DEX = 0.30
+
+# Per-star truth that is not part of the JSON the UI sees (blend EB parameters,
+# dilution factor).  Rebuilt by generate_starfield.
+_truth = {}
+
+def _contrast_limit(sep, brightness):
+    """5-sigma delta-mag limit of the (synthetic) imager at separation sep."""
+    return 5.0 - 4.0 * np.exp(-sep / 0.25) - 1.5 * (1.0 - brightness)
+
+def _detectable(sep, dmag, brightness):
+    return bool(sep >= RESOLVE_MIN and dmag <= _contrast_limit(sep, brightness))
+
+def _bound_companion(srng, dist_pc, brightness):
+    """Physically bound companion, or None.  Same distance as the primary."""
+    if srng.random() >= COMP_FRAC:
         return None
-    return dict(sep_arcsec=float(sep), pa_deg=float(pa), dmag=float(dmag))
+    sep = None
+    for _ in range(200):                       # truncated log-normal in a
+        a   = 10 ** srng.normal(LOGA_MEAN, LOGA_SIGMA)
+        s   = a * srng.uniform(0.3, 1.0) / dist_pc     # projection factor
+        if SEP_MIN <= s <= SEP_MAX:
+            sep = s
+            break
+    if sep is None:
+        return None
+    q    = srng.uniform(0.1, 1.0)
+    dmag = DMAG_PER_DEX * np.log10(1.0 / q)
+    pa   = srng.uniform(0.0, 360.0)
+    return dict(sep_arcsec=float(sep), pa_deg=float(pa), dmag=float(dmag),
+                bound=True, is_eb=False, dist_pc=float(dist_pc),
+                detectable=_detectable(sep, dmag, brightness))
 
 def generate_starfield(seed=42, n_stars=25):
     rng   = np.random.default_rng(seed)
-    # Separate stream for binary truth: adding it must not perturb positions,
-    # brightness, types, or (via seed*1000+id) any light curve.
-    brng  = np.random.default_rng([seed, 1])
     types = ['boring']*5 + ['pulsating', 'transit', 'transit', 'eb']
     stars = []
+    _truth.clear()
     for i in range(n_stars):
-        stars.append({
+        # Existing draws, unchanged -> same positions/brightness/types as before.
+        s = {
             'id':         i,
             'x':          float(rng.uniform(0.05, 0.95)),
             'y':          float(rng.uniform(0.05, 0.95)),
             'brightness': float(rng.uniform(0.2, 1.0)),
             'type':       str(rng.choice(types)),
-            'companion':  _make_companion(brng),   # None or dict (hidden truth)
-        })
+        }
+        # New truth, from per-star streams so it can never perturb the above.
+        srng  = np.random.default_rng([seed, 1, i])
+        dist  = float(np.clip(10 ** srng.normal(np.log10(DIST_MEDIAN_PC), DIST_SIGMA_DEX), 25.0, 800.0))
+        perr  = float(0.02 + 0.08 * (1.0 - s['brightness']))        # mas, Gaia-like
+        s['distance_pc']       = dist                                # truth (foreground/primary)
+        s['parallax_mas']      = float(1000.0 / dist + srng.normal(0.0, perr))   # measured
+        s['parallax_err_mas']  = perr
+        s['companion']         = _bound_companion(srng, dist, s['brightness'])
+        stars.append(s)
+
+    # Blended background eclipsing binaries.  Converted from 'boring' stars so
+    # no planet / EB / pulsator light curve in the field changes.  The first one
+    # is forced to be an easy imaging detection so there is always one to debug.
+    brng   = np.random.default_rng([seed, 2])
+    n_bl   = max(2, int(round(0.08 * n_stars)))
+    boring = [s['id'] for s in stars if s['type'] == 'boring']
+    others = [s['id'] for s in stars if s['type'] != 'boring']      # fallback only
+    pool   = boring if len(boring) >= n_bl else boring + others
+    chosen = [int(i) for i in brng.permutation(pool)][:n_bl]
+    for k, i in enumerate(chosen):
+        s = stars[i]
+        if k == 0:
+            sep  = float(brng.uniform(0.5, 2.5));  dmag = float(brng.uniform(1.5, 3.5))
+        else:                                       # chance alignment: uniform on the sky
+            u    = brng.uniform((SEP_MIN / SEP_MAX) ** 2, 1.0)
+            sep  = float(SEP_MAX * np.sqrt(u));    dmag = float(brng.uniform(1.0, 3.8))
+        f_eb   = 1.0 / (1.0 + 10 ** (0.4 * dmag))                 # EB's share of the light
+        obs    = float(brng.uniform(0.004, 0.02))                 # depth the student sees
+        d1     = float(min(obs / f_eb, 0.7))                      # intrinsic eclipse depth
+        P      = float(brng.uniform(1.0, 10.0))
+        s['type']      = 'blend_eb'
+        s['companion'] = dict(sep_arcsec=sep, pa_deg=float(brng.uniform(0.0, 360.0)),
+                              dmag=dmag, bound=False, is_eb=True,
+                              dist_pc=float(s['distance_pc'] * brng.uniform(1.5, 5.0)),
+                              detectable=_detectable(sep, dmag, s['brightness']))
+        _truth[i] = dict(dilution=f_eb,
+                         blend=dict(period=P, t0=float(brng.uniform(0, P)),
+                                    dur_frac=float(brng.uniform(0.03, 0.08)),
+                                    d1=d1, d2=float(d1 * brng.uniform(0.05, 0.9))))
+    # Bound companions dilute the host's own signal: host keeps 1/(1+10^(-0.4 dm)).
+    for s in stars:
+        c = s['companion']
+        if c and c['bound']:
+            _truth[s['id']] = dict(dilution=1.0 / (1.0 + 10 ** (-0.4 * c['dmag'])))
     return json.dumps(stars)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 def _gen_flux(star_id, star_type, brightness, seed):
@@ -565,6 +643,7 @@ def _gen_flux(star_id, star_type, brightness, seed):
     t     = np.linspace(0, 27, 1500)            # 27-day TESS sector
     sigma = 0.0006 + (1.0 - brightness) * 0.0024  # DEBUG: 5x reduced noise
     flux  = np.ones(len(t)) + rng.normal(0, sigma, len(t))
+    noise = flux - 1.0
     params = {}
 
     if star_type == 'pulsating':
@@ -600,6 +679,26 @@ def _gen_flux(star_id, star_type, brightness, seed):
         m2 = ds < w2
         flux[m2] -= d2 * (1.0 - ds[m2] / w2)
         params = dict(period=P, d1=d1, d2=d2, t0=t0)
+
+    elif star_type == 'blend_eb':
+        # Background EB: box-like eclipses (primary at phase 0, secondary at 0.5),
+        # diluted below by the foreground star's light.
+        b  = _truth[star_id]['blend']
+        P, t0, df = b['period'], b['t0'], b['dur_frac']
+        ph1 = ((t - t0) % P) / P;            ph1 = np.where(ph1 > 0.5, ph1 - 1.0, ph1)
+        ph2 = ((t - t0 - P / 2) % P) / P;    ph2 = np.where(ph2 > 0.5, ph2 - 1.0, ph2)
+        flux[np.abs(ph1) < df / 2] -= b['d1']
+        flux[np.abs(ph2) < df / 2] -= b['d2']
+        params = dict(period=P, depth=b['d1'], t0=t0, dur_frac=df, d2=b['d2'])
+
+    # Light from a companion inside the aperture dilutes every signal; noise is
+    # untouched (it was drawn first, so the random stream is unchanged).
+    dil = _truth.get(star_id, {}).get('dilution', 1.0)
+    if dil != 1.0:
+        flux = 1.0 + noise + dil * (flux - 1.0 - noise)
+    params['dilution'] = float(dil)
+    if 'depth' in params:
+        params['depth_obs'] = float(params['depth'] * dil)
 
     return t, flux, sigma, params
 
@@ -783,7 +882,8 @@ def make_lightcurve(star_id, star_type, brightness, seed):
     _star_data[star_id]    = dict(t=t, flux=flux, sigma=sigma, params=params)
 
     labels = dict(boring='Quiet Star', pulsating='Pulsating Star',
-                  transit='Transit Candidate', eb='Eclipsing Binary')
+                  transit='Transit Candidate', eb='Eclipsing Binary',
+                  blend_eb='Blended Background EB')
 
     fig, ax = plt.subplots(figsize=(7.5, 2.6), facecolor=S['fig_bg'])
     ax.plot(t, flux, color=S['line'], lw=0.55, alpha=0.9)
@@ -802,6 +902,8 @@ def make_lightcurve(star_id, star_type, brightness, seed):
         true_period = float(params.get('period', -1)),
         true_t0     = float(params.get('t0', -1)),
         true_depth  = float(params.get('depth', -1)),
+        true_depth_obs = float(params.get('depth_obs', -1)),
+        dilution    = float(params.get('dilution', 1.0)),
     ))
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -920,10 +1022,14 @@ const DEBUG   = true;  // show ground truth (true P/T0/depth, hidden binaries) i
 let viewPhase = 1, maxPhase = 1;
 const flagsEditable = () => maxPhase === 1;
 
+// Debug-only ground truth for a star's companion / distance (never shown to students).
 function companionText(s) {
   const c = s.companion;
-  return c ? `BINARY  sep=${c.sep_arcsec.toFixed(2)}"  PA=${c.pa_deg.toFixed(0)}°  Δm=${c.dmag.toFixed(1)}`
-           : 'SINGLE (no companion)';
+  const plx = `plx=${s.parallax_mas.toFixed(2)}±${s.parallax_err_mas.toFixed(2)} mas (d=${s.distance_pc.toFixed(0)} pc)`;
+  if (!c) return `SINGLE (no companion)\n${plx}`;
+  const kind = c.is_eb ? `BG-EB @${c.dist_pc.toFixed(0)}pc` : 'BOUND';
+  const det  = c.detectable ? 'detectable' : 'NOT detectable';
+  return `${kind} sep=${c.sep_arcsec.toFixed(2)}" (${(c.sep_arcsec*s.distance_pc).toFixed(0)} AU@fg) PA=${c.pa_deg.toFixed(0)}° Δm=${c.dmag.toFixed(1)} ${det}\n${plx}`;
 }
 
 // DOM
@@ -1125,8 +1231,15 @@ async function loadLC(star) {
     // DEBUG info
     const dbg   = document.getElementById('debug-info');
     const lines = [];
-    if (result.true_period > 0)
-      lines.push(`TRUE P=${result.true_period.toFixed(4)}d  T0=${result.true_t0.toFixed(4)}d  depth=${(result.true_depth*100).toFixed(3)}%`);
+    if (result.true_period > 0) {
+      let t = `TRUE P=${result.true_period.toFixed(4)}d  T0=${result.true_t0.toFixed(4)}d`;
+      if (result.true_depth > 0) {
+        t += `  depth=${(result.true_depth*100).toFixed(3)}%`;
+        if (result.dilution < 0.999)
+          t += `→${(result.true_depth_obs*100).toFixed(3)}% obs (dil ${result.dilution.toFixed(2)})`;
+      }
+      lines.push(t);
+    }
     lines.push(companionText(star));
     if (DEBUG) {
       dbg.textContent   = lines.join('\n');
