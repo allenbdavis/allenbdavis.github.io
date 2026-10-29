@@ -94,6 +94,61 @@
     display: none;
     font-family: var(--mono); font-size: 13px; color: var(--warn);
     letter-spacing: 0.05em;
+    white-space: pre-line; text-align: right; line-height: 1.35;
+  }
+  .hdr-btn:disabled { opacity: 0.55; cursor: default; }
+  .hdr-btn:disabled:hover { border-color: var(--border); color: var(--text-dim); }
+  .hdr-btn.active:disabled:hover { border-color: var(--warn); color: var(--warn); }
+
+  /* ── Phase tabs (header) ── */
+  #phase-nav { display: flex; gap: 6px; }
+  .phase-tab {
+    background: none; border: 1px solid var(--border); color: var(--text-dim);
+    font-family: var(--mono); font-size: 13px; padding: 4px 12px;
+    cursor: pointer; border-radius: 2px; letter-spacing: 0.06em;
+    transition: all 0.12s;
+  }
+  .phase-tab:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .phase-tab.active { border-color: var(--accent); color: var(--accent); background: #0c1a1c; }
+  .phase-tab:disabled { opacity: 0.4; cursor: default; }
+
+  /* ── Proceed button (footer) ── */
+  #proceed-btn {
+    margin-left: auto;
+    background: none; border: 1px solid var(--accent); color: var(--accent);
+    font-family: var(--mono); font-size: 13px; padding: 3px 14px;
+    cursor: pointer; border-radius: 2px; letter-spacing: 0.06em;
+    transition: all 0.12s;
+  }
+  #proceed-btn:hover:not(:disabled) { background: #0c1a1c; box-shadow: 0 0 8px #4af3c844; }
+  #proceed-btn:disabled { border-color: var(--border); color: var(--text-dim); cursor: default; }
+
+  /* ── Phase 2 placeholder view ── */
+  #phase2-view {
+    display: none; flex: 1; overflow-y: auto;
+    flex-direction: column; align-items: center;
+    padding: 28px 20px; gap: 14px;
+  }
+  #phase2-view h2 {
+    font-family: var(--mono); font-size: 16px; letter-spacing: 0.15em;
+    color: var(--accent); text-transform: uppercase; font-weight: normal;
+  }
+  #phase2-view p {
+    font-family: var(--mono); font-size: 13px; color: var(--text-dim);
+    letter-spacing: 0.05em; text-align: center; max-width: 560px; line-height: 1.8;
+  }
+  #p2-list {
+    width: 100%; max-width: 560px;
+    border: 1px solid var(--border); border-radius: 4px; background: var(--panel-bg);
+  }
+  #p2-list .cp-row { cursor: default; }
+  #p2-list .cp-row:hover { background: transparent; }
+  .cp-debug {
+    font-family: var(--mono); font-size: 10px; color: var(--warn); letter-spacing: 0.04em;
+  }
+  #cp-lock-note {
+    display: none; font-family: var(--mono); font-size: 11px;
+    color: var(--text-dim); letter-spacing: 0.06em; margin: 0 10px;
   }
 
   .hdr-btn {
@@ -308,6 +363,10 @@
 <!-- Header -->
 <header>
   <h1>TESS Explorer // DEBUG — seed=0</h1>
+  <nav id="phase-nav">
+    <button class="phase-tab active" id="tab-p1">1 · Light Curves</button>
+    <button class="phase-tab" id="tab-p2" disabled>2 · Imaging</button>
+  </nav>
   <div id="status">● LOADING</div>
 </header>
 
@@ -321,6 +380,7 @@
     <div id="candidates-panel">
       <div id="cp-header">
         <span>Candidates</span>
+        <span id="cp-lock-note">🔒 locked</span>
         <button id="cp-close">✕</button>
       </div>
       <div id="cp-list">
@@ -396,11 +456,20 @@
   </div><!-- /side-panel -->
 </div><!-- /main -->
 
+<!-- Phase 2 (placeholder until imaging is built) -->
+<div id="phase2-view">
+  <h2>Phase 2 — Follow-up Imaging</h2>
+  <p>High-resolution imaging is not built yet.<br>
+     Candidates locked in from Phase 1 are listed below.</p>
+  <div id="p2-list"></div>
+</div>
+
 <!-- Footer -->
 <footer>
   <button id="stars-toggle">Stars: <span class="ct-count" id="star-count">—</span></button>
   <div>Examined: <span id="examined-count">0</span> / <span id="star-total">—</span></div>
   <button id="candidates-toggle">Candidates: <span class="ct-count" id="flagged-count">0</span></button>
+  <button id="proceed-btn" disabled title="Flag at least one candidate first">Proceed to Follow-up Imaging →</button>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
@@ -450,8 +519,29 @@ def _to_b64(fig):
     return base64.b64encode(buf.read()).decode()
 
 # ─────────────────────────────────────────────────────────────────────────────
+def _make_companion(brng, frac=0.25):
+    """
+    Hidden-binary truth for one star (used by Phase 2 imaging).
+    Always consumes the same number of draws per star, so changing frac
+    never reshuffles the companion parameters of other stars.
+    Returns None for a single star, else:
+      sep_arcsec : projected separation, log-uniform 0.1-3.0"
+      pa_deg     : position angle (deg, east of north)
+      dmag       : magnitude difference, companion minus primary (0 = equal)
+    """
+    has  = brng.random() < frac
+    sep  = 10 ** brng.uniform(np.log10(0.1), np.log10(3.0))
+    pa   = brng.uniform(0.0, 360.0)
+    dmag = brng.uniform(0.0, 5.0)
+    if not has:
+        return None
+    return dict(sep_arcsec=float(sep), pa_deg=float(pa), dmag=float(dmag))
+
 def generate_starfield(seed=42, n_stars=25):
     rng   = np.random.default_rng(seed)
+    # Separate stream for binary truth: adding it must not perturb positions,
+    # brightness, types, or (via seed*1000+id) any light curve.
+    brng  = np.random.default_rng([seed, 1])
     types = ['boring']*5 + ['pulsating', 'transit', 'transit', 'eb']
     stars = []
     for i in range(n_stars):
@@ -461,6 +551,7 @@ def generate_starfield(seed=42, n_stars=25):
             'y':          float(rng.uniform(0.05, 0.95)),
             'brightness': float(rng.uniform(0.2, 1.0)),
             'type':       str(rng.choice(types)),
+            'companion':  _make_companion(brng),   # None or dict (hidden truth)
         })
     return json.dumps(stars)
 
@@ -819,6 +910,21 @@ let foldDebounce = null;
 
 const SEED    = 0;   // DEBUG: fixed seed
 const N_STARS = 25;
+const DEBUG   = true;  // show ground truth (true P/T0/depth, hidden binaries) in the LC header
+
+// Phase navigation. Always moves forward; earlier phases stay viewable.
+//   viewPhase = page being shown, maxPhase = furthest phase reached.
+//   Flagged candidates may only be edited on the most advanced page. The flag
+//   controls live on Phase 1, so they're editable only while Phase 1 is still
+//   the furthest phase reached; once the user proceeds they lock for good.
+let viewPhase = 1, maxPhase = 1;
+const flagsEditable = () => maxPhase === 1;
+
+function companionText(s) {
+  const c = s.companion;
+  return c ? `BINARY  sep=${c.sep_arcsec.toFixed(2)}"  PA=${c.pa_deg.toFixed(0)}°  Δm=${c.dmag.toFixed(1)}`
+           : 'SINGLE (no companion)';
+}
 
 // DOM
 const fieldCanvas  = document.getElementById('starCanvas');
@@ -1017,9 +1123,13 @@ async function loadLC(star) {
     updateFlagBtn();
 
     // DEBUG info
-    const dbg = document.getElementById('debug-info');
-    if (result.true_period > 0) {
-      dbg.textContent = `TRUE P=${result.true_period.toFixed(4)}d  T0=${result.true_t0.toFixed(4)}d  depth=${(result.true_depth*100).toFixed(3)}%`;
+    const dbg   = document.getElementById('debug-info');
+    const lines = [];
+    if (result.true_period > 0)
+      lines.push(`TRUE P=${result.true_period.toFixed(4)}d  T0=${result.true_t0.toFixed(4)}d  depth=${(result.true_depth*100).toFixed(3)}%`);
+    lines.push(companionText(star));
+    if (DEBUG) {
+      dbg.textContent   = lines.join('\n');
       dbg.style.display = 'inline';
     }
   } catch(e) {
@@ -1316,11 +1426,11 @@ document.getElementById('undo-btn').addEventListener('click', () => {
 document.getElementById('reset-btn').addEventListener('click', resetTransits);
 
 document.getElementById('flag-btn').addEventListener('click', () => {
-  if (!currentStar) return;
+  if (!currentStar || !flagsEditable()) return;
   if (flagged.has(currentStar.id)) flagged.delete(currentStar.id);
   else flagged.add(currentStar.id);
   updateFlagBtn();
-  document.getElementById('flagged-count').textContent = flagged.size;
+  syncFlagCount();
   drawStars();
   if (document.getElementById('candidates-panel').classList.contains('open'))
     updateCandidatesPanel();
@@ -1329,8 +1439,90 @@ document.getElementById('flag-btn').addEventListener('click', () => {
 function updateFlagBtn() {
   const btn = document.getElementById('flag-btn');
   const on  = currentStar && flagged.has(currentStar.id);
-  btn.textContent = on ? '⚑ Flagged' : '⚑ Flag';
+  const locked = !flagsEditable();
+  btn.disabled = locked;
+  btn.title    = locked ? 'Candidates are locked in — only editable on the most advanced phase' : '';
+  btn.textContent = locked ? (on ? '⚑ Flagged (locked)' : '⚑ Not flagged (locked)')
+                           : (on ? '⚑ Flagged' : '⚑ Flag');
   btn.classList.toggle('active', !!on);
+}
+
+// Footer count + proceed button state; call after any change to `flagged`
+function syncFlagCount() {
+  document.getElementById('flagged-count').textContent = flagged.size;
+  updateProceedBtn();
+}
+
+function updateProceedBtn() {
+  const b = document.getElementById('proceed-btn');
+  b.style.display = viewPhase === 1 ? 'inline-block' : 'none';
+  if (maxPhase === 1) {
+    b.textContent = 'Proceed to Follow-up Imaging →';
+    b.disabled    = flagged.size === 0;
+    b.title       = flagged.size === 0 ? 'Flag at least one candidate first' : '';
+  } else {
+    b.textContent = 'Return to Phase 2 →';
+    b.disabled    = false;
+    b.title       = '';
+  }
+}
+
+document.getElementById('proceed-btn').addEventListener('click', () => {
+  if (maxPhase >= 2) { setViewPhase(2); return; }
+  const n = flagged.size;
+  if (n === 0) return;
+  const ok = confirm(
+    `Lock in ${n} candidate${n === 1 ? '' : 's'} and proceed to follow-up imaging?\n\n` +
+    `You can come back to Phase 1 to review light curves and make new plots, ` +
+    `but the candidate list will be locked.`);
+  if (!ok) return;
+  if (currentStar) saveStarCache(currentStar.id);   // capture latest measurements
+  maxPhase = 2;
+  document.getElementById('candidates-panel').classList.remove('open');
+  setViewPhase(2);
+});
+
+document.getElementById('tab-p1').addEventListener('click', () => setViewPhase(1));
+document.getElementById('tab-p2').addEventListener('click', () => { if (maxPhase >= 2) setViewPhase(2); });
+
+function setViewPhase(n) {
+  viewPhase = n;
+  document.querySelector('.main').style.display = n === 1 ? '' : 'none';
+  document.getElementById('phase2-view').style.display = n === 2 ? 'flex' : 'none';
+  document.getElementById('tab-p1').classList.toggle('active', n === 1);
+  document.getElementById('tab-p2').classList.toggle('active', n === 2);
+  document.getElementById('tab-p2').disabled = maxPhase < 2;
+  if (n === 1) {
+    resizeCanvas(); drawStars();               // canvas had zero size while hidden
+    requestAnimationFrame(syncOverlay);
+  } else {
+    renderPhase2();
+  }
+  updateFlagBtn();
+  updateProceedBtn();
+  document.getElementById('cp-lock-note').style.display = flagsEditable() ? 'none' : 'inline';  // maxPhase > 1
+  if (document.getElementById('candidates-panel').classList.contains('open')) updateCandidatesPanel();
+}
+
+// Placeholder Phase 2 page: just lists the locked-in candidates
+function renderPhase2() {
+  const list = document.getElementById('p2-list');
+  list.innerHTML = '';
+  const cands = stars.filter(s => flagged.has(s.id)).sort((a,b) => a.id - b.id);
+  const hdr = document.createElement('div');
+  hdr.className = 'cp-section-label';
+  hdr.textContent = `Candidates (${cands.length})`;
+  list.appendChild(hdr);
+  cands.forEach(s => {
+    const row = makeRow(s, true);
+    if (DEBUG) {
+      const d = document.createElement('span');
+      d.className = 'cp-debug';
+      d.textContent = `[${s.type}] ${companionText(s)}`;
+      row.querySelector('.cp-name-block').appendChild(d);
+    }
+    list.appendChild(row);
+  });
 }
 
 // ── Candidates panel ──
@@ -1359,7 +1551,8 @@ function makeStarThumb(s) {
 
 function makeRow(s, showUnflag) {
   const active = currentStar && currentStar.id === s.id ? ' active' : '';
-  const btn    = showUnflag
+  const btn    = !flagsEditable() ? ''
+    : showUnflag
     ? `<button class="cp-unflag" data-id="${s.id}">✕ unflag</button>`
     : `<button class="cp-reflag" data-id="${s.id}">⚑ flag</button>`;
 
@@ -1438,7 +1631,7 @@ function updateCandidatesPanel() {
       e.stopPropagation();
       const id = parseInt(btn.dataset.id);
       flagged.delete(id);
-      document.getElementById('flagged-count').textContent = flagged.size;
+      syncFlagCount();
       if (currentStar && currentStar.id === id) updateFlagBtn();
       drawStars();
       updateCandidatesPanel();
@@ -1451,7 +1644,7 @@ function updateCandidatesPanel() {
       e.stopPropagation();
       const id = parseInt(btn.dataset.id);
       flagged.add(id);
-      document.getElementById('flagged-count').textContent = flagged.size;
+      syncFlagCount();
       if (currentStar && currentStar.id === id) updateFlagBtn();
       drawStars();
       updateCandidatesPanel();
