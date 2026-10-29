@@ -132,10 +132,9 @@
   /* ── LC image + overlay canvas wrapper ── */
   #lc-wrapper {
     position: relative;
-    width: 100%;
     display: none;
   }
-  #plot-img   { display: block; width: 100%; height: auto; border-radius: 3px; }
+  #plot-img   { display: block; height: auto; border-radius: 3px; }
   #lc-overlay {
     position: absolute; top: 0; left: 0;
     width: 100%; height: 100%;
@@ -384,7 +383,7 @@
       <!-- Phase fold -->
       <div id="fold-area" style="display:none">
         <div class="sec-label">Phase-Folded Light Curve</div>
-        <img class="sub-img" id="fold-img" alt="phase fold" />
+        <img class="sub-img" id="fold-img" alt="phase fold" style="visibility:hidden" />
       </div>
 
       <!-- Odd / even -->
@@ -986,7 +985,9 @@ async function selectStar(star) {
 // ═══════════════════════════════════════════════════════════════════════
 async function loadLC(star) {
   document.getElementById('placeholder').style.display    = 'flex';
-  document.getElementById('lc-wrapper').style.display     = 'none';
+  const _lcw = document.getElementById('lc-wrapper');
+  _lcw.style.display = 'none'; _lcw.style.width = ''; _lcw.style.flexShrink = '';
+  plotImg.style.width = '';
   document.getElementById('click-hint').style.display     = 'none';
   document.getElementById('reset-btn').style.display      = 'none';
   document.getElementById('undo-btn').style.display       = 'none';
@@ -1101,10 +1102,15 @@ function restoreStarCache(id) {
 // Sync overlay canvas dimensions to the rendered image size
 function syncOverlay() {
   if (!plotImg.clientWidth) return;
-  lcOverlay.width  = plotImg.clientWidth;
-  lcOverlay.height = plotImg.clientHeight;
-  lcOverlay.style.width  = plotImg.clientWidth  + 'px';
-  lcOverlay.style.height = plotImg.clientHeight + 'px';
+  const w = plotImg.clientWidth;
+  const h = plotImg.clientHeight;
+  const wrapper = document.getElementById('lc-wrapper');
+  wrapper.style.width      = w + 'px';
+  wrapper.style.flexShrink = '0';
+  lcOverlay.width  = w;
+  lcOverlay.height = h;
+  lcOverlay.style.width  = w + 'px';
+  lcOverlay.style.height = h + 'px';
   redrawOverlay();
 }
 
@@ -1221,6 +1227,7 @@ async function findBestPeriodAndFold(pGuess) {
     const res = JSON.parse(raw);
     initSlider(res.best_period);
     foldImg.src = 'data:image/png;base64,' + res.img;
+    foldImg.style.visibility = 'visible';
     updateStats(res.snr, res.depth, res.chi2r);
   } catch(e) { console.error(e); }
   computingEl.textContent = '';
