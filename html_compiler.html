@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTML Playground</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --panel: #ffffff;
+    --line: #d9dce1;
+    --ink: #1c1f24;
+    --muted: #6b7280;
+    --accent: #1f6feb;
+    --accent-ink: #ffffff;
+    --run: #1a7f37;
+    --danger: #b42318;
+    --code-bg: #fbfbfc;
+    --gutter-bg: #eef0f3;
+    --gutter-ink: #8a909b;
+    --hover: #f0f2f5;
+    --active: #e8f0fe;
+    --kbd: #eef0f3;
+    --disabled: #eee;
+    --fs: 14px;
+    --lh: 21px;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #14161a; --panel: #1e2127; --line: #343a44; --ink: #e4e7ec; --muted: #9aa3b2;
+    --accent: #5b9dff; --run: #2ea043; --danger: #ff7b72;
+    --code-bg: #181b20; --gutter-bg: #22262d; --gutter-ink: #6b7482;
+    --hover: #2a2f38; --active: #26385a; --kbd: #2a2f38; --disabled: #2a2f38;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink); background: var(--bg);
+    display: flex; flex-direction: column;
+  }
+
+  /* ---------- top bar ---------- */
+  header {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 15px; margin: 0 12px 0 0; font-weight: 650; }
+  header .spacer { flex: 1; }
+  .fontctl { display: inline-flex; align-items: center; gap: 4px; }
+  .fontctl span { min-width: 34px; text-align: center; color: var(--muted); font-size: 12px; }
+  header .sep { width: 1px; align-self: stretch; background: var(--line); margin: 2px 4px; }
+  button, label.btn {
+    font: inherit; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--panel); color: var(--ink); cursor: pointer;
+  }
+  label.btn { display: inline-block; user-select: none; line-height: 1.4; }
+  button:hover, label.btn:hover { background: var(--hover); }
+  button:focus-visible, label.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.run { background: var(--run); color: #fff; border-color: var(--run); font-weight: 600; padding: 6px 18px; }
+  button.run:hover { background: var(--run); filter: brightness(.88); }
+  button.small { padding: 2px 8px; font-size: 12px; }
+  button.danger { color: var(--danger); }
+  #status { color: var(--muted); font-size: 12px; }
+
+  /* ---------- layout ---------- */
+  main { flex: 1; min-height: 0; display: flex; }
+  aside {
+    width: 232px; flex: none; background: var(--panel); border-right: 1px solid var(--line);
+    overflow-y: auto; padding: 10px 0;
+  }
+  aside h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+    margin: 0; padding: 4px 12px; display: flex; align-items: center; justify-content: space-between;
+  }
+  aside ul { list-style: none; margin: 0 0 14px; padding: 0; }
+  aside li {
+    padding: 5px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    border-left: 3px solid transparent; overflow: hidden;
+  }
+  aside li:hover { background: var(--hover); }
+  aside li.active { background: var(--active); border-left-color: var(--accent); font-weight: 600; }
+  aside li .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  aside li img { width: 28px; height: 28px; object-fit: cover; border-radius: 3px; border: 1px solid var(--line); background: #fff; }
+  aside li .x { visibility: hidden; border: 0; background: none; color: var(--muted); padding: 0 4px; font-size: 16px; line-height: 1; }
+  aside li:hover .x { visibility: visible; }
+  aside li .x:hover { color: var(--danger); background: none; }
+  .treeBtns { display: flex; gap: 4px; padding: 2px 10px 6px; flex-wrap: wrap; }
+  #selDirLabel { padding: 0 12px 6px; font-size: 11px; color: var(--muted); }
+  #fileList { min-height: 80px; }
+  aside li.folder { font-weight: 600; }
+  aside li.folder.selected { background: var(--hover); }
+  aside li .caret { width: 12px; flex: none; color: var(--muted); font-size: 11px; }
+  aside .empty { padding: 4px 12px; color: var(--muted); font-size: 12px; }
+
+  #editorPane { flex: 1 1 50%; min-width: 220px; display: flex; flex-direction: column; background: var(--code-bg); }
+  #previewPane { flex: 1 1 50%; min-width: 220px; display: flex; flex-direction: column; background: var(--panel); }
+  #splitter { width: 6px; flex: none; cursor: col-resize; background: var(--line); }
+  #splitter:hover, #splitter.drag { background: var(--accent); }
+
+  .paneBar {
+    display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+    background: var(--panel); border-bottom: 1px solid var(--line); min-height: 38px;
+  }
+  .paneBar .title { font-weight: 600; font-family: var(--mono); font-size: 13px; }
+  .paneBar .spacer { flex: 1; }
+  .paneBar .hint { color: var(--muted); font-size: 12px; }
+
+  /* ---------- code editor ---------- */
+  .editor { flex: 1; min-height: 0; display: flex; position: relative; }
+  #gutter, #code {
+    margin: 0; border: 0; font-family: var(--mono); font-size: var(--fs); line-height: var(--lh);
+    tab-size: 2; -moz-tab-size: 2;
+  }
+  #gutter {
+    flex: none; background: var(--gutter-bg); color: var(--gutter-ink); text-align: right;
+    padding: 10px 10px 80px 12px; overflow: hidden; user-select: none; white-space: pre;
+    border-right: 1px solid var(--line);
+  }
+  #code {
+    flex: 1; min-width: 0; resize: none; outline: none; background: var(--code-bg); color: var(--ink);
+    padding: 10px 12px 40px 12px; white-space: pre; overflow: auto;
+  }
+  #code:disabled { background: var(--disabled); }
+
+  /* ---------- preview ---------- */
+  #frameWrap { flex: 1; min-height: 0; position: relative; }
+  #preview { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+  #placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); pointer-events: none; }
+  #console {
+    display: none; flex: none; height: 130px; border-top: 2px solid var(--line);
+    background: #1e1f24; color: #e6e6e6; font: 12px/1.45 var(--mono); flex-direction: column;
+  }
+  #console.show { display: flex; }
+  #console .bar { display: flex; justify-content: space-between; align-items: center; padding: 3px 10px; background: #2b2d34; color: #aaa; }
+  #console .bar button { background: none; color: #ccc; border-color: #555; }
+  #consoleLog { flex: 1; overflow: auto; padding: 4px 10px; white-space: pre-wrap; word-break: break-word; }
+  #consoleLog .error { color: #ff8b8b; }
+  #consoleLog .warn { color: #ffd479; }
+
+  footer { padding: 4px 12px; font-size: 12px; color: var(--muted); background: var(--panel); border-top: 1px solid var(--line); }
+  kbd { font: 11px var(--mono); background: var(--kbd); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; }
+  input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+  #dropHint { display: none; position: fixed; inset: 0; z-index: 40; align-items: center; justify-content: center; pointer-events: none;
+    background: rgba(31,111,235,.12); border: 4px dashed var(--accent); font-size: 22px; font-weight: 600; color: var(--accent); }
+  body.dragging #dropHint { display: flex; }
+  #overlay { position: fixed; inset: 0; background: rgba(20,24,31,.45); display: flex; align-items: center; justify-content: center; z-index: 50; }
+  #overlay .box { background: var(--panel); color: var(--ink); border-radius: 10px; padding: 18px 20px; width: min(440px, 92vw); box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+  #overlay .msg { white-space: pre-wrap; margin: 0 0 12px; }
+  #overlay input[type=text] { width: 100%; background: var(--code-bg); color: var(--ink); padding: 7px 9px; font: inherit; border: 1px solid var(--line); border-radius: 6px; margin-bottom: 12px; }
+  #overlay .btns { display: flex; justify-content: flex-end; gap: 8px; }
+  #overlay button.ok { background: var(--accent); color: #fff; border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>HTML Playground</h1>
+  <button class="run" id="runBtn" title="Ctrl/⌘ + Enter">▶ Run</button>
+  <button id="newProjBtn" title="Start over with the example project">New project</button>
+  <button id="saveBtn">Save project…</button>
+  <label class="btn" id="openBtn" for="openInput" tabindex="0" role="button">Open project…</label>
+  <span class="sep"></span>
+  <button id="zipBtn" title="Download everything as a .zip you can unzip and put on a web server">Export ZIP</button>
+  <label class="btn" id="openZipBtn" for="zipInput" tabindex="0" role="button" title="Restore a project from a .zip file">Restore from ZIP…</label>
+  <span class="spacer"></span>
+  <span id="status"></span>
+  <span class="fontctl" title="Editor text size">
+    <button id="fontDown" class="small" aria-label="Smaller text">A−</button>
+    <span id="fontLabel">14px</span>
+    <button id="fontUp" class="small" aria-label="Larger text">A+</button>
+  </span>
+  <button id="themeBtn" class="small" title="Switch between light and dark">🌙 Dark</button>
+</header>
+
+<main>
+  <aside>
+    <h2>Files</h2>
+    <div class="treeBtns">
+      <button class="small" id="newFileBtn" title="New file">+ File</button>
+      <button class="small" id="newFolderBtn" title="New folder">+ Folder</button>
+      <button class="small" id="uploadBtn" title="Upload images or code files">⬆ Upload</button>
+    </div>
+    <div id="selDirLabel"></div>
+    <ul id="fileList"></ul>
+  </aside>
+
+  <section id="editorPane">
+    <div class="paneBar">
+      <span class="title" id="fileTitle"></span>
+      <span class="spacer"></span>
+      <button class="small" id="renameBtn">Rename</button>
+      <button class="small danger" id="deleteBtn">Delete</button>
+    </div>
+    <div class="editor">
+      <pre id="gutter" aria-hidden="true">1</pre>
+      <textarea id="code" wrap="off" spellcheck="false" autocomplete="off" autocorrect="off"
+                autocapitalize="off" aria-label="Code editor"></textarea>
+    </div>
+  </section>
+
+  <div id="splitter" role="separator" aria-orientation="vertical"></div>
+
+  <section id="previewPane">
+    <div class="paneBar">
+      <span class="title">Preview</span>
+      <span class="hint" id="previewName"></span>
+    </div>
+    <div id="frameWrap">
+      <iframe id="preview" sandbox="allow-scripts allow-forms allow-modals allow-popups" title="Preview"></iframe>
+      <div id="placeholder">Press ▶ Run to see your page here.</div>
+    </div>
+    <div id="console">
+      <div class="bar"><span>Console</span><button class="small" id="clearConsole">Clear</button></div>
+      <div id="consoleLog"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Your work lives only in this browser tab — use <b>Save project…</b> to download a backup.
+  &nbsp;·&nbsp; <kbd>Ctrl/⌘</kbd>+<kbd>Enter</kbd> runs &nbsp;·&nbsp; <kbd>Tab</kbd> indents, <kbd>Shift</kbd>+<kbd>Tab</kbd> leaves the editor &nbsp;·&nbsp; You can also drag files onto this page
+</footer>
+
+<div id="dropHint">Drop files here: project (.json / .zip), images, or code</div>
+<input type="file" id="uploadInput" multiple accept="image/*,.html,.htm,.css,.js,.txt">
+<input type="file" id="openInput">
+<input type="file" id="zipInput">
+
+<script>
+(function () {
+  'use strict';
+
+  /* =====================  state  ===================== */
+  var STARTER = [
+    '<!DOCTYPE html>',
+    '<html>',
+    '<head>',
+    '  <title>My Page</title>',
+    '</head>',
+    '<body>',
+    '  <h1>Hello, world!</h1>',
+    '  <p>Edit this file, then press Run.</p>',
+    '</body>',
+    '</html>',
+    ''
+  ].join('\n');
+
+  /* ---- example project shown on first load (a small three-page site) ---- */
+  var EXAMPLE_FILES = {
+    'index.html': [
+      '<!DOCTYPE html>',
+      '<html lang="en">',
+      '<head>',
+      '  <meta charset="utf-8">',
+      '  <title>Home | Planet Explorer</title>',
+      '  <!-- This line connects the page to the file style.css -->',
+      '  <link rel="stylesheet" href="style.css">',
+      '</head>',
+      '<body>',
+      '  <nav>',
+      '    <!-- Links between pages: href is just the other file\'s name. -->',
+      '    <!-- Press Run, then click them in the preview! -->',
+      '    <a href="index.html">Home</a>',
+      '    <a href="facts.html">Facts</a>',
+      '    <a href="quiz.html">Quiz</a>',
+      '  </nav>',
+      '',
+      '  <h1>Planet Explorer</h1>',
+      '',
+      '  <!-- planet.png lives in the "images" folder (see the file list on the left). -->',
+      '  <!-- The path in src is relative to this page: folder name, slash, file name. -->',
+      '  <img src="images/planet.png" alt="A planet orbiting a star" width="400">',
+      '',
+      '  <p>This is a small three-page website. Each page is its own',
+      '     .html file, and the menu above jumps between them.</p>',
+      '  <p>Try changing the heading color in <b>style.css</b>,',
+      '     then press Run again.</p>',
+      '</body>',
+      '</html>',
+      ''
+    ].join('\n'),
+
+    'facts.html': [
+      '<!DOCTYPE html>',
+      '<html lang="en">',
+      '<head>',
+      '  <meta charset="utf-8">',
+      '  <title>Facts | Planet Explorer</title>',
+      '  <link rel="stylesheet" href="style.css">',
+      '</head>',
+      '<body>',
+      '  <nav>',
+      '    <a href="index.html">Home</a>',
+      '    <a href="facts.html">Facts</a>',
+      '    <a href="quiz.html">Quiz</a>',
+      '  </nav>',
+      '',
+      '  <h1>Surface Gravity</h1>',
+      '  <p>How strongly a planet pulls on you, compared with Earth:</p>',
+      '',
+      '  <table>',
+      '    <tr><th>Planet</th><th>g (m/s&sup2;)</th></tr>',
+      '    <tr><td>Mercury</td><td>3.7</td></tr>',
+      '    <tr><td>Earth</td><td>9.8</td></tr>',
+      '    <tr><td>Mars</td><td>3.7</td></tr>',
+      '    <tr><td>Jupiter</td><td>24.8</td></tr>',
+      '  </table>',
+      '',
+      '  <!-- A link back to the home page, using the same image again -->',
+      '  <p><a href="index.html"><img src="images/planet.png" alt="Back to home" width="120"></a></p>',
+      '</body>',
+      '</html>',
+      ''
+    ].join('\n'),
+
+    'quiz.html': [
+      '<!DOCTYPE html>',
+      '<html lang="en">',
+      '<head>',
+      '  <meta charset="utf-8">',
+      '  <title>Quiz | Planet Explorer</title>',
+      '  <link rel="stylesheet" href="style.css">',
+      '</head>',
+      '<body>',
+      '  <nav>',
+      '    <a href="index.html">Home</a>',
+      '    <a href="facts.html">Facts</a>',
+      '    <a href="quiz.html">Quiz</a>',
+      '  </nav>',
+      '',
+      '  <h1>Quick Quiz</h1>',
+      '  <p>Which planet has the strongest surface gravity in our table?</p>',
+      '',
+      '  <button onclick="answer(\'Mars\')">Mars</button>',
+      '  <button onclick="answer(\'Jupiter\')">Jupiter</button>',
+      '  <button onclick="answer(\'Mercury\')">Mercury</button>',
+      '',
+      '  <p id="result"></p>',
+      '',
+      '  <!-- This connects the page to the file script.js -->',
+      '  <script src="script.js"><\/script>',
+      '</body>',
+      '</html>',
+      ''
+    ].join('\n'),
+
+    'style.css': [
+      '/* Shared by all three pages. */',
+      'body {',
+      '  font-family: Arial, sans-serif;',
+      '  max-width: 600px;',
+      '  margin: 20px auto;',
+      '  padding: 0 16px;',
+      '  background: #f5f7fb;',
+      '}',
+      '',
+      'h1 {',
+      '  color: #2457c5;   /* try another color! */',
+      '}',
+      '',
+      'nav a {',
+      '  margin-right: 14px;',
+      '  font-weight: bold;',
+      '}',
+      '',
+      'img {',
+      '  border-radius: 8px;',
+      '}',
+      '',
+      'table {',
+      '  border-collapse: collapse;',
+      '}',
+      'th, td {',
+      '  border: 1px solid #aab;',
+      '  padding: 6px 14px;',
+      '}',
+      ''
+    ].join('\n'),
+
+    'script.js': [
+      '// Used by quiz.html',
+      'function answer(choice) {',
+      '  var result = document.getElementById("result");',
+      '  if (choice === "Jupiter") {',
+      '    result.textContent = "Correct! Jupiter: 24.8 m/s\\u00B2";',
+      '  } else {',
+      '    result.textContent = "Not quite. Check the Facts page and try again.";',
+      '  }',
+      '  console.log("You picked " + choice);   // shows up in the Console below the preview',
+      '}',
+      ''
+    ].join('\n')
+  };
+  var EXAMPLE_IMAGES = { 'images/planet.png': 'data:image/png;base64,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' };
+
+  var state = { files: JSON.parse(JSON.stringify(EXAMPLE_FILES)), images: JSON.parse(JSON.stringify(EXAMPLE_IMAGES)), active: 'index.html', folders: [] };
+  var dirty = false;
+  var runPage = null;       // name of the page currently shown in the preview
+  var scrollMemory = {};
+  var lastRendered = null;   // which file the editor last showed (to keep scroll/caret on re-render)
+  var selDir = '';           // folder that + File / + Folder / Upload add into ('' = top level)
+  var collapsed = {};        // folders collapsed in the tree
+
+  var $ = function (id) { return document.getElementById(id); };
+  var code = $('code'), gutter = $('gutter'), preview = $('preview');
+
+  /* =====================  helpers  ===================== */
+  function setStatus(msg) {
+    var el = $('status'); el.textContent = msg;
+    clearTimeout(setStatus.t);
+    if (msg) setStatus.t = setTimeout(function () { el.textContent = ''; }, 4000);
+  }
+  function isHtml(n) { return /\.html?$/i.test(n); }
+  function sortedKeys(o) { return Object.keys(o).sort(function (a, b) { return a.localeCompare(b); }); }
+
+  /* =====================  in-page dialogs  ===================== */
+  // Native alert/confirm/prompt are silently blocked when a page is embedded in another site
+  // (and can be switched off by the browser), so we draw our own.
+  function dialog(message, opts) {
+    opts = opts || {};
+    return new Promise(function (resolve) {
+      var ov = document.createElement('div'); ov.id = 'overlay';
+      var box = document.createElement('div'); box.className = 'box'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+      var msg = document.createElement('p'); msg.className = 'msg'; msg.textContent = message; box.appendChild(msg);
+      var inp = null;
+      if (opts.input !== undefined) {
+        inp = document.createElement('input'); inp.type = 'text'; inp.value = opts.input;
+        inp.spellcheck = false; inp.autocomplete = 'off'; box.appendChild(inp);
+      }
+      var btns = document.createElement('div'); btns.className = 'btns';
+      var prevFocus = document.activeElement;
+      function done(v) { document.removeEventListener('keydown', onKey, true); ov.remove(); if (prevFocus && prevFocus.focus) prevFocus.focus(); resolve(v); }
+      var okV = inp ? function () { return inp.value; } : function () { return true; };
+      var cancelV = inp ? null : false;
+      if (opts.cancel !== false) {
+        var c = document.createElement('button'); c.textContent = 'Cancel'; c.onclick = function () { done(cancelV); }; btns.appendChild(c);
+      }
+      var ok = document.createElement('button'); ok.className = 'ok'; ok.textContent = opts.ok || 'OK';
+      ok.onclick = function () { done(okV()); }; btns.appendChild(ok);
+      box.appendChild(btns); ov.appendChild(box); document.body.appendChild(ov);
+      function onKey(e) {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(opts.cancel === false ? true : cancelV); }
+        else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); done(okV()); }
+      }
+      document.addEventListener('keydown', onKey, true);
+      (inp || ok).focus(); if (inp) inp.select();
+    });
+  }
+  function say(m) { return dialog(m, { cancel: false }); }
+  function confirmIt(m, okText) { return dialog(m, { ok: okText || 'Continue' }); }
+  function askText(m, def) { return dialog(m, { input: def || '' }); }
+
+  /* =====================  editor + line numbers  ===================== */
+  function updateGutter() {
+    var n = code.value.split('\n').length;
+    var out = new Array(n);
+    for (var i = 0; i < n; i++) out[i] = i + 1;
+    gutter.textContent = out.join('\n');
+    gutter.style.minWidth = (String(n).length + 3) + 'ch';
+    gutter.scrollTop = code.scrollTop;
+  }
+  code.addEventListener('scroll', function () { gutter.scrollTop = code.scrollTop; });
+  code.addEventListener('input', function () {
+    if (state.active) state.files[state.active] = code.value;
+    dirty = true;
+    updateGutter();
+  });
+  code.addEventListener('keydown', function (e) {
+    if (e.key === 'Tab' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      if (!document.execCommand('insertText', false, '  ')) {
+        var s = code.selectionStart;
+        code.setRangeText('  ', s, code.selectionEnd, 'end');
+        code.dispatchEvent(new Event('input'));
+      }
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); run(); }
+  });
+
+  /* =====================  paths + file tree  ===================== */
+  function dirOf(path) { var i = path.lastIndexOf('/'); return i < 0 ? '' : path.slice(0, i); }
+  function baseOf(path) { return path.slice(path.lastIndexOf('/') + 1); }
+  function joinPath(d, n) { return d ? d + '/' + n : n; }
+  function normalizePath(raw) {           // "a\\b//c.html " -> "a/b/c.html"; null if unusable
+    var parts = String(raw || '').replace(/\\/g, '/').replace(/[?#%*:"<>|]/g, '-').split('/')
+      .map(function (x) { return x.trim(); }).filter(function (x) { return x !== '' && x !== '.'; });
+    if (!parts.length || parts.indexOf('..') >= 0) return null;
+    return parts.join('/');
+  }
+  function cleanName(raw, fallbackExt) {
+    var n = normalizePath(raw);
+    if (!n) return null;
+    if (fallbackExt && baseOf(n).indexOf('.') < 0) n += fallbackExt;
+    return n;
+  }
+  function ancestors(path) {              // "a/b/c.txt" -> ["a", "a/b"]
+    var out = [], parts = path.split('/');
+    for (var i = 1; i < parts.length; i++) out.push(parts.slice(0, i).join('/'));
+    return out;
+  }
+  function allFolders() {
+    var set = {};
+    state.folders.forEach(function (f) { set[f] = 1; ancestors(f + '/x').forEach(function (a) { set[a] = 1; }); });
+    Object.keys(state.files).concat(Object.keys(state.images)).forEach(function (n) { ancestors(n).forEach(function (a) { set[a] = 1; }); });
+    return Object.keys(set);
+  }
+  function isFolder(p) { return allFolders().indexOf(p) >= 0; }
+  // Returns an error message if `path` can't be created, else null.
+  function pathProblem(path, ignore) {
+    if (path !== ignore && (state.files[path] !== undefined || state.images[path] !== undefined)) return '"' + path + '" already exists.';
+    if (path !== ignore && isFolder(path)) return 'There is already a folder named "' + path + '".';
+    var anc = ancestors(path);
+    for (var i = 0; i < anc.length; i++)
+      if (state.files[anc[i]] !== undefined || state.images[anc[i]] !== undefined) return 'A file named "' + anc[i] + '" is in the way.';
+    return null;
+  }
+  function insideDir(path, dir) { return path === dir || path.indexOf(dir + '/') === 0; }
+
+  function render() {
+    var el;
+    var sameFile = (lastRendered === state.active);
+    var prevScroll = code.scrollTop, prevSel = [code.selectionStart, code.selectionEnd];
+    if (state.active) ancestors(state.active).forEach(function (a) { delete collapsed[a]; });
+
+    var fl = $('fileList'); fl.textContent = '';
+    var folders = allFolders(), fileNames = Object.keys(state.files), imgNames = Object.keys(state.images);
+    function byBase(a, b) { return baseOf(a.n).localeCompare(baseOf(b.n)); }
+
+    function row(depth, cls) {
+      var li = document.createElement('li');
+      li.className = cls || '';
+      li.style.paddingLeft = (12 + depth * 14) + 'px';
+      return li;
+    }
+    function actionBtn(label, title, fn) {
+      var b = document.createElement('button'); b.className = 'x'; b.textContent = label; b.title = title;
+      b.addEventListener('click', function (e) { e.stopPropagation(); fn(); });
+      return b;
+    }
+    function level(dir, depth) {
+      folders.filter(function (f) { return dirOf(f) === dir; }).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (f) {
+        var li = row(depth, 'folder' + (selDir === f ? ' selected' : ''));
+        var caret = document.createElement('span'); caret.className = 'caret'; caret.textContent = collapsed[f] ? '▸' : '▾';
+        var nm = document.createElement('span'); nm.className = 'name'; nm.textContent = baseOf(f) + '/'; nm.title = f;
+        li.appendChild(caret); li.appendChild(nm);
+        li.appendChild(actionBtn('✎', 'Rename folder', function () { renameFolder(f); }));
+        li.appendChild(actionBtn('×', 'Delete folder', function () { deleteFolder(f); }));
+        li.addEventListener('click', function () { selDir = f; if (collapsed[f]) delete collapsed[f]; else collapsed[f] = true; render(); });
+        fl.appendChild(li);
+        if (!collapsed[f]) level(f, depth + 1);
+      });
+      var items = fileNames.filter(function (n) { return dirOf(n) === dir; }).map(function (n) { return { n: n, kind: 'file' }; })
+        .concat(imgNames.filter(function (n) { return dirOf(n) === dir; }).map(function (n) { return { n: n, kind: 'image' }; }))
+        .sort(byBase);
+      items.forEach(function (it) {
+        var li = row(depth, it.kind === 'file' && it.n === state.active ? 'active' : '');
+        var gap = document.createElement('span'); gap.className = 'caret'; li.appendChild(gap);
+        if (it.kind === 'image') {
+          var im = document.createElement('img'); im.src = state.images[it.n]; im.alt = ''; li.appendChild(im);
+        }
+        var nm = document.createElement('span'); nm.className = 'name'; nm.textContent = baseOf(it.n); nm.title = it.n;
+        li.appendChild(nm);
+        if (it.kind === 'image') {
+          li.appendChild(actionBtn('×', 'Remove ' + it.n, function () {
+            confirmIt('Remove "' + it.n + '" from this project?', 'Remove').then(function (y) {
+              if (y) { delete state.images[it.n]; dirty = true; render(); }
+            });
+          }));
+          li.addEventListener('click', function () { selDir = dir; render(); });
+        } else {
+          li.addEventListener('click', function () { openFile(it.n); });
+        }
+        fl.appendChild(li);
+      });
+    }
+    level('', 0);
+    if (!fileNames.length && !imgNames.length && !folders.length) {
+      var e = document.createElement('li'); e.className = 'empty'; e.style.cursor = 'default'; e.textContent = 'No files yet'; fl.appendChild(e);
+    }
+    $('selDirLabel').textContent = 'New items go in: ' + (selDir ? selDir + '/' : 'top level') + (selDir ? '' : '  (click a folder to change)');
+
+    // editor
+    var has = !!state.active;
+    code.disabled = !has;
+    code.value = has ? state.files[state.active] : '';
+    $('fileTitle').textContent = has ? state.active : '(no file)';
+    $('renameBtn').disabled = !has; $('deleteBtn').disabled = !has;
+    updateGutter();
+    if (sameFile) {
+      code.scrollTop = prevScroll;
+      try { code.setSelectionRange(prevSel[0], prevSel[1]); } catch (err) {}
+    } else {
+      code.scrollTop = (scrollMemory[state.active] || 0);
+    }
+    gutter.scrollTop = code.scrollTop;
+    lastRendered = state.active;
+  }
+  fl_click_bg();
+  function fl_click_bg() {
+    $('fileList').addEventListener('click', function (e) { if (e.target === $('fileList')) { selDir = ''; render(); } });
+  }
+  function openFile(name) {
+    if (state.active) scrollMemory[state.active] = code.scrollTop;
+    state.active = name; selDir = dirOf(name); render(); code.focus();
+  }
+
+  $('newFileBtn').addEventListener('click', async function () {
+    var n = cleanName(await askText('New file name. Use a slash to put it in a folder (e.g. about.html, css/style.css):', joinPath(selDir, 'page2.html')), '.html');
+    if (!n) return;
+    var bad = pathProblem(n); if (bad) { await say(bad); return; }
+    state.files[n] = isHtml(n) ? STARTER : '';
+    dirty = true; openFile(n);
+  });
+  $('newFolderBtn').addEventListener('click', async function () {
+    var n = normalizePath(await askText('New folder name (use slashes for nested folders, e.g. images/icons):', joinPath(selDir, 'images')));
+    if (!n) return;
+    var bad = pathProblem(n); if (bad) { await say(bad); return; }
+    state.folders.push(n); selDir = n; dirty = true; render();
+  });
+  $('renameBtn').addEventListener('click', async function () {
+    var old = state.active; if (!old) return;
+    var n = cleanName(await askText('Rename "' + old + '" to (include a folder path to move it):', old));
+    if (!n || n === old) return;
+    var bad = pathProblem(n, old); if (bad) { await say(bad); return; }
+    state.files[n] = state.files[old]; delete state.files[old];
+    state.active = n; selDir = dirOf(n); dirty = true; render();
+  });
+  $('deleteBtn').addEventListener('click', async function () {
+    var n = state.active; if (!n) return;
+    if (!(await confirmIt('Delete "' + n + '"? This cannot be undone.', 'Delete'))) return;
+    delete state.files[n];
+    var rest = sortedKeys(state.files);
+    state.active = rest.length ? rest[0] : null;
+    dirty = true; render();
+  });
+  async function renameFolder(f) {
+    var n = normalizePath(await askText('Rename folder "' + f + '" to:', f));
+    if (!n || n === f) return;
+    if (insideDir(n, f)) { await say('A folder can\'t be moved inside itself.'); return; }
+    var bad = pathProblem(n); if (bad) { await say(bad); return; }
+    function mv(p) { return insideDir(p, f) ? n + p.slice(f.length) : p; }
+    var nf = {}, ni = {};
+    Object.keys(state.files).forEach(function (k) { nf[mv(k)] = state.files[k]; });
+    Object.keys(state.images).forEach(function (k) { ni[mv(k)] = state.images[k]; });
+    state.files = nf; state.images = ni;
+    state.folders = state.folders.map(mv);
+    if (state.active) state.active = mv(state.active);
+    if (selDir) selDir = mv(selDir);
+    var nc = {}; Object.keys(collapsed).forEach(function (k) { nc[mv(k)] = true; }); collapsed = nc;
+    dirty = true; render();
+  }
+  async function deleteFolder(f) {
+    var nFiles = Object.keys(state.files).filter(function (k) { return insideDir(k, f); });
+    var nImgs = Object.keys(state.images).filter(function (k) { return insideDir(k, f); });
+    var count = nFiles.length + nImgs.length;
+    if (!(await confirmIt('Delete the folder "' + f + '"' + (count ? ' and the ' + count + ' file(s) inside it' : '') + '? This cannot be undone.', 'Delete'))) return;
+    nFiles.forEach(function (k) { delete state.files[k]; });
+    nImgs.forEach(function (k) { delete state.images[k]; });
+    state.folders = state.folders.filter(function (k) { return !insideDir(k, f); });
+    if (state.active && state.files[state.active] === undefined) { var rest = sortedKeys(state.files); state.active = rest.length ? rest[0] : null; }
+    if (insideDir(selDir, f)) selDir = dirOf(f);
+    dirty = true; render();
+  }
+
+  /* =====================  uploads  ===================== */
+  $('uploadBtn').addEventListener('click', function () { $('uploadInput').click(); });
+  function readAs(f, how) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = function () { rej(r.error); };
+      if (how === 'text') r.readAsText(f); else r.readAsDataURL(f);
+    });
+  }
+  $('uploadInput').addEventListener('change', async function (e) {
+    var list = Array.prototype.slice.call(e.target.files);
+    e.target.value = '';
+    for (var i = 0; i < list.length; i++) {
+      var f = list[i];
+      var name = normalizePath(joinPath(selDir, normalizePath(f.name.replace(/[\\\/]+/g, '-')) || 'file'));
+      var asText = /\.(html?|css|js|txt)$/i.test(name);
+      var exists = asText ? state.files[name] !== undefined : state.images[name] !== undefined;
+      var bad = pathProblem(name, exists ? name : null);
+      if (bad) { await say(bad + ' Skipped "' + f.name + '".'); continue; }
+      if (exists && !(await confirmIt('"' + name + '" already exists. Replace it?', 'Replace'))) continue;
+      if (!asText && f.size > 4 * 1024 * 1024 &&
+          !(await confirmIt('"' + name + '" is ' + (f.size / 1048576).toFixed(1) + ' MB. Big images make save files large. Add it anyway?', 'Add it'))) continue;
+      var res;
+      try { res = await readAs(f, asText ? 'text' : 'url'); } catch (err) { await say('Could not read "' + name + '".'); continue; }
+      if (asText) { state.files[name] = String(res); if (!state.active) state.active = name; }
+      else if (/^data:image\//.test(res)) { state.images[name] = res; }
+      else { await say('"' + name + '" doesn\'t look like an image or a text file, so it was skipped.'); continue; }
+      dirty = true; render(); setStatus('Added ' + name);
+    }
+  });
+
+  /* =====================  save / open project  ===================== */
+  $('saveBtn').addEventListener('click', function () {
+    var data = { format: 'html-playground', version: 1, saved: new Date().toISOString(),
+                 active: state.active, files: state.files, images: state.images, folders: state.folders };
+    var blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    var d = new Date(), p = function (x) { return String(x).padStart(2, '0'); };
+    var fname = 'html-project-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + '.json';
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    dirty = false; setStatus('Saved ' + fname);
+  });
+  // Hand a file to one of the two hidden file inputs (used for routing and drag-and-drop).
+  function feed(inputId, file) {
+    var dt = new DataTransfer(); dt.items.add(file);
+    var inp = $(inputId); inp.files = dt.files; inp.dispatchEvent(new Event('change'));
+  }
+  ['openBtn', 'openZipBtn'].forEach(function (id) {       // keyboard access for the label-buttons
+    $(id).addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $(id === 'openBtn' ? 'openInput' : 'zipInput').click(); }
+    });
+  });
+  $('openInput').addEventListener('change', async function (e) {
+    var f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (/\.zip$/i.test(f.name)) { feed('zipInput', f); return; }
+    setStatus('Reading ' + f.name + '…');
+    var text;
+    try { text = await readAs(f, 'text'); } catch (err) { await say('Could not read that file.'); return; }
+    {
+      var d;
+      try { d = JSON.parse(text); } catch (err) { await say('That file isn\'t a valid project file.'); return; }
+      if (!d || d.format !== 'html-playground' || typeof d.files !== 'object' || !d.files) {
+        await say('That file isn\'t an HTML Playground project.'); return;
+      }
+      if (dirty && !(await confirmIt('Opening a project replaces your current work. Continue?'))) return;
+      state.files = {}; state.images = {}; state.folders = [];
+      Object.keys(d.files).forEach(function (k) {
+        var pk = normalizePath(k); if (pk && typeof d.files[k] === 'string') state.files[pk] = d.files[k];
+      });
+      Object.keys(d.images || {}).forEach(function (k) {
+        var pk = normalizePath(k);
+        if (pk && typeof d.images[k] === 'string' && /^data:image\//.test(d.images[k])) state.images[pk] = d.images[k];
+      });
+      (Array.isArray(d.folders) ? d.folders : []).forEach(function (k) { var pk = typeof k === 'string' && normalizePath(k); if (pk) state.folders.push(pk); });
+      var names = sortedKeys(state.files);
+      state.active = state.files[d.active] !== undefined ? d.active : (names[0] || null);
+      scrollMemory = {}; lastRendered = null; selDir = ''; collapsed = {}; dirty = false; render();
+      $('console').classList.remove('show'); $('consoleLog').textContent = '';
+      preview.srcdoc = ''; $('placeholder').style.display = ''; $('previewName').textContent = '';
+      setStatus('Opened ' + f.name);
+    }
+  });
+  /* =====================  ZIP export / restore  ===================== */
+  // Minimal ZIP reader/writer (no libraries). Handles "stored" and "deflate" entries.
+  var CRC_TABLE = (function () {
+    var t = new Uint32Array(256);
+    for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c >>> 0; }
+    return t;
+  })();
+  function crc32(u8) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function pipeThrough(u8, stream) {
+    var w = stream.writable.getWriter(); w.write(u8); w.close();
+    return new Response(stream.readable).arrayBuffer().then(function (b) { return new Uint8Array(b); });
+  }
+  function deflateRaw(u8) { return pipeThrough(u8, new CompressionStream('deflate-raw')); }
+  function inflateRaw(u8) { return pipeThrough(u8, new DecompressionStream('deflate-raw')); }
+
+  var MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp',
+               svg: 'image/svg+xml', bmp: 'image/bmp', ico: 'image/x-icon', avif: 'image/avif' };
+  var TEXT_EXT = /\.(html?|css|js|txt|json|md|csv|xml)$/i;
+  function extOf(n) { var m = /\.([^.\/]+)$/.exec(n); return m ? m[1].toLowerCase() : ''; }
+
+  function dataUrlToBytes(url) {
+    var i = url.indexOf(','), bin = atob(url.slice(i + 1)), u8 = new Uint8Array(bin.length);
+    for (var k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k);
+    return u8;
+  }
+  function bytesToDataUrl(u8, mime) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = rej;
+      r.readAsDataURL(new Blob([u8], { type: mime }));
+    });
+  }
+
+  function buildZip(entries) {          // entries: [{name, data: Uint8Array, deflate: bool}]
+    var enc = new TextEncoder(), now = new Date();
+    var dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+    var dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+    var canDeflate = typeof CompressionStream === 'function';
+    return Promise.all(entries.map(function (e) {
+      var p = (e.deflate && canDeflate && e.data.length > 0) ? deflateRaw(e.data) : Promise.resolve(null);
+      return p.then(function (c) {
+        var useC = c && c.length < e.data.length;
+        return { nameBytes: enc.encode(e.name), raw: e.data, body: useC ? c : e.data, method: useC ? 8 : 0, crc: crc32(e.data) };
+      });
+    })).then(function (items) {
+      var parts = [], central = [], offset = 0;
+      items.forEach(function (it) {
+        var lh = new DataView(new ArrayBuffer(30));
+        lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true);
+        lh.setUint16(8, it.method, true); lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true);
+        lh.setUint32(14, it.crc, true); lh.setUint32(18, it.body.length, true); lh.setUint32(22, it.raw.length, true);
+        lh.setUint16(26, it.nameBytes.length, true); lh.setUint16(28, 0, true);
+        var ch = new DataView(new ArrayBuffer(46));
+        ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+        ch.setUint16(10, it.method, true); ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true);
+        ch.setUint32(16, it.crc, true); ch.setUint32(20, it.body.length, true); ch.setUint32(24, it.raw.length, true);
+        ch.setUint16(28, it.nameBytes.length, true); ch.setUint32(42, offset, true);
+        parts.push(new Uint8Array(lh.buffer), it.nameBytes, it.body);
+        central.push(new Uint8Array(ch.buffer), it.nameBytes);
+        offset += 30 + it.nameBytes.length + it.body.length;
+      });
+      var cdSize = central.reduce(function (a, b) { return a + b.length; }, 0);
+      var end = new DataView(new ArrayBuffer(22));
+      end.setUint32(0, 0x06054b50, true); end.setUint16(8, items.length, true); end.setUint16(10, items.length, true);
+      end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+      return new Blob(parts.concat(central, [new Uint8Array(end.buffer)]), { type: 'application/zip' });
+    });
+  }
+
+  function readZip(buf) {               // -> Promise<[{name, data}]>
+    var u8 = new Uint8Array(buf), dv = new DataView(buf), dec = new TextDecoder('utf-8');
+    var eocd = -1;
+    for (var i = u8.length - 22; i >= Math.max(0, u8.length - 22 - 65535); i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) return Promise.reject(new Error('This doesn\'t look like a ZIP file.'));
+    var count = dv.getUint16(eocd + 10, true), p = dv.getUint32(eocd + 16, true);
+    if (count === 0xFFFF || p === 0xFFFFFFFF) return Promise.reject(new Error('ZIP64 files aren\'t supported.'));
+    var jobs = [];
+    for (var n = 0; n < count; n++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) return Promise.reject(new Error('The ZIP file is damaged.'));
+      var flags = dv.getUint16(p + 8, true), method = dv.getUint16(p + 10, true);
+      var csize = dv.getUint32(p + 20, true), nlen = dv.getUint16(p + 28, true);
+      var elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), loff = dv.getUint32(p + 42, true);
+      var name = dec.decode(u8.subarray(p + 46, p + 46 + nlen));
+      p += 46 + nlen + elen + clen;
+      name = name.replace(/\\/g, '/');
+      if (name.charAt(name.length - 1) === '/') {                        // folder entry
+        jobs.push(Promise.resolve({ name: name.slice(0, -1), data: new Uint8Array(0), dir: true }));
+        continue;
+      }
+      if (flags & 1) return Promise.reject(new Error('Password-protected ZIP files aren\'t supported.'));
+      if (dv.getUint32(loff, true) !== 0x04034b50) return Promise.reject(new Error('The ZIP file is damaged.'));
+      var start = loff + 30 + dv.getUint16(loff + 26, true) + dv.getUint16(loff + 28, true);
+      var body = u8.subarray(start, start + csize);
+      (function (name, method, body) {
+        if (method === 0) jobs.push(Promise.resolve({ name: name, data: body }));
+        else if (method === 8) {
+          if (typeof DecompressionStream !== 'function') throw new Error('This browser can\'t read compressed ZIP files. Try a recent Chrome, Edge, Firefox or Safari.');
+          jobs.push(inflateRaw(body).then(function (d) { return { name: name, data: d }; }));
+        } else throw new Error('Unsupported ZIP compression in "' + name + '".');
+      })(name, method, body);
+    }
+    return Promise.all(jobs);
+  }
+
+  $('zipBtn').addEventListener('click', function () {
+    if (state.active) state.files[state.active] = code.value;
+    var enc = new TextEncoder(), entries = [];
+    Object.keys(state.files).forEach(function (n) { entries.push({ name: n, data: enc.encode(state.files[n]), deflate: true }); });
+    Object.keys(state.images).forEach(function (n) { entries.push({ name: n, data: dataUrlToBytes(state.images[n]), deflate: false }); });
+    state.folders.forEach(function (f) {        // keep empty folders
+      var used = Object.keys(state.files).concat(Object.keys(state.images)).some(function (k) { return insideDir(k, f) && k !== f; });
+      if (!used) entries.push({ name: f + '/', data: new Uint8Array(0), deflate: false });
+    });
+    if (!entries.length) { setStatus('Nothing to export yet.'); return; }
+    buildZip(entries).then(function (blob) {
+      var d = new Date(), pad = function (x) { return String(x).padStart(2, '0'); };
+      var fname = 'website-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()) + '.zip';
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = fname;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+      dirty = false; setStatus('Exported ' + fname);
+    }).catch(function (err) { say('Could not create the ZIP: ' + err.message); });
+  });
+
+  $('openZipBtn').addEventListener('click', function () { $('zipInput').click(); });
+  $('zipInput').addEventListener('change', function (e) {
+    var f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (/\.json$/i.test(f.name)) { feed('openInput', f); return; }
+    setStatus('Reading ' + f.name + '…');
+    f.arrayBuffer().then(readZip).then(function (list) {
+      // ignore junk added by Finder / Windows
+      list = list.filter(function (it) {
+        var base = it.name.split('/').pop();
+        return !/^__MACOSX\//.test(it.name) && base !== '.DS_Store' && base !== 'Thumbs.db' && base.indexOf('._') !== 0;
+      });
+      // if everything sits inside a single top-level folder (e.g. "My Site/"), drop that folder name
+      var tops = {}; list.forEach(function (it) { var s = it.name.split('/'); tops[(s.length > 1 || it.dir) ? s[0] : ''] = 1; });
+      var keys = Object.keys(tops);
+      if (keys.length === 1 && keys[0] !== '') {
+        list.forEach(function (it) { it.name = it.name === keys[0] ? '' : it.name.slice(keys[0].length + 1); });
+      }
+      var dirs = [];
+      list = list.filter(function (it) {
+        it.name = normalizePath(it.name) || '';
+        if (it.dir) { if (it.name) dirs.push(it.name); return false; }
+        return !!it.name;
+      });
+
+      var files = {}, imgJobs = [], skipped = [];
+      list.forEach(function (it) {
+        var n = it.name;
+        if (!n) return;
+        if (TEXT_EXT.test(n)) {
+          var t = new TextDecoder('utf-8').decode(it.data);
+          files[n] = t.charCodeAt(0) === 0xFEFF ? t.slice(1) : t;
+        } else if (MIME[extOf(n)]) {
+          imgJobs.push(bytesToDataUrl(it.data, MIME[extOf(n)]).then(function (u) { return [n, u]; }));
+        } else skipped.push(n);
+      });
+      return Promise.all(imgJobs).then(function (pairs) {
+        if (!Object.keys(files).length && !pairs.length && !dirs.length) throw new Error('No web files (.html, .css, .js, images) were found in that ZIP.');
+        return (dirty ? confirmIt('Restoring from a ZIP replaces your current work. Continue?') : Promise.resolve(true)).then(function (go) {
+        if (!go) return;
+        state.files = files; state.images = {}; state.folders = dirs;
+        pairs.forEach(function (pr) { state.images[pr[0]] = pr[1]; });
+        var names = sortedKeys(files);
+        state.active = files['index.html'] !== undefined ? 'index.html' : (names.filter(isHtml)[0] || names[0] || null);
+        scrollMemory = {}; lastRendered = null; selDir = ''; collapsed = {}; dirty = false; render();
+        $('console').classList.remove('show'); $('consoleLog').textContent = '';
+        preview.srcdoc = ''; $('placeholder').style.display = ''; $('previewName').textContent = '';
+        setStatus('Restored ' + names.length + ' file(s) and ' + pairs.length + ' image(s)' + (skipped.length ? '; skipped ' + skipped.length + ' unsupported' : ''));
+        if (skipped.length) say('These files aren\'t supported and were skipped:\n\n' + skipped.join('\n'));
+        });
+      });
+    }).catch(function (err) { say('Could not open that ZIP: ' + err.message); });
+  });
+
+  // Drag a project .json or .zip anywhere onto the page to open it.
+  // Any other files (images, .html, .css, .js, .txt) are added to the project like an upload.
+  function hasFiles(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0; }
+  window.addEventListener('dragenter', function (e) { if (hasFiles(e)) document.body.classList.add('dragging'); });
+  window.addEventListener('dragover', function (e) { if (hasFiles(e)) { e.preventDefault(); document.body.classList.add('dragging'); } });
+  window.addEventListener('dragleave', function (e) { if (!e.relatedTarget) document.body.classList.remove('dragging'); });
+  window.addEventListener('drop', function (e) {
+    document.body.classList.remove('dragging');
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    var files = Array.prototype.slice.call(e.dataTransfer.files);
+    if (!files.length) return;
+    var f = files[0];
+    if (/\.zip$/i.test(f.name)) feed('zipInput', f);
+    else if (/\.json$/i.test(f.name)) feed('openInput', f);
+    else {
+      var dt = new DataTransfer(); files.forEach(function (x) { dt.items.add(x); });
+      $('uploadInput').files = dt.files; $('uploadInput').dispatchEvent(new Event('change'));
+    }
+  });
+  window.addEventListener('error', function (e) { setStatus('Error: ' + e.message); });
+  window.addEventListener('unhandledrejection', function (e) { say('Something went wrong: ' + (e.reason && e.reason.message || e.reason)); });
+
+  window.addEventListener('beforeunload', function (e) {
+    if (dirty) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  /* =====================  new project  ===================== */
+  $('newProjBtn').addEventListener('click', async function () {
+    var ok = await confirmIt('Start a new project?\n\nThis replaces everything here with the example project.' +
+      (dirty ? ' You have changes that haven\'t been saved or exported.' : '') +
+      '\n\nUse Save project… or Export ZIP first if you want to keep your work.', 'Start new project');
+    if (!ok) return;
+    state.files = JSON.parse(JSON.stringify(EXAMPLE_FILES));
+    state.images = JSON.parse(JSON.stringify(EXAMPLE_IMAGES));
+    state.active = 'index.html'; state.folders = [];
+    scrollMemory = {}; lastRendered = null; selDir = ''; collapsed = {}; dirty = false; render();
+    $('console').classList.remove('show'); $('consoleLog').textContent = '';
+    preview.srcdoc = ''; $('placeholder').style.display = ''; $('previewName').textContent = '';
+    setStatus('Started a new project');
+  });
+
+  /* =====================  theme + text size  ===================== */
+  var prefs = { theme: 'light', fs: 14 };
+  try { var sp = JSON.parse(localStorage.getItem('htmlPlaygroundPrefs') || '{}');
+        if (sp.theme === 'dark' || sp.theme === 'light') prefs.theme = sp.theme;
+        if (sp.fs >= 10 && sp.fs <= 32) prefs.fs = sp.fs; } catch (e) {}
+  function applyPrefs() {
+    var root = document.documentElement;
+    root.setAttribute('data-theme', prefs.theme);
+    root.style.setProperty('--fs', prefs.fs + 'px');
+    root.style.setProperty('--lh', Math.round(prefs.fs * 1.5) + 'px');
+    $('fontLabel').textContent = prefs.fs + 'px';
+    $('themeBtn').textContent = prefs.theme === 'dark' ? '☀ Light' : '🌙 Dark';
+    $('fontDown').disabled = prefs.fs <= 10; $('fontUp').disabled = prefs.fs >= 32;
+    try { localStorage.setItem('htmlPlaygroundPrefs', JSON.stringify(prefs)); } catch (e) {}
+    updateGutter();
+  }
+  $('themeBtn').addEventListener('click', function () { prefs.theme = prefs.theme === 'dark' ? 'light' : 'dark'; applyPrefs(); });
+  $('fontDown').addEventListener('click', function () { prefs.fs = Math.max(10, prefs.fs - 2); applyPrefs(); });
+  $('fontUp').addEventListener('click', function () { prefs.fs = Math.min(32, prefs.fs + 2); applyPrefs(); });
+
+  /* =====================  running the page  ===================== */
+  var warnings = [];
+
+  // Turn a reference like "../img/cat.png?x#y" (written inside a file in folder `baseDir`)
+  // into a project path, or null if it points outside the project.
+  function resolve(ref, pool, baseDir) {
+    if (!ref) return null;
+    ref = ref.trim();
+    if (!ref || /^([a-z][a-z0-9+.-]*:|\/\/|#)/i.test(ref)) return null;
+    var n = ref.split('#')[0].split('?')[0];
+    try { n = decodeURIComponent(n); } catch (e) {}
+    if (!n) return null;
+    function norm(path) {
+      var out = [];
+      path.split('/').forEach(function (sg) { if (sg === '' || sg === '.') return; if (sg === '..') out.pop(); else out.push(sg); });
+      return out.join('/');
+    }
+    var abs = n.charAt(0) === '/';
+    var p = norm(abs ? n : joinPath(baseDir || '', n));
+    if (pool[p] !== undefined) return p;
+    // Lenient fallback so the preview still works: a unique file with the same name elsewhere.
+    var want = baseOf(norm(n)), hits = Object.keys(pool).filter(function (k) { return baseOf(k) === want; });
+    if (want && hits.length === 1) {
+      warnings.push('Found "' + hits[0] + '", but "' + ref + '" doesn\'t point to it from here. ' +
+                    'It works in this preview, but the link would break on a real website. Check the folder path.');
+      return hits[0];
+    }
+    return null;
+  }
+  function missing(ref, kind) {
+    if (!ref || /^([a-z][a-z0-9+.-]*:|\/\/|#)/i.test(ref.trim())) return;
+    warnings.push('Could not find ' + kind + ' "' + ref + '" in your project.');
+  }
+  function inlineCssUrls(css, baseDir) {
+    return css.replace(/url\(\s*(['"]?)(.*?)\1\s*\)/g, function (m, q, u) {
+      var n = resolve(u, state.images, baseDir);
+      return n ? 'url("' + state.images[n] + '")' : m;
+    });
+  }
+
+  var SHIM = '(' + function () {
+    function send(t, a) { try { parent.postMessage({ __pg: true, type: t, args: a }, '*'); } catch (e) {} }
+    function fmt(v) {
+      if (typeof v === 'string') return v;
+      if (v instanceof Error) return v.name + ': ' + v.message;
+      try { return JSON.stringify(v); } catch (e) { return String(v); }
+    }
+    ['log', 'info', 'warn', 'error'].forEach(function (k) {
+      var o = console[k];
+      console[k] = function () { send(k, [].map.call(arguments, fmt)); o.apply(console, arguments); };
+    });
+    window.addEventListener('error', function (e) { send('error', [e.message || 'Script error']); });
+    window.addEventListener('unhandledrejection', function (e) { send('error', ['Unhandled promise rejection: ' + fmt(e.reason)]); });
+    document.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest && e.target.closest('a[data-pg-page]');
+      if (a) { e.preventDefault(); send('nav', [a.getAttribute('data-pg-page')]); }
+    }, true);
+  } + ')();';
+
+  function buildDoc(name) {
+    warnings = [];
+    var base = dirOf(name);
+    var doc = new DOMParser().parseFromString(state.files[name], 'text/html');
+
+    // images / media
+    doc.querySelectorAll('img[src], source[src], audio[src], video[src], input[src]').forEach(function (el) {
+      var ref = el.getAttribute('src'), n = resolve(ref, state.images, base);
+      if (n) el.setAttribute('src', state.images[n]); else missing(ref, 'image');
+    });
+    doc.querySelectorAll('video[poster]').forEach(function (el) {
+      var n = resolve(el.getAttribute('poster'), state.images, base);
+      if (n) el.setAttribute('poster', state.images[n]);
+    });
+    // stylesheets
+    doc.querySelectorAll('link[href]').forEach(function (el) {
+      if (!/stylesheet/i.test(el.getAttribute('rel') || '')) return;
+      var ref = el.getAttribute('href'), n = resolve(ref, state.files, base);
+      if (n) {
+        var st = doc.createElement('style');
+        st.textContent = inlineCssUrls(state.files[n], dirOf(n));
+        el.replaceWith(st);
+      } else missing(ref, 'stylesheet');
+    });
+    doc.querySelectorAll('style').forEach(function (el) { el.textContent = inlineCssUrls(el.textContent, base); });
+    doc.querySelectorAll('[style]').forEach(function (el) { el.setAttribute('style', inlineCssUrls(el.getAttribute('style'), base)); });
+    // scripts
+    doc.querySelectorAll('script[src]').forEach(function (el) {
+      var ref = el.getAttribute('src'), n = resolve(ref, state.files, base);
+      if (n) {
+        el.removeAttribute('src');
+        el.textContent = state.files[n].replace(/<\/script/gi, '<\\/script');
+      } else missing(ref, 'script');
+    });
+    // links between pages
+    doc.querySelectorAll('a[href]').forEach(function (el) {
+      var ref = el.getAttribute('href'), n = resolve(ref, state.files, base);
+      if (n && isHtml(n)) { el.setAttribute('data-pg-page', n); el.setAttribute('href', '#'); }
+      else if (n === null && !/^([a-z][a-z0-9+.-]*:|\/\/|#|$)/i.test(ref.trim()) && /\.html?([?#]|$)/i.test(ref)) {
+        missing(ref, 'page');
+      }
+    });
+
+    // make sure there's a head, then add the shim
+    var head = doc.head || doc.documentElement.insertBefore(doc.createElement('head'), doc.body);
+    var s = doc.createElement('script');
+    s.textContent = SHIM;
+    head.insertBefore(s, head.firstChild);
+
+    return '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+  }
+
+  function logLine(kind, text) {
+    var box = $('consoleLog'), d = document.createElement('div');
+    d.className = kind; d.textContent = (kind === 'error' ? '✖ ' : kind === 'warn' ? '⚠ ' : '› ') + text;
+    box.appendChild(d); box.scrollTop = box.scrollHeight;
+    $('console').classList.add('show');
+  }
+  $('clearConsole').addEventListener('click', function () {
+    $('consoleLog').textContent = ''; $('console').classList.remove('show');
+  });
+
+  function showPage(name) {
+    runPage = name;
+    $('consoleLog').textContent = ''; $('console').classList.remove('show');
+    var html = buildDoc(name);
+    preview.srcdoc = html;
+    $('placeholder').style.display = 'none';
+    $('previewName').textContent = name;
+    warnings.forEach(function (w) { logLine('warn', w); });
+  }
+
+  function run() {
+    if (state.active) state.files[state.active] = code.value;
+    var target = null;
+    if (state.active && isHtml(state.active)) target = state.active;
+    else if (state.files['index.html'] !== undefined) target = 'index.html';
+    else { var h = sortedKeys(state.files).filter(isHtml); target = h[0] || null; }
+    if (!target) { setStatus('Nothing to run — create an .html file first.'); return; }
+    showPage(target);
+  }
+  $('runBtn').addEventListener('click', run);
+
+  window.addEventListener('message', function (e) {
+    if (e.source !== preview.contentWindow) return;
+    var d = e.data; if (!d || !d.__pg) return;
+    if (d.type === 'nav') {
+      if (state.files[d.args[0]] !== undefined) showPage(d.args[0]);
+    } else {
+      logLine(d.type === 'log' || d.type === 'info' ? 'log' : d.type, (d.args || []).join(' '));
+    }
+  });
+
+  /* =====================  resizable split  ===================== */
+  (function () {
+    var sp = $('splitter'), ed = $('editorPane'), pv = $('previewPane'), dragging = false;
+    sp.addEventListener('pointerdown', function (e) {
+      dragging = true; sp.classList.add('drag'); sp.setPointerCapture(e.pointerId);
+      preview.style.pointerEvents = 'none'; e.preventDefault();
+    });
+    sp.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var area = ed.parentElement.getBoundingClientRect();
+      var left = ed.getBoundingClientRect().left;
+      var total = area.right - left - sp.offsetWidth;
+      var w = Math.min(Math.max(e.clientX - left, 220), total - 220);
+      ed.style.flex = '0 0 ' + w + 'px';
+      pv.style.flex = '1 1 0';
+    });
+    function end() { dragging = false; sp.classList.remove('drag'); preview.style.pointerEvents = ''; }
+    sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end);
+  })();
+
+  render();
+  applyPrefs();
+})();
+</script>
+</body>
+</html>
