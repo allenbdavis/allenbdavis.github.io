@@ -80,6 +80,7 @@
     border-left: 3px solid transparent; overflow: hidden;
   }
   aside li:hover { background: var(--hover); }
+  aside li.viewing { background: var(--active); }
   aside li.active { background: var(--active); border-left-color: var(--accent); font-weight: 600; }
   aside li .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
   aside li img { width: 28px; height: 28px; object-fit: cover; border-radius: 3px; border: 1px solid var(--line); background: #fff; }
@@ -87,10 +88,13 @@
   aside li:hover .x { visibility: visible; }
   aside li .x:hover { color: var(--danger); background: none; }
   .treeBtns { display: flex; gap: 4px; padding: 2px 10px 6px; flex-wrap: wrap; }
-  #selDirLabel { padding: 0 12px 6px; font-size: 11px; color: var(--muted); }
   #fileList { min-height: 80px; }
   aside li.folder { font-weight: 600; }
-  aside li.folder.selected { background: var(--hover); }
+  aside li.folder.selected { background: var(--hover); border-left-color: var(--accent); }
+  aside li.dropTarget { outline: 2px dashed var(--accent); outline-offset: -2px; background: var(--active); }
+  aside li.dragSrc { opacity: .45; }
+  aside li[draggable="true"] { cursor: grab; }
+
   aside li .caret { width: 12px; flex: none; color: var(--muted); font-size: 11px; }
   aside .empty { padding: 4px 12px; color: var(--muted); font-size: 12px; }
 
@@ -182,7 +186,6 @@
       <button class="small" id="newFolderBtn" title="New folder">+ Folder</button>
       <button class="small" id="uploadBtn" title="Upload images or code files">⬆ Upload</button>
     </div>
-    <div id="selDirLabel"></div>
     <ul id="fileList"></ul>
   </aside>
 
@@ -401,6 +404,7 @@
   var scrollMemory = {};
   var lastRendered = null;   // which file the editor last showed (to keep scroll/caret on re-render)
   var selDir = '';           // folder that + File / + Folder / Upload add into ('' = top level)
+  var viewing = null;        // image currently shown in the preview pane
   var collapsed = {};        // folders collapsed in the tree
 
   var $ = function (id) { return document.getElementById(id); };
@@ -526,6 +530,7 @@
     var prevScroll = code.scrollTop, prevSel = [code.selectionStart, code.selectionEnd];
     if (state.active) ancestors(state.active).forEach(function (a) { delete collapsed[a]; });
 
+    allFolders().forEach(function (f) { if (state.folders.indexOf(f) < 0) state.folders.push(f); });
     var fl = $('fileList'); fl.textContent = '';
     var folders = allFolders(), fileNames = Object.keys(state.files), imgNames = Object.keys(state.images);
     function byBase(a, b) { return baseOf(a.n).localeCompare(baseOf(b.n)); }
@@ -541,6 +546,31 @@
       b.addEventListener('click', function (e) { e.stopPropagation(); fn(); });
       return b;
     }
+    function dragSource(li, path, kind) {
+      li.draggable = true;
+      li.addEventListener('dragstart', function (e) {
+        e.dataTransfer.setData('application/x-pg-item', JSON.stringify({ path: path, kind: kind }));
+        e.dataTransfer.effectAllowed = 'move';
+        li.classList.add('dragSrc');
+      });
+      li.addEventListener('dragend', function () { li.classList.remove('dragSrc'); });
+    }
+    function dropTarget(li, dirPath) {
+      li.addEventListener('dragover', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        e.dataTransfer.dropEffect = hasFiles(e) ? 'copy' : 'move';
+        li.classList.add('dropTarget');
+      });
+      li.addEventListener('dragleave', function (e) { if (!li.contains(e.relatedTarget)) li.classList.remove('dropTarget'); });
+      li.addEventListener('drop', function (e) {
+        li.classList.remove('dropTarget');
+        if (hasFiles(e)) { selDir = dirPath; return; }        // files from your computer: upload into this folder
+        var raw = e.dataTransfer.getData('application/x-pg-item');
+        if (!raw) return;
+        e.preventDefault(); e.stopPropagation();
+        moveItem(JSON.parse(raw), dirPath);
+      });
+    }
     function level(dir, depth) {
       folders.filter(function (f) { return dirOf(f) === dir; }).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (f) {
         var li = row(depth, 'folder' + (selDir === f ? ' selected' : ''));
@@ -549,7 +579,14 @@
         li.appendChild(caret); li.appendChild(nm);
         li.appendChild(actionBtn('✎', 'Rename folder', function () { renameFolder(f); }));
         li.appendChild(actionBtn('×', 'Delete folder', function () { deleteFolder(f); }));
-        li.addEventListener('click', function () { selDir = f; if (collapsed[f]) delete collapsed[f]; else collapsed[f] = true; render(); });
+        dragSource(li, f, 'folder'); dropTarget(li, f);
+        li.addEventListener('click', function (e) {
+          // click = select (and open); click the arrow, or click an already-selected folder, to collapse/expand
+          var toggle = e.target === caret || selDir === f;
+          selDir = f;
+          if (toggle) { if (collapsed[f]) delete collapsed[f]; else collapsed[f] = true; } else delete collapsed[f];
+          render();
+        });
         fl.appendChild(li);
         if (!collapsed[f]) level(f, depth + 1);
       });
@@ -557,36 +594,45 @@
         .concat(imgNames.filter(function (n) { return dirOf(n) === dir; }).map(function (n) { return { n: n, kind: 'image' }; }))
         .sort(byBase);
       items.forEach(function (it) {
-        var li = row(depth, it.kind === 'file' && it.n === state.active ? 'active' : '');
+        var li = row(depth, it.kind === 'file' && it.n === state.active ? 'active' : (it.kind === 'image' && it.n === viewing ? 'viewing' : ''));
+        if (it.kind === 'image') li.setAttribute('data-img', it.n);
         var gap = document.createElement('span'); gap.className = 'caret'; li.appendChild(gap);
         if (it.kind === 'image') {
           var im = document.createElement('img'); im.src = state.images[it.n]; im.alt = ''; li.appendChild(im);
         }
         var nm = document.createElement('span'); nm.className = 'name'; nm.textContent = baseOf(it.n); nm.title = it.n;
         li.appendChild(nm);
+        dragSource(li, it.n, it.kind);
         if (it.kind === 'image') {
           li.appendChild(actionBtn('×', 'Remove ' + it.n, function () {
             confirmIt('Remove "' + it.n + '" from this project?', 'Remove').then(function (y) {
               if (y) { delete state.images[it.n]; dirty = true; render(); }
             });
           }));
-          li.addEventListener('click', function () { selDir = dir; render(); });
+          li.title = 'Click to view';
+          li.addEventListener('click', function () { selDir = dir; render(); viewImage(it.n); });
         } else {
           li.addEventListener('click', function () { openFile(it.n); });
         }
         fl.appendChild(li);
       });
     }
-    level('', 0);
+    var rootLi = row(0, 'folder' + (selDir === '' ? ' selected' : ''));
+    var rc = document.createElement('span'); rc.className = 'caret'; rootLi.appendChild(rc);
+    var rn = document.createElement('span'); rn.className = 'name'; rn.textContent = '/'; rootLi.title = 'Top level of the project'; rootLi.appendChild(rn);
+    rootLi.addEventListener('click', function () { selDir = ''; render(); });
+    dropTarget(rootLi, '');
+    fl.appendChild(rootLi);
+    level('', 1);
     if (!fileNames.length && !imgNames.length && !folders.length) {
       var e = document.createElement('li'); e.className = 'empty'; e.style.cursor = 'default'; e.textContent = 'No files yet'; fl.appendChild(e);
     }
-    $('selDirLabel').textContent = 'New items go in: ' + (selDir ? selDir + '/' : 'top level') + (selDir ? '' : '  (click a folder to change)');
 
     // editor
     var has = !!state.active;
     code.disabled = !has;
-    code.value = has ? state.files[state.active] : '';
+    var want = has ? state.files[state.active] : '';
+    if (code.value !== want) code.value = want;
     $('fileTitle').textContent = has ? state.active : '(no file)';
     $('renameBtn').disabled = !has; $('deleteBtn').disabled = !has;
     updateGutter();
@@ -599,10 +645,17 @@
     gutter.scrollTop = code.scrollTop;
     lastRendered = state.active;
   }
-  fl_click_bg();
-  function fl_click_bg() {
-    $('fileList').addEventListener('click', function (e) { if (e.target === $('fileList')) { selDir = ''; render(); } });
-  }
+  (function () {
+    var ul = $('fileList');
+    ul.addEventListener('click', function (e) { if (e.target === ul) { selDir = ''; render(); } });
+    ul.addEventListener('dragover', function (e) { if (e.target === ul) { e.preventDefault(); e.dataTransfer.dropEffect = hasFiles(e) ? 'copy' : 'move'; } });
+    ul.addEventListener('drop', function (e) {
+      if (e.target !== ul) return;
+      if (hasFiles(e)) { selDir = ''; return; }
+      var raw = e.dataTransfer.getData('application/x-pg-item');
+      if (raw) { e.preventDefault(); e.stopPropagation(); moveItem(JSON.parse(raw), ''); }
+    });
+  })();
   function openFile(name) {
     if (state.active) scrollMemory[state.active] = code.scrollTop;
     state.active = name; selDir = dirOf(name); render(); code.focus();
@@ -642,6 +695,10 @@
     if (!n || n === f) return;
     if (insideDir(n, f)) { await say('A folder can\'t be moved inside itself.'); return; }
     var bad = pathProblem(n); if (bad) { await say(bad); return; }
+    applyFolderMove(f, n);
+    dirty = true; render();
+  }
+  function applyFolderMove(f, n) {
     function mv(p) { return insideDir(p, f) ? n + p.slice(f.length) : p; }
     var nf = {}, ni = {};
     Object.keys(state.files).forEach(function (k) { nf[mv(k)] = state.files[k]; });
@@ -650,8 +707,22 @@
     state.folders = state.folders.map(mv);
     if (state.active) state.active = mv(state.active);
     if (selDir) selDir = mv(selDir);
+    if (viewing) viewing = mv(viewing);
     var nc = {}; Object.keys(collapsed).forEach(function (k) { nc[mv(k)] = true; }); collapsed = nc;
+  }
+  // Drag-and-drop in the tree: move a file, image or folder into another folder ('' = top level).
+  async function moveItem(info, target) {
+    var src = info.path, dest = joinPath(target, baseOf(src));
+    if (dest === src) return;
+    if (info.kind === 'folder' && insideDir(target, src)) { await say('A folder can\'t be moved inside itself.'); return; }
+    var bad = pathProblem(dest);
+    if (bad) { await say('Can\'t move "' + baseOf(src) + '" to ' + (target ? '"' + target + '/"' : 'the top level') + ': ' + bad); return; }
+    if (info.kind === 'folder') applyFolderMove(src, dest);
+    else if (info.kind === 'image') { state.images[dest] = state.images[src]; delete state.images[src]; if (viewing === src) viewing = dest; }
+    else { state.files[dest] = state.files[src]; delete state.files[src]; if (state.active === src) state.active = dest; }
+    delete collapsed[target]; selDir = target;
     dirty = true; render();
+    setStatus('Moved to ' + (target ? target + '/' : 'top level'));
   }
   async function deleteFolder(f) {
     var nFiles = Object.keys(state.files).filter(function (k) { return insideDir(k, f); });
@@ -746,7 +817,7 @@
       state.active = state.files[d.active] !== undefined ? d.active : (names[0] || null);
       scrollMemory = {}; lastRendered = null; selDir = ''; collapsed = {}; dirty = false; render();
       $('console').classList.remove('show'); $('consoleLog').textContent = '';
-      preview.srcdoc = ''; $('placeholder').style.display = ''; $('previewName').textContent = '';
+      viewing = null; preview.srcdoc = ''; $('placeholder').style.display = ''; $('previewName').textContent = '';
       setStatus('Opened ' + f.name);
     }
   });
@@ -926,7 +997,7 @@
         state.active = files['index.html'] !== undefined ? 'index.html' : (names.filter(isHtml)[0] || names[0] || null);
         scrollMemory = {}; lastRendered = null; selDir = ''; collapsed = {}; dirty = false; render();
         $('console').classList.remove('show'); $('consoleLog').textContent = '';
-        preview.srcdoc = ''; $('placeholder').style.display = ''; $('previewName').textContent = '';
+        viewing = null; preview.srcdoc = ''; $('placeholder').style.display = ''; $('previewName').textContent = '';
         setStatus('Restored ' + names.length + ' file(s) and ' + pairs.length + ' image(s)' + (skipped.length ? '; skipped ' + skipped.length + ' unsupported' : ''));
         if (skipped.length) say('These files aren\'t supported and were skipped:\n\n' + skipped.join('\n'));
         });
@@ -972,7 +1043,7 @@
     state.active = 'index.html'; state.folders = [];
     scrollMemory = {}; lastRendered = null; selDir = ''; collapsed = {}; dirty = false; render();
     $('console').classList.remove('show'); $('consoleLog').textContent = '';
-    preview.srcdoc = ''; $('placeholder').style.display = ''; $('previewName').textContent = '';
+    viewing = null; preview.srcdoc = ''; $('placeholder').style.display = ''; $('previewName').textContent = '';
     setStatus('Started a new project');
   });
 
@@ -995,6 +1066,33 @@
   $('themeBtn').addEventListener('click', function () { prefs.theme = prefs.theme === 'dark' ? 'light' : 'dark'; applyPrefs(); });
   $('fontDown').addEventListener('click', function () { prefs.fs = Math.max(10, prefs.fs - 2); applyPrefs(); });
   $('fontUp').addEventListener('click', function () { prefs.fs = Math.min(32, prefs.fs + 2); applyPrefs(); });
+
+  /* =====================  image viewer (right pane)  ===================== */
+  function escHtml(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function markViewing() {
+    Array.prototype.forEach.call($('fileList').querySelectorAll('li[data-img]'), function (li) {
+      li.classList.toggle('viewing', li.getAttribute('data-img') === viewing);
+    });
+  }
+  function viewImage(name) {
+    if (state.images[name] === undefined) return;
+    viewing = name; runPage = null; markViewing();
+    $('consoleLog').textContent = ''; $('console').classList.remove('show');
+    preview.srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' +
+      'html,body{height:100%;margin:0}body{display:flex;flex-direction:column;font:13px system-ui,sans-serif;color:#333;' +
+      'background:#e9ebef repeating-conic-gradient(#dfe2e7 0% 25%,#eef0f3 0% 50%) 50%/20px 20px}' +
+      '#w{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:auto;padding:16px}' +
+      'img{max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;background:transparent}' +
+      'img.full{max-width:none;max-height:none;cursor:zoom-out}' +
+      '#c{padding:8px 14px;background:rgba(255,255,255,.92);border-top:1px solid #ccd;text-align:center}' +
+      '</style></head><body><div id="w"><img id="im" src="' + state.images[name] + '" alt="' + escHtml(name) + '"></div>' +
+      '<div id="c">' + escHtml(name) + ' <span id="d"></span> &nbsp;·&nbsp; click image to toggle actual size</div>' +
+      '<script>var im=document.getElementById("im");' +
+      'function d(){document.getElementById("d").textContent="— "+im.naturalWidth+" × "+im.naturalHeight+" px"}' +
+      'im.complete?d():im.onload=d;im.onclick=function(){im.classList.toggle("full")};<\/script></body></html>';
+    $('placeholder').style.display = 'none';
+    $('previewName').textContent = name + ' (image)';
+  }
 
   /* =====================  running the page  ===================== */
   var warnings = [];
@@ -1118,7 +1216,7 @@
   });
 
   function showPage(name) {
-    runPage = name;
+    runPage = name; viewing = null; markViewing();
     $('consoleLog').textContent = ''; $('console').classList.remove('show');
     var html = buildDoc(name);
     preview.srcdoc = html;
