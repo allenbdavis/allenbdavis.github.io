@@ -164,32 +164,32 @@
 
 <header>
   <h1>HTML Playground</h1>
-  <input type="text" id="projName" maxlength="60" placeholder="Project name" aria-label="Project name" title="Project name" spellcheck="false" autocomplete="off">
-  <button class="run" id="runBtn" title="Ctrl/⌘ + Enter">▶ Run</button>
+  <input type="text" id="projName" maxlength="60" placeholder="Project name" aria-label="Project name" title="Project name: used for the save and ZIP file names" spellcheck="false" autocomplete="off">
+  <button class="run" id="runBtn" title="Show the open page in the preview (if a CSS or JS file is open, runs index.html). Shortcut: Ctrl/⌘ + Enter">▶ Run</button>
   <button id="newProjBtn" title="Start over with the example project">New project</button>
   <button id="saveBtn" title="Download the project as a .json file named after the project">Save</button>
   <button id="saveAsBtn" title="Choose the file name and the folder to save into">Save As…</button>
-  <label class="btn" id="openBtn" for="openInput" tabindex="0" role="button">Open project…</label>
+  <label class="btn" id="openBtn" for="openInput" tabindex="0" role="button" title="Open a project from a saved .json file (replaces what is here)">Open project…</label>
   <span class="sep"></span>
   <button id="zipBtn" title="Download everything as a .zip you can unzip and put on a web server">Export ZIP</button>
   <label class="btn" id="openZipBtn" for="zipInput" tabindex="0" role="button" title="Restore a project from a .zip file">Restore from ZIP…</label>
   <span class="spacer"></span>
   <span id="status"></span>
-  <span class="fontctl" title="Editor text size">
-    <button id="fontDown" class="small" aria-label="Smaller text">A−</button>
+  <span class="fontctl">
+    <button id="fontDown" class="small" aria-label="Smaller text" title="Make the editor text smaller">A−</button>
     <span id="fontLabel">14px</span>
-    <button id="fontUp" class="small" aria-label="Larger text">A+</button>
+    <button id="fontUp" class="small" aria-label="Larger text" title="Make the editor text larger">A+</button>
   </span>
-  <button id="themeBtn" class="small" title="Switch between light and dark">🌙 Dark</button>
+  <button id="themeBtn" class="small" title="Switch to the dark theme">🌙 Dark</button>
 </header>
 
 <main>
   <aside>
     <h2>Files</h2>
     <div class="treeBtns">
-      <button class="small" id="newFileBtn" title="New file">+ File</button>
-      <button class="small" id="newFolderBtn" title="New folder">+ Folder</button>
-      <button class="small" id="uploadBtn" title="Upload images or code files">⬆ Upload</button>
+      <button class="small" id="newFileBtn" title="Create a new file in the selected folder">+ File</button>
+      <button class="small" id="newFolderBtn" title="Create a new folder inside the selected folder">+ Folder</button>
+      <button class="small" id="uploadBtn" title="Add images or code files from your computer to the selected folder">⬆ Upload</button>
     </div>
     <ul id="fileList"></ul>
   </aside>
@@ -198,8 +198,8 @@
     <div class="paneBar">
       <span class="title" id="fileTitle"></span>
       <span class="spacer"></span>
-      <button class="small" id="renameBtn">Rename</button>
-      <button class="small danger" id="deleteBtn">Delete</button>
+      <button class="small" id="renameBtn" title="Rename the open file, or move it by typing a folder path">Rename</button>
+      <button class="small danger" id="deleteBtn" title="Delete the open file">Delete</button>
     </div>
     <div class="editor">
       <pre id="gutter" aria-hidden="true">1</pre>
@@ -208,7 +208,7 @@
     </div>
   </section>
 
-  <div id="splitter" role="separator" aria-orientation="vertical"></div>
+  <div id="splitter" title="Drag to resize the editor and preview" role="separator" aria-orientation="vertical"></div>
 
   <section id="previewPane">
     <div class="paneBar">
@@ -220,7 +220,7 @@
       <div id="placeholder">Press ▶ Run to see your page here.</div>
     </div>
     <div id="console">
-      <div class="bar"><span>Console</span><button class="small" id="clearConsole">Clear</button></div>
+      <div class="bar"><span>Console</span><button class="small" id="clearConsole" title="Clear the console messages">Clear</button></div>
       <div id="consoleLog"></div>
     </div>
   </section>
@@ -1109,6 +1109,7 @@
     root.style.setProperty('--lh', Math.round(prefs.fs * 1.5) + 'px');
     $('fontLabel').textContent = prefs.fs + 'px';
     $('themeBtn').textContent = prefs.theme === 'dark' ? '☀ Light' : '🌙 Dark';
+    $('themeBtn').title = prefs.theme === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme';
     $('fontDown').disabled = prefs.fs <= 10; $('fontUp').disabled = prefs.fs >= 32;
     try { localStorage.setItem('htmlPlaygroundPrefs', JSON.stringify(prefs)); } catch (e) {}
     updateGutter();
