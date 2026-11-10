@@ -9,10 +9,11 @@ import numpy as np
 import generate
 import analysis
 import plots
+import imaging
 from plot_utils import to_b64
 
 __all__ = ['generate_starfield', 'make_lightcurve', 'find_best_period',
-           'make_folded_plot', 'make_oddeven_plot']
+           'make_folded_plot', 'make_oddeven_plot', 'make_psf_image']
 
 # Per-star light-curve cache: filled by make_lightcurve, read by the others.
 _star_data = {}
@@ -109,3 +110,20 @@ def make_oddeven_plot(star_id, period, t0):
     tnum = np.floor((t - t0) / period).astype(int)
     even = (tnum % 2 == 0)
     return json.dumps(dict(img=to_b64(plots.oddeven_fig(ph, flux, even))))
+
+
+def make_psf_image(star_id, seed):
+    """Phase 2 high-resolution image of one star.  Pixels are float32 counts,
+    base64-encoded (little endian).  No truth is returned: the page only sees
+    what an observer would see.  `debug` carries true positions for the overlay."""
+    import base64
+    s = generate._stars.get(star_id)
+    if s is None:
+        return json.dumps(dict(error='no star'))
+    r = imaging.render(s, seed)
+    enc = lambda a: base64.b64encode(np.ascontiguousarray(a, dtype='<f4').tobytes()).decode('ascii')
+    return json.dumps(dict(
+        n=r['n'], ref_n=r['ref_n'], pix_scale=r['pix_scale'], fwhm=r['fwhm'],
+        img=enc(r['img']), ref=enc(r['ref']),
+        debug=r['truth'],
+    ))

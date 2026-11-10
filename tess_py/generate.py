@@ -17,12 +17,12 @@ import numpy as np
 #   - Imaging window: 0.03" .. 4" (speckle FOV ~6").  Companions inside the
 #     window are real and dilute the light curve whether or not they resolve.
 #   - Detectability: SOAR-like contrast curve; ~5 mag beyond ~0.5", worse
-#     closer in and for fainter hosts; unresolved below ~0.04".
+#     closer in and for fainter hosts; unresolved below ~0.05".
 COMP_FRAC      = 0.30
 LOGA_MEAN      = 1.7      # log10(a/AU)
 LOGA_SIGMA     = 1.5
 SEP_MIN, SEP_MAX = 0.03, 4.0     # arcsec
-RESOLVE_MIN    = 0.04            # arcsec
+RESOLVE_MIN    = 0.05            # arcsec (~0.85 x the 0.06" imager FWHM)
 DMAG_PER_DEX   = 7.5
 DIST_MEDIAN_PC = 200.0           # typical TESS planet host (Ziegler+2021)
 DIST_SIGMA_DEX = 0.30
@@ -30,6 +30,8 @@ DIST_SIGMA_DEX = 0.30
 # Per-star truth that is not part of the JSON the UI sees (blend EB parameters,
 # dilution factor).  Rebuilt by generate_starfield.
 _truth = {}
+# id -> star dict (as returned in the JSON), so other modules can look a star up
+_stars = {}
 
 def _contrast_limit(sep, brightness):
     """5-sigma delta-mag limit of the (synthetic) imager at separation sep."""
@@ -63,6 +65,7 @@ def generate_starfield(seed=42, n_stars=25):
     types = ['boring']*5 + ['pulsating', 'transit', 'transit', 'eb']
     stars = []
     _truth.clear()
+    _stars.clear()
     for i in range(n_stars):
         # Existing draws, unchanged -> same positions/brightness/types as before.
         s = {
@@ -116,6 +119,8 @@ def generate_starfield(seed=42, n_stars=25):
         c = s['companion']
         if c and c['bound']:
             _truth[s['id']] = dict(dilution=1.0 / (1.0 + 10 ** (-0.4 * c['dmag'])))
+    for s in stars:
+        _stars[s['id']] = s
     return json.dumps(stars)
 
 

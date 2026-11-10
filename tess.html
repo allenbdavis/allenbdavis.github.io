@@ -124,26 +124,82 @@
   #proceed-btn:hover:not(:disabled) { background: #0c1a1c; box-shadow: 0 0 8px #4af3c844; }
   #proceed-btn:disabled { border-color: var(--border); color: var(--text-dim); cursor: default; }
 
-  /* ── Phase 2 placeholder view ── */
-  #phase2-view {
-    display: none; flex: 1; overflow-y: auto;
-    flex-direction: column; align-items: center;
-    padding: 28px 20px; gap: 14px;
+  /* ── Phase 2: imaging ── */
+  #phase2-view, #phase3-view {
+    display: none; flex: 1; min-height: 0; overflow: hidden;
   }
-  #phase2-view h2 {
+  #phase2-view { flex-direction: row; }
+  #p2-left {
+    width: 300px; flex-shrink: 0; overflow-y: auto;
+    border-right: 1px solid var(--border); background: var(--panel-bg);
+  }
+  #p2-left .cp-row { cursor: pointer; }
+  #p2-left .cp-row:hover { background: #0c1a1c; }
+  #p2-left .cp-row.active { background: #0f2230; box-shadow: inset 3px 0 0 var(--accent); }
+  .p2-badge {
+    margin-left: auto; font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em;
+    padding: 1px 6px; border-radius: 2px; border: 1px solid var(--border); color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .p2-badge.clean { color: var(--accent); border-color: var(--accent); }
+  .p2-badge.contaminated { color: var(--warn); border-color: var(--warn); }
+  #p2-right { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  #p2-viewer { position: relative; flex: 1; min-height: 0; background: #000; overflow: hidden; }
+  #p2-canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; cursor: crosshair; }
+  #p2-zoom { position: absolute; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
+  #p2-zoom button {
+    width: 28px; height: 28px; background: #05080fcc; border: 1px solid var(--border);
+    color: var(--accent); font-family: var(--mono); font-size: 16px; cursor: pointer; border-radius: 2px;
+  }
+  #p2-zoom button:hover { border-color: var(--accent); }
+  #p2-refbox {
+    position: absolute; right: 10px; top: 10px; background: #05080fcc;
+    border: 1px solid var(--border); padding: 4px; border-radius: 2px; text-align: center;
+    font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.04em;
+  }
+  #p2-ref { width: 96px; height: 96px; display: block; image-rendering: pixelated; }
+  #p2-empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 13px; color: var(--text-dim); letter-spacing: 0.05em;
+  }
+  #p2-controls {
+    border-top: 1px solid var(--border); background: var(--panel-bg);
+    padding: 8px 14px; display: flex; flex-direction: column; gap: 6px;
+    font-family: var(--mono); font-size: 12px; color: var(--text-dim); letter-spacing: 0.04em;
+  }
+  #p2-controls .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  #p2-controls select, #p2-controls label { color: var(--text); font-family: var(--mono); font-size: 12px; }
+  #p2-controls select { background: var(--bg); border: 1px solid var(--border); padding: 2px 4px; }
+  #p2-readout { color: var(--text); line-height: 1.6; min-height: 20px; }
+  #p2-readout b { color: var(--accent); font-weight: normal; }
+  #p2-readout .old { color: var(--text-dim); }
+  .p2-verdict {
+    background: none; border: 1px solid var(--border); color: var(--text);
+    font-family: var(--mono); font-size: 13px; padding: 4px 16px; cursor: pointer;
+    border-radius: 2px; letter-spacing: 0.06em; transition: all 0.12s;
+  }
+  .p2-verdict:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .p2-verdict.sel.clean { background: #0c1a1c; border-color: var(--accent); color: var(--accent); }
+  .p2-verdict.sel.contaminated { background: #1c1808; border-color: var(--warn); color: var(--warn); }
+  .p2-verdict:disabled { opacity: 0.5; cursor: default; }
+  #phase3-view {
+    flex-direction: column; align-items: center; padding: 28px 20px; gap: 14px; overflow-y: auto;
+  }
+  #phase3-view h2 {
     font-family: var(--mono); font-size: 16px; letter-spacing: 0.15em;
     color: var(--accent); text-transform: uppercase; font-weight: normal;
   }
-  #phase2-view p {
+  #phase3-view p {
     font-family: var(--mono); font-size: 13px; color: var(--text-dim);
     letter-spacing: 0.05em; text-align: center; max-width: 560px; line-height: 1.8;
   }
-  #p2-list {
+  #p3-list {
     width: 100%; max-width: 560px;
     border: 1px solid var(--border); border-radius: 4px; background: var(--panel-bg);
   }
-  #p2-list .cp-row { cursor: default; }
-  #p2-list .cp-row:hover { background: transparent; }
+  #p3-list .cp-row { cursor: default; }
+  #p3-list .cp-row:hover { background: transparent; }
+  #p3-list .cp-row.greyed { opacity: 0.35; }
   .cp-debug {
     font-family: var(--mono); font-size: 10px; color: var(--warn); letter-spacing: 0.04em;
     white-space: pre-line;
@@ -368,6 +424,7 @@
   <nav id="phase-nav">
     <button class="phase-tab active" id="tab-p1">1 · Light Curves</button>
     <button class="phase-tab" id="tab-p2" disabled>2 · Imaging</button>
+    <button class="phase-tab" id="tab-p3" disabled>3 · Radial Velocity</button>
   </nav>
   <div id="status">● LOADING</div>
 </header>
@@ -458,12 +515,50 @@
   </div><!-- /side-panel -->
 </div><!-- /main -->
 
-<!-- Phase 2 (placeholder until imaging is built) -->
+<!-- Phase 2: high-resolution imaging -->
 <div id="phase2-view">
-  <h2>Phase 2 — Follow-up Imaging</h2>
-  <p>High-resolution imaging is not built yet.<br>
-     Candidates locked in from Phase 1 are listed below.</p>
-  <div id="p2-list"></div>
+  <div id="p2-left"><div id="p2-list"></div></div>
+  <div id="p2-right">
+    <div id="p2-viewer">
+      <canvas id="p2-canvas"></canvas>
+      <div id="p2-refbox"><canvas id="p2-ref" width="32" height="32"></canvas>point-source<br>reference</div>
+      <div id="p2-zoom">
+        <button id="p2-zin" title="Zoom in">+</button>
+        <button id="p2-zout" title="Zoom out">&minus;</button>
+        <button id="p2-zfit" title="Fit image" style="font-size:12px">fit</button>
+      </div>
+      <div id="p2-empty">Select a candidate on the left</div>
+    </div>
+    <div id="p2-controls">
+      <div class="row">
+        <span>Scale:
+          <select id="p2-scale">
+            <option value="linear">linear</option>
+            <option value="sqrt" selected>sqrt</option>
+            <option value="log">log</option>
+          </select></span>
+        <button class="hdr-btn" id="p2-reset-stretch" style="padding:2px 10px;font-size:12px">Reset stretch</button>
+        <label><input type="checkbox" id="p2-snap" checked> snap to peak</label>
+        <button class="hdr-btn" id="p2-clear" style="padding:2px 10px;font-size:12px">Clear measurements</button>
+        <label id="p2-dbg-wrap" style="display:none;color:var(--warn)"><input type="checkbox" id="p2-dbg"> show true positions (debug)</label>
+      </div>
+      <div class="row" style="font-size:11px">Right-drag: contrast (up/down) &amp; brightness (left/right) &middot; Click: mark star &middot; Wheel: zoom &middot; Middle-drag (or left-drag): pan</div>
+      <div id="p2-readout"></div>
+      <div class="row">
+        <span>This star is:</span>
+        <button class="p2-verdict clean" id="p2-clean">Clean</button>
+        <button class="p2-verdict contaminated" id="p2-contam">Contaminated</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Phase 3 (placeholder until radial velocity is built) -->
+<div id="phase3-view">
+  <h2>Phase 3 &mdash; Radial Velocity</h2>
+  <p>Radial-velocity follow-up is not built yet.<br>
+     Contaminated targets are greyed out.</p>
+  <div id="p3-list"></div>
 </div>
 
 <!-- Footer -->
@@ -546,12 +641,12 @@ import numpy as np
 #   - Imaging window: 0.03" .. 4" (speckle FOV ~6").  Companions inside the
 #     window are real and dilute the light curve whether or not they resolve.
 #   - Detectability: SOAR-like contrast curve; ~5 mag beyond ~0.5", worse
-#     closer in and for fainter hosts; unresolved below ~0.04".
+#     closer in and for fainter hosts; unresolved below ~0.05".
 COMP_FRAC      = 0.30
 LOGA_MEAN      = 1.7      # log10(a/AU)
 LOGA_SIGMA     = 1.5
 SEP_MIN, SEP_MAX = 0.03, 4.0     # arcsec
-RESOLVE_MIN    = 0.04            # arcsec
+RESOLVE_MIN    = 0.05            # arcsec (~0.85 x the 0.06" imager FWHM)
 DMAG_PER_DEX   = 7.5
 DIST_MEDIAN_PC = 200.0           # typical TESS planet host (Ziegler+2021)
 DIST_SIGMA_DEX = 0.30
@@ -559,6 +654,8 @@ DIST_SIGMA_DEX = 0.30
 # Per-star truth that is not part of the JSON the UI sees (blend EB parameters,
 # dilution factor).  Rebuilt by generate_starfield.
 _truth = {}
+# id -> star dict (as returned in the JSON), so other modules can look a star up
+_stars = {}
 
 def _contrast_limit(sep, brightness):
     """5-sigma delta-mag limit of the (synthetic) imager at separation sep."""
@@ -592,6 +689,7 @@ def generate_starfield(seed=42, n_stars=25):
     types = ['boring']*5 + ['pulsating', 'transit', 'transit', 'eb']
     stars = []
     _truth.clear()
+    _stars.clear()
     for i in range(n_stars):
         # Existing draws, unchanged -> same positions/brightness/types as before.
         s = {
@@ -645,6 +743,8 @@ def generate_starfield(seed=42, n_stars=25):
         c = s['companion']
         if c and c['bound']:
             _truth[s['id']] = dict(dilution=1.0 / (1.0 + 10 ** (-0.4 * c['dmag'])))
+    for s in stars:
+        _stars[s['id']] = s
     return json.dumps(stars)
 
 
@@ -933,6 +1033,148 @@ def oddeven_fig(ph, flux, even):
     fig.tight_layout(pad=0.8)
     return fig
 `,
+'imaging': String.raw`"""Synthetic high-resolution images for Phase 2 (speckle / adaptive-optics style).
+
+Standalone:   python imaging.py --seed 0 --star 3 --out star3.png
+
+Conventions (shared with the page):
+  * pixel (i, j) covers [i, i+1) x [j, j+1); coordinates are continuous, so a
+    pixel centre is at i + 0.5.  x grows to the right, y grows DOWN.
+  * North is up, East is LEFT.  Position angle is measured from North toward East.
+  * Images are float32 counts.  Nothing here reveals the companion beyond what
+    the pixels show; ${'`'}truth${'`'} is returned separately for debug overlays and tests.
+
+Noise is built from the same contrast curve that decides which companions are
+"detectable" in generate.py: the per-pixel noise at distance r from the primary
+is set so a companion sitting exactly at the contrast limit has a peak of ~5
+sigma.  That keeps the pixels and the ${'`'}detectable${'`'} flag consistent by
+construction (and tests/test_imaging.py checks it).
+"""
+import numpy as np
+import generate
+
+PIX_SCALE = 0.02        # arcsec / pixel
+N_PIX     = 256         # 5.12" field of view
+FWHM      = 0.06        # arcsec  (3 pixels)
+SIGMA_PX  = FWHM / 2.3548 / PIX_SCALE
+
+HALO_FRAC  = 0.06       # fraction of the light in a broad Moffat halo
+HALO_ALPHA = 0.25       # arcsec
+HALO_BETA  = 2.5
+
+FLUX0     = 4.0e5       # total electrons from a brightness-1.0 star
+READ_NOISE = 5.0        # electrons
+SNR_LIMIT = 5.0         # peak S/N of a companion exactly at the contrast limit
+REF_N     = 32          # size of the reference point-source cutout
+EDGE      = 12          # keep both stars at least this many pixels from the edge
+
+
+def star_flux(brightness):
+    """Total counts; the 1.5-mag span matches the faint-host term in generate._contrast_limit."""
+    return FLUX0 * 10 ** (-0.6 * (1.0 - brightness))
+
+
+def _grid(n):
+    ax = np.arange(n) + 0.5
+    return np.meshgrid(ax, ax)          # X (right), Y (down)
+
+
+def psf(n, cx, cy):
+    """Unit-flux PSF (Gaussian core + Moffat halo) centred at (cx, cy) pixels."""
+    X, Y = _grid(n)
+    r2 = (X - cx) ** 2 + (Y - cy) ** 2
+    core = np.exp(-r2 / (2 * SIGMA_PX ** 2)) / (2 * np.pi * SIGMA_PX ** 2)
+    a = HALO_ALPHA / PIX_SCALE
+    halo = (HALO_BETA - 1) / (np.pi * a ** 2) * (1 + r2 / a ** 2) ** (-HALO_BETA)
+    return (1 - HALO_FRAC) * core + HALO_FRAC * halo
+
+
+PSF_PEAK = float(psf(41, 20.5, 20.5).max())      # peak pixel of a unit-flux PSF
+
+
+def offset_pixels(sep_arcsec, pa_deg):
+    """(dx, dy) in pixels of a companion relative to its primary: N up, E left."""
+    pa = np.radians(pa_deg)
+    return (-sep_arcsec * np.sin(pa) / PIX_SCALE,
+            -sep_arcsec * np.cos(pa) / PIX_SCALE)
+
+
+def noise_sigma(r_arcsec, brightness):
+    """Per-pixel noise implied by the contrast curve at distance r from the primary."""
+    lim  = generate._contrast_limit(r_arcsec, brightness)
+    peak = star_flux(brightness) * PSF_PEAK * 10 ** (-0.4 * lim)
+    return peak / SNR_LIMIT
+
+
+def _positions(rng, companion):
+    """Primary near the centre (small random offset); shift the pair to stay in frame."""
+    ang, rad = rng.uniform(0, 2 * np.pi), 0.3 / PIX_SCALE * np.sqrt(rng.uniform())
+    p = np.array([N_PIX / 2 + rad * np.cos(ang), N_PIX / 2 + rad * np.sin(ang)])
+    pts = [p]
+    if companion:
+        pts.append(p + np.array(offset_pixels(companion['sep_arcsec'], companion['pa_deg'])))
+    pts = np.array(pts)
+    lo, hi = EDGE - pts.min(axis=0), (N_PIX - EDGE) - pts.max(axis=0)
+    shift = np.where(lo > 0, lo, np.where(hi < 0, hi, 0.0))
+    return pts + shift
+
+
+def render(star, seed):
+    """Render one star. Returns dict(img, ref, truth, ...) with float32 arrays."""
+    rng  = np.random.default_rng([seed, 3, star['id']])
+    comp = star.get('companion')
+    b    = star['brightness']
+    F    = star_flux(b)
+    pts  = _positions(rng, comp)
+    px, py = pts[0]
+    model = F * psf(N_PIX, px, py)
+    if comp:
+        cx, cy = pts[1]
+        model = model + F * 10 ** (-0.4 * comp['dmag']) * psf(N_PIX, cx, cy)
+
+    X, Y = _grid(N_PIX)
+    r_as = np.hypot(X - px, Y - py) * PIX_SCALE          # distance from the primary
+    var  = noise_sigma(r_as, b) ** 2 + np.clip(model, 0, None) + READ_NOISE ** 2
+    img  = model + rng.normal(size=model.shape) * np.sqrt(var)
+
+    # Reference point source: same brightness, same noise recipe, no companion.
+    r2   = np.random.default_rng([seed, 4, star['id']])
+    rx   = REF_N / 2 + r2.uniform(-0.5, 0.5)
+    ry   = REF_N / 2 + r2.uniform(-0.5, 0.5)
+    rX, rY = _grid(REF_N)
+    rmodel = F * psf(REF_N, rx, ry)
+    rr   = np.hypot(rX - rx, rY - ry) * PIX_SCALE
+    rvar = noise_sigma(rr, b) ** 2 + np.clip(rmodel, 0, None) + READ_NOISE ** 2
+    ref  = rmodel + r2.normal(size=rmodel.shape) * np.sqrt(rvar)
+
+    return dict(
+        img=img.astype('<f4'), ref=ref.astype('<f4'), n=N_PIX, ref_n=REF_N,
+        pix_scale=PIX_SCALE, fwhm=FWHM,
+        truth=dict(primary=[float(px), float(py)],
+                   companion=[float(pts[1][0]), float(pts[1][1])] if comp else None),
+    )
+
+
+if __name__ == '__main__':
+    import argparse, json
+    ap = argparse.ArgumentParser(description='Render a Phase 2 image to a PNG (log + linear stretch).')
+    ap.add_argument('--seed', type=int, default=0)
+    ap.add_argument('--star', type=int, default=0)
+    ap.add_argument('--n', type=int, default=25)
+    ap.add_argument('--out', default='star.png')
+    a = ap.parse_args()
+    stars = json.loads(generate.generate_starfield(a.seed, a.n))
+    s = stars[a.star]
+    r = render(s, a.seed)
+    import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
+    x = np.clip(r['img'] / r['img'].max(), 0, 1)
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+    axs[0].imshow(x, cmap='gray', origin='upper'); axs[0].set_title('linear')
+    axs[1].imshow(np.log10(1000 * x + 1) / 3, cmap='gray', origin='upper'); axs[1].set_title('log')
+    fig.suptitle(f"star {s['id']}  b={s['brightness']:.2f}  companion={s['companion']}", fontsize=8)
+    fig.savefig(a.out, dpi=100)
+    print('wrote', a.out)
+`,
 'bridge': String.raw`"""Thin JS-facing API.  The page calls these functions by name through
 pyodide.runPython and gets JSON strings back.  This is the only module that
 holds state (the per-star light-curve cache) or builds JSON; everything else
@@ -944,10 +1186,11 @@ import numpy as np
 import generate
 import analysis
 import plots
+import imaging
 from plot_utils import to_b64
 
 __all__ = ['generate_starfield', 'make_lightcurve', 'find_best_period',
-           'make_folded_plot', 'make_oddeven_plot']
+           'make_folded_plot', 'make_oddeven_plot', 'make_psf_image']
 
 # Per-star light-curve cache: filled by make_lightcurve, read by the others.
 _star_data = {}
@@ -1044,6 +1287,23 @@ def make_oddeven_plot(star_id, period, t0):
     tnum = np.floor((t - t0) / period).astype(int)
     even = (tnum % 2 == 0)
     return json.dumps(dict(img=to_b64(plots.oddeven_fig(ph, flux, even))))
+
+
+def make_psf_image(star_id, seed):
+    """Phase 2 high-resolution image of one star.  Pixels are float32 counts,
+    base64-encoded (little endian).  No truth is returned: the page only sees
+    what an observer would see.  ${'`'}debug${'`'} carries true positions for the overlay."""
+    import base64
+    s = generate._stars.get(star_id)
+    if s is None:
+        return json.dumps(dict(error='no star'))
+    r = imaging.render(s, seed)
+    enc = lambda a: base64.b64encode(np.ascontiguousarray(a, dtype='<f4').tobytes()).decode('ascii')
+    return json.dumps(dict(
+        n=r['n'], ref_n=r['ref_n'], pix_scale=r['pix_scale'], fwhm=r['fwhm'],
+        img=enc(r['img']), ref=enc(r['ref']),
+        debug=r['truth'],
+    ))
 `,
 };
 // <<< PY_BUNDLE
@@ -1625,19 +1885,38 @@ function syncFlagCount() {
 
 function updateProceedBtn() {
   const b = document.getElementById('proceed-btn');
-  b.style.display = viewPhase === 1 ? 'inline-block' : 'none';
-  if (maxPhase === 1) {
-    b.textContent = 'Proceed to Follow-up Imaging →';
-    b.disabled    = flagged.size === 0;
-    b.title       = flagged.size === 0 ? 'Flag at least one candidate first' : '';
-  } else {
-    b.textContent = 'Return to Phase 2 →';
-    b.disabled    = false;
-    b.title       = '';
+  b.style.display = viewPhase === 3 ? 'none' : 'inline-block';
+  if (viewPhase === 1) {
+    if (maxPhase === 1) {
+      b.textContent = 'Proceed to Follow-up Imaging →';
+      b.disabled    = flagged.size === 0;
+      b.title       = flagged.size === 0 ? 'Flag at least one candidate first' : '';
+    } else {
+      b.textContent = 'Go to Phase 2 →'; b.disabled = false; b.title = '';
+    }
+  } else if (viewPhase === 2) {
+    if (maxPhase === 2) {
+      const left = p2Cands().filter(s => !p2State(s.id).verdict).length;
+      b.textContent = 'Proceed to Radial Velocity →';
+      b.disabled    = left > 0;
+      b.title       = left > 0 ? `Mark every candidate Clean or Contaminated first (${left} left)` : '';
+    } else {
+      b.textContent = 'Go to Phase 3 →'; b.disabled = false; b.title = '';
+    }
   }
 }
 
 document.getElementById('proceed-btn').addEventListener('click', () => {
+  if (viewPhase === 2) {
+    if (maxPhase >= 3) { setViewPhase(3); return; }
+    const left = p2Cands().filter(s => !p2State(s.id).verdict).length;
+    if (left > 0) return;
+    if (!confirm('Lock in your Clean / Contaminated verdicts and proceed to radial velocity?\n\n' +
+                 'You can come back to look at the images, but the verdicts will be locked.')) return;
+    maxPhase = 3;
+    setViewPhase(3);
+    return;
+  }
   if (maxPhase >= 2) { setViewPhase(2); return; }
   const n = flagged.size;
   if (n === 0) return;
@@ -1654,19 +1933,25 @@ document.getElementById('proceed-btn').addEventListener('click', () => {
 
 document.getElementById('tab-p1').addEventListener('click', () => setViewPhase(1));
 document.getElementById('tab-p2').addEventListener('click', () => { if (maxPhase >= 2) setViewPhase(2); });
+document.getElementById('tab-p3').addEventListener('click', () => { if (maxPhase >= 3) setViewPhase(3); });
 
 function setViewPhase(n) {
   viewPhase = n;
   document.querySelector('.main').style.display = n === 1 ? '' : 'none';
   document.getElementById('phase2-view').style.display = n === 2 ? 'flex' : 'none';
+  document.getElementById('phase3-view').style.display = n === 3 ? 'flex' : 'none';
+  document.getElementById('tab-p3').classList.toggle('active', n === 3);
+  document.getElementById('tab-p3').disabled = maxPhase < 3;
   document.getElementById('tab-p1').classList.toggle('active', n === 1);
   document.getElementById('tab-p2').classList.toggle('active', n === 2);
   document.getElementById('tab-p2').disabled = maxPhase < 2;
   if (n === 1) {
     resizeCanvas(); drawStars();               // canvas had zero size while hidden
     requestAnimationFrame(syncOverlay);
-  } else {
+  } else if (n === 2) {
     renderPhase2();
+  } else {
+    renderPhase3();
   }
   updateFlagBtn();
   updateProceedBtn();
@@ -1674,23 +1959,337 @@ function setViewPhase(n) {
   if (document.getElementById('candidates-panel').classList.contains('open')) updateCandidatesPanel();
 }
 
-// Placeholder Phase 2 page: just lists the locked-in candidates
+// ═══════════════════════════════════════════════════════════════════════
+//  PHASE 2 — high-resolution imaging
+// ═══════════════════════════════════════════════════════════════════════
+const p2Editable = () => maxPhase === 2;
+const p2 = new Map();            // star id -> { verdict, meas:[], pending, bias, k, scale, zoom, cx, cy, img }
+let p2Cur = null;                // currently displayed star
+const P2 = { W: 0, H: 0, dpr: 1, off: document.createElement('canvas'), raf: 0, drag: null };
+
+function p2State(id) {
+  if (!p2.has(id)) p2.set(id, { verdict: null, meas: [], pending: null, bias: 0.5, k: 1,
+                                scale: 'sqrt', zoom: 1, cx: 128, cy: 128, img: null });
+  return p2.get(id);
+}
+const p2Cands = () => stars.filter(s => flagged.has(s.id)).sort((a, b) => a.id - b.id);
+
+function b64f32(b64) {
+  const bin = atob(b64), u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return new Float32Array(u8.buffer);
+}
+
 function renderPhase2() {
   const list = document.getElementById('p2-list');
   list.innerHTML = '';
-  const cands = stars.filter(s => flagged.has(s.id)).sort((a,b) => a.id - b.id);
+  const cands = p2Cands();
+  const done  = cands.filter(s => p2State(s.id).verdict).length;
   const hdr = document.createElement('div');
   hdr.className = 'cp-section-label';
-  hdr.textContent = `Candidates (${cands.length})`;
+  hdr.textContent = `Candidates — ${done} / ${cands.length} marked`;
   list.appendChild(hdr);
   cands.forEach(s => {
-    const row = makeRow(s, true);
+    const st = p2State(s.id);
+    const row = document.createElement('div');
+    row.className = 'cp-row' + (p2Cur && p2Cur.id === s.id ? ' active' : '');
+    row.dataset.id = s.id;
+    row.innerHTML = `<span class="cp-name-block"><span class="cp-name">Star ${s.id}</span></span>
+      <span class="p2-badge ${st.verdict || ''}">${st.verdict || 'unmarked'}</span>`;
+    row.insertBefore(makeStarThumb(s), row.firstChild);
     if (DEBUG) {
       const d = document.createElement('span');
       d.className = 'cp-debug';
       d.textContent = `[${s.type}] ${companionText(s)}`;
       row.querySelector('.cp-name-block').appendChild(d);
     }
+    row.addEventListener('click', () => p2Select(s));
+    list.appendChild(row);
+  });
+  document.getElementById('p2-dbg-wrap').style.display = DEBUG ? '' : 'none';
+  p2Resize();
+  if (!p2Cur && cands.length) p2Select(cands[0]); else { p2Controls(); p2Draw(); }
+  updateProceedBtn();
+}
+
+async function p2Select(s) {
+  p2Cur = s;
+  const st = p2State(s.id);
+  if (!st.img) {
+    document.getElementById('p2-empty').style.display = 'flex';
+    document.getElementById('p2-empty').textContent = 'Taking image…';
+    await new Promise(r => setTimeout(r, 20));
+    const r = JSON.parse(pyodide.runPython(`make_psf_image(${s.id}, ${SEED})`));
+    const img = b64f32(r.img), ref = b64f32(r.ref);
+    let lo = Infinity, hi = -Infinity;
+    for (const v of img) { if (v > hi) hi = v; }
+    lo = Float32Array.from(img).sort()[img.length >> 1];     // background level (median) -> black
+    st.img = { n: r.n, ref_n: r.ref_n, pix: r.pix_scale, raw: img, ref, lo, hi, debug: r.debug, f: null, fScale: null };
+    st.cx = st.cy = r.n / 2;
+  }
+  if (p2Cur !== s) return;      // user clicked another star meanwhile
+  document.getElementById('p2-empty').style.display = 'none';
+  document.querySelectorAll('#p2-list .cp-row').forEach(r =>
+    r.classList.toggle('active', +r.dataset.id === s.id));
+  document.getElementById('p2-scale').value = st.scale;
+  p2Resize(); p2Controls(); p2Draw();
+}
+
+function p2Resize() {
+  const v = document.getElementById('p2-viewer'), c = document.getElementById('p2-canvas');
+  P2.dpr = window.devicePixelRatio || 1;
+  P2.W = v.clientWidth; P2.H = v.clientHeight;
+  c.width = Math.max(1, Math.round(P2.W * P2.dpr));
+  c.height = Math.max(1, Math.round(P2.H * P2.dpr));
+}
+window.addEventListener('resize', () => { if (viewPhase === 2) { p2Resize(); p2DrawNow(); } });
+
+// Normalised, scaled copy of the image (recomputed when the scale function changes)
+function p2Prepare(st) {
+  const im = st.img;
+  if (im.fScale === st.scale) return;
+  const sc = st.scale, span = (im.hi - im.lo) || 1;
+  const fn = x => sc === 'sqrt' ? Math.sqrt(x) : sc === 'log' ? Math.log10(1000 * x + 1) / 3 : x;
+  const prep = arr => { const o = new Float32Array(arr.length);
+    for (let i = 0; i < arr.length; i++) o[i] = fn(Math.min(1, Math.max(0, (arr[i] - im.lo) / span)));
+    return o; };
+  im.f = prep(im.raw); im.fr = prep(im.ref); im.fScale = sc;
+}
+
+function p2Paint(f, n, cvs, st) {
+  cvs.width = cvs.height = n;
+  const ctx = cvs.getContext('2d'), id = ctx.createImageData(n, n), d = id.data;
+  const b = st.bias, k = st.k;
+  for (let i = 0; i < f.length; i++) {
+    let y = (f[i] - b) * k + 0.5;
+    y = y < 0 ? 0 : y > 1 ? 1 : y;
+    const g = y * 255, j = i * 4;
+    d[j] = d[j + 1] = d[j + 2] = g; d[j + 3] = 255;
+  }
+  ctx.putImageData(id, 0, 0);
+}
+
+const p2Scale = st => Math.min(P2.W, P2.H) / st.img.n * st.zoom;     // CSS px per image px
+function p2Draw() { if (!P2.raf) P2.raf = requestAnimationFrame(() => { P2.raf = 0; p2DrawNow(); }); }
+
+function p2DrawNow() {
+  const cvs = document.getElementById('p2-canvas'), ctx = cvs.getContext('2d');
+  ctx.setTransform(P2.dpr, 0, 0, P2.dpr, 0, 0);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, P2.W, P2.H);
+  if (!p2Cur) return;
+  const st = p2State(p2Cur.id); if (!st.img) return;
+  p2Prepare(st);
+  const im = st.img, s = p2Scale(st);
+  const ox = P2.W / 2 - st.cx * s, oy = P2.H / 2 - st.cy * s;
+  p2Paint(im.f, im.n, P2.off, st);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(P2.off, ox, oy, im.n * s, im.n * s);
+  const rc = document.getElementById('p2-ref');
+  p2Paint(im.fr, im.ref_n, rc, st);
+
+  const toS = (x, y) => [ox + x * s, oy + y * s];
+  const mark = (p, col, r) => {
+    const [x, y] = toS(p[0], p[1]);
+    ctx.strokeStyle = col; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - r - 4, y); ctx.lineTo(x - 3, y); ctx.moveTo(x + 3, y); ctx.lineTo(x + r + 4, y);
+    ctx.moveTo(x, y - r - 4); ctx.lineTo(x, y - 3); ctx.moveTo(x, y + 3); ctx.lineTo(x, y + r + 4); ctx.stroke();
+  };
+  st.meas.forEach((m, i) => {
+    const last = i === st.meas.length - 1 && !st.pending, a = last ? 1 : 0.45;
+    ctx.globalAlpha = a;
+    const [x1, y1] = toS(...m.p1), [x2, y2] = toS(...m.p2);
+    ctx.strokeStyle = '#4af3c8'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.setLineDash([]);
+    mark(m.p1, '#4af3c8', 7); mark(m.p2, '#f3c84a', 7);
+    ctx.fillStyle = '#4af3c8'; ctx.font = '12px "Share Tech Mono", monospace';
+    ctx.fillText(`${m.sep.toFixed(3)}"`, (x1 + x2) / 2 + 8, (y1 + y2) / 2 - 8);
+    ctx.globalAlpha = 1;
+  });
+  if (st.pending) mark(st.pending, '#4af3c8', 7);
+
+  if (DEBUG && document.getElementById('p2-dbg').checked) {
+    ctx.setLineDash([2, 3]);
+    mark(im.debug.primary, '#ff66aa', 14);
+    if (im.debug.companion) mark(im.debug.companion, '#ff66aa', 14);
+    ctx.setLineDash([]);
+  }
+
+  // scale bar (bottom-left)
+  const pxAs = s / im.pix;                         // CSS px per arcsec
+  const nice = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2];
+  let L = nice[0];
+  for (const v of nice) if (v * pxAs <= 160) L = v;
+  const bx = 16, by = P2.H - 22, bw = L * pxAs;
+  ctx.strokeStyle = ctx.fillStyle = '#c8d8f0'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(bx, by - 4); ctx.lineTo(bx, by + 4); ctx.moveTo(bx, by); ctx.lineTo(bx + bw, by);
+  ctx.moveTo(bx + bw, by - 4); ctx.lineTo(bx + bw, by + 4); ctx.stroke();
+  ctx.font = '13px "Share Tech Mono", monospace';
+  ctx.fillText(`${L}"`, bx, by - 9);
+
+  // compass (top-left): North up, East left
+  const cx0 = 46, cy0 = 46, len = 26;
+  ctx.strokeStyle = ctx.fillStyle = '#7aa0d8'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(cx0, cy0); ctx.lineTo(cx0, cy0 - len); ctx.moveTo(cx0, cy0); ctx.lineTo(cx0 - len, cy0); ctx.stroke();
+  ctx.fillText('N', cx0 - 4, cy0 - len - 5); ctx.fillText('E', cx0 - len - 16, cy0 + 4);
+}
+
+function p2Zoom(factor, sx, sy) {
+  if (!p2Cur) return;
+  const st = p2State(p2Cur.id); if (!st.img) return;
+  const s0 = p2Scale(st);
+  if (sx === undefined) { sx = P2.W / 2; sy = P2.H / 2; }
+  const px = st.cx + (sx - P2.W / 2) / s0, py = st.cy + (sy - P2.H / 2) / s0;   // image pt under cursor
+  st.zoom = Math.min(40, Math.max(1, st.zoom * factor));
+  const s1 = p2Scale(st);
+  st.cx = px - (sx - P2.W / 2) / s1; st.cy = py - (sy - P2.H / 2) / s1;
+  p2ClampView(st); p2Draw();
+}
+function p2ClampView(st) {
+  const n = st.img.n;
+  st.cx = Math.min(n, Math.max(0, st.cx)); st.cy = Math.min(n, Math.max(0, st.cy));
+  if (st.zoom <= 1) st.cx = st.cy = n / 2;
+}
+
+// Snap a click to the nearest bright peak (3x3-smoothed maximum within 4 px), with a sub-pixel centroid.
+function p2Snap(st, x, y) {
+  const im = st.img, n = im.n, a = im.raw;
+  const sm = (i, j) => { let t = 0; for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++)
+    t += a[Math.min(n - 1, Math.max(0, i + di)) * n + Math.min(n - 1, Math.max(0, j + dj))]; return t; };
+  const i0 = Math.floor(y), j0 = Math.floor(x);
+  let best = -Infinity, bi = i0, bj = j0;
+  for (let i = i0 - 4; i <= i0 + 4; i++) for (let j = j0 - 4; j <= j0 + 4; j++) {
+    if (i < 1 || j < 1 || i >= n - 1 || j >= n - 1) continue;
+    const v = sm(i, j); if (v > best) { best = v; bi = i; bj = j; }
+  }
+  let sw = 0, sx = 0, sy = 0;
+  for (let i = bi - 1; i <= bi + 1; i++) for (let j = bj - 1; j <= bj + 1; j++) {
+    const w = Math.max(0, a[i * n + j]); sw += w; sx += w * (j + 0.5); sy += w * (i + 0.5);
+  }
+  return sw > 0 ? [sx / sw, sy / sw] : [bj + 0.5, bi + 0.5];
+}
+
+function p2Click(sx, sy) {
+  if (!p2Cur) return;
+  const st = p2State(p2Cur.id); if (!st.img) return;
+  const s = p2Scale(st);
+  let p = [st.cx + (sx - P2.W / 2) / s, st.cy + (sy - P2.H / 2) / s];
+  if (p[0] < 0 || p[1] < 0 || p[0] > st.img.n || p[1] > st.img.n) return;
+  if (document.getElementById('p2-snap').checked) p = p2Snap(st, p[0], p[1]);
+  if (!st.pending) { st.pending = p; }
+  else {
+    const p1 = st.pending, dx = p[0] - p1[0], dy = p[1] - p1[1];
+    const pxl = Math.hypot(dx, dy), sep = pxl * st.img.pix;
+    const pa = (Math.atan2(-dx, -dy) * 180 / Math.PI + 360) % 360;     // N through E; E is left
+    st.meas.push({ p1, p2: p, sep, pxl, pa });
+    if (st.meas.length > 6) st.meas.shift();
+    st.pending = null;
+  }
+  p2Controls(); p2Draw();
+}
+
+function p2Controls() {
+  const ro = document.getElementById('p2-readout');
+  const cl = document.getElementById('p2-clean'), co = document.getElementById('p2-contam');
+  if (!p2Cur) { ro.textContent = ''; cl.disabled = co.disabled = true; return; }
+  const st = p2State(p2Cur.id);
+  const d = 1000 / p2Cur.parallax_mas;
+  let html = '';
+  if (st.pending) html = 'Now click the <b>companion</b>.';
+  else if (!st.meas.length) html = 'To measure a separation: click the <b>primary</b>, then the other star.';
+  st.meas.slice().reverse().forEach((m, i) => {
+    const au = m.sep * d;
+    const line = `${m.sep.toFixed(3)}″ (${m.pxl.toFixed(1)} px) &middot; PA ${m.pa.toFixed(1)}° &middot; ` +
+                 `${au < 10 ? au.toFixed(1) : au.toFixed(0)} AU projected`;
+    html += (i === 0 && !st.pending ? `<div><b>${line}</b>` : `<div class="old">${line}`) + '</div>';
+  });
+  if (st.meas.length) html += `<div class="old">AU uses this star's parallax: ${p2Cur.parallax_mas.toFixed(2)} mas &rarr; d ≈ ${d.toFixed(0)} pc</div>`;
+  ro.innerHTML = html;
+  const ed = p2Editable();
+  cl.disabled = co.disabled = !ed;
+  cl.classList.toggle('sel', st.verdict === 'clean');
+  co.classList.toggle('sel', st.verdict === 'contaminated');
+}
+
+function p2Mark(v) {
+  if (!p2Cur || !p2Editable()) return;
+  const st = p2State(p2Cur.id);
+  st.verdict = st.verdict === v ? null : v;
+  const keep = p2Cur;
+  const scroll = document.getElementById('p2-left').scrollTop;
+  renderPhase2();
+  document.getElementById('p2-left').scrollTop = scroll;
+  p2Cur = keep;
+}
+
+(function p2Wire() {
+  const c = document.getElementById('p2-canvas');
+  c.addEventListener('contextmenu', e => e.preventDefault());
+  c.addEventListener('mousedown', e => {
+    if (!p2Cur || !p2State(p2Cur.id).img) return;
+    const st = p2State(p2Cur.id), r = c.getBoundingClientRect();
+    P2.drag = { btn: e.button, x0: e.clientX, y0: e.clientY, last: [e.clientX, e.clientY],
+                moved: false, bias0: st.bias, k0: st.k, sx: e.clientX - r.left, sy: e.clientY - r.top };
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    const d = P2.drag; if (!d || !p2Cur) return;
+    const st = p2State(p2Cur.id);
+    const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+    if (d.btn === 2) {                                      // DS9-style: horizontal = brightness, vertical = contrast
+      st.bias = Math.min(1.5, Math.max(-0.5, d.bias0 - dx / P2.W));
+      st.k    = Math.min(200, Math.max(0.2, d.k0 * Math.exp(-dy / P2.H * 4)));
+      p2Draw();
+    } else if (d.btn === 0 || d.btn === 1) {                // left-drag or middle-drag pans
+      if (!d.moved && (d.btn === 1 || Math.hypot(dx, dy) > 4)) d.moved = true;
+      if (d.moved) {
+        const s = p2Scale(st);
+        st.cx -= (e.clientX - d.last[0]) / s; st.cy -= (e.clientY - d.last[1]) / s;
+        p2ClampView(st); p2Draw();
+      }
+    }
+    d.last = [e.clientX, e.clientY];
+  });
+  window.addEventListener('mouseup', e => {
+    const d = P2.drag; P2.drag = null;
+    if (d && d.btn === 0 && !d.moved) p2Click(d.sx, d.sy);
+  });
+  c.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = c.getBoundingClientRect();
+    p2Zoom(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  document.getElementById('p2-zin').addEventListener('click', () => p2Zoom(1.5));
+  document.getElementById('p2-zout').addEventListener('click', () => p2Zoom(1 / 1.5));
+  document.getElementById('p2-zfit').addEventListener('click', () => {
+    if (!p2Cur) return; const st = p2State(p2Cur.id); st.zoom = 1; if (st.img) st.cx = st.cy = st.img.n / 2; p2Draw(); });
+  document.getElementById('p2-scale').addEventListener('change', e => {
+    if (!p2Cur) return; const st = p2State(p2Cur.id); st.scale = e.target.value; p2Draw(); });
+  document.getElementById('p2-reset-stretch').addEventListener('click', () => {
+    if (!p2Cur) return; const st = p2State(p2Cur.id); st.bias = 0.5; st.k = 1; p2Draw(); });
+  document.getElementById('p2-clear').addEventListener('click', () => {
+    if (!p2Cur) return; const st = p2State(p2Cur.id); st.meas = []; st.pending = null; p2Controls(); p2Draw(); });
+  document.getElementById('p2-dbg').addEventListener('change', p2Draw);
+  document.getElementById('p2-clean').addEventListener('click', () => p2Mark('clean'));
+  document.getElementById('p2-contam').addEventListener('click', () => p2Mark('contaminated'));
+  new ResizeObserver(() => { if (viewPhase === 2) { p2Resize(); p2DrawNow(); } })
+    .observe(document.getElementById('p2-viewer'));
+})();
+
+function renderPhase3() {
+  const list = document.getElementById('p3-list');
+  list.innerHTML = '';
+  const hdr = document.createElement('div');
+  hdr.className = 'cp-section-label';
+  hdr.textContent = 'Candidates';
+  list.appendChild(hdr);
+  p2Cands().forEach(s => {
+    const v = p2State(s.id).verdict;
+    const row = document.createElement('div');
+    row.className = 'cp-row' + (v === 'contaminated' ? ' greyed' : '');
+    row.innerHTML = `<span class="cp-name-block"><span class="cp-name">Star ${s.id}</span></span>
+      <span class="p2-badge ${v || ''}">${v || 'unmarked'}</span>`;
+    row.insertBefore(makeStarThumb(s), row.firstChild);
     list.appendChild(row);
   });
 }
@@ -1838,4 +2437,4 @@ document.getElementById('stars-toggle').addEventListener('click', () => {
 boot();
 </script>
 </body>
-</html>
+</html>
