@@ -542,7 +542,7 @@
         <button class="hdr-btn" id="p2-clear" style="padding:2px 10px;font-size:12px">Clear measurements</button>
         <label id="p2-dbg-wrap" style="display:none;color:var(--warn)"><input type="checkbox" id="p2-dbg"> show true positions (debug)</label>
       </div>
-      <div class="row" style="font-size:11px">Right-drag: contrast (up/down) &amp; brightness (left/right) &middot; Click: mark star &middot; Wheel: zoom &middot; Drag: pan</div>
+      <div class="row" style="font-size:11px">Right-drag: contrast (up/down) &amp; brightness (left/right) &middot; Click: mark star &middot; Wheel: zoom &middot; Middle-drag (or left-drag): pan</div>
       <div id="p2-readout"></div>
       <div class="row">
         <span>This star is:</span>
@@ -2240,8 +2240,8 @@ function p2Mark(v) {
       st.bias = Math.min(1.5, Math.max(-0.5, d.bias0 - dx / P2.W));
       st.k    = Math.min(200, Math.max(0.2, d.k0 * Math.exp(-dy / P2.H * 4)));
       p2Draw();
-    } else if (d.btn === 0) {
-      if (!d.moved && Math.hypot(dx, dy) > 4) d.moved = true;
+    } else if (d.btn === 0 || d.btn === 1) {                // left-drag or middle-drag pans
+      if (!d.moved && (d.btn === 1 || Math.hypot(dx, dy) > 4)) d.moved = true;
       if (d.moved) {
         const s = p2Scale(st);
         st.cx -= (e.clientX - d.last[0]) / s; st.cy -= (e.clientY - d.last[1]) / s;
