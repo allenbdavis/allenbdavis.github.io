@@ -18,5 +18,6 @@ Run any module on its own, e.g. `python3 tess_py/generate.py --seed 42`.
 | `analysis.py` | phase folding, BLS box fit, period search (pure numpy) |
 | `plots.py` | Matplotlib figures |
 | `plot_utils.py` | palette, axis styling, PNG → base64 |
+| `imaging.py` | Phase 2 synthetic images: PSF + noise tied to the contrast limit, reference star |
 | `bridge.py` | the only module the page calls; JSON in/out, per-star cache |
 | `build.py` | embeds the modules into `tess.html` |
