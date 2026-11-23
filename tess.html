@@ -182,24 +182,128 @@
   .p2-verdict.sel.clean { background: #0c1a1c; border-color: var(--accent); color: var(--accent); }
   .p2-verdict.sel.contaminated { background: #1c1808; border-color: var(--warn); color: var(--warn); }
   .p2-verdict:disabled { opacity: 0.5; cursor: default; }
-  #phase3-view {
-    flex-direction: column; align-items: center; padding: 28px 20px; gap: 14px; overflow-y: auto;
+  /* ── Phase 3: reconnaissance RVs ── */
+  #phase3-view { flex-direction: row; }
+  #phase4-view {
+    display: none; flex: 1; min-height: 0; overflow-y: auto;
+    flex-direction: column; align-items: center; padding: 28px 20px; gap: 14px;
   }
-  #phase3-view h2 {
+  #phase4-view h2 {
     font-family: var(--mono); font-size: 16px; letter-spacing: 0.15em;
     color: var(--accent); text-transform: uppercase; font-weight: normal;
   }
-  #phase3-view p {
+  #phase4-view p {
     font-family: var(--mono); font-size: 13px; color: var(--text-dim);
     letter-spacing: 0.05em; text-align: center; max-width: 560px; line-height: 1.8;
   }
-  #p3-list {
+  #p4-list {
     width: 100%; max-width: 560px;
     border: 1px solid var(--border); border-radius: 4px; background: var(--panel-bg);
   }
-  #p3-list .cp-row { cursor: default; }
-  #p3-list .cp-row:hover { background: transparent; }
-  #p3-list .cp-row.greyed { opacity: 0.35; }
+  #p4-list .cp-row { cursor: default; }
+  #p3-left {
+    width: 300px; flex-shrink: 0; overflow-y: auto;
+    border-right: 1px solid var(--border); background: var(--panel-bg);
+  }
+  #p3-left .cp-row { cursor: pointer; }
+  #p3-left .cp-row:hover { background: #0c1a1c; }
+  #p3-left .cp-row.active { background: #0f2230; box-shadow: inset 3px 0 0 var(--accent); }
+  .p3-badges { margin-left: auto; display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+  .p2-badge.advance { color: var(--accent); border-color: var(--accent); }
+  .p2-badge.reject  { color: var(--danger); border-color: var(--danger); }
+  #p3-right { flex: 1; min-width: 0; overflow-y: auto; position: relative; background: var(--panel-bg); }
+  #p3-right::-webkit-scrollbar { width: 4px; }
+  #p3-right::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  #p3-empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 13px; color: var(--text-dim); letter-spacing: 0.05em;
+  }
+  #p3-main { display: none; padding: 0 18px 24px; flex-direction: column; gap: 10px; }
+  #p3-head {
+    position: sticky; top: 0; z-index: 3; background: var(--panel-bg);
+    border-bottom: 1px solid var(--border); padding: 10px 0 8px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .p3-head-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  #p3-name { font-family: var(--mono); font-size: 15px; color: var(--accent2); }
+  #p3-recon { font-family: var(--mono); font-size: 13px; color: var(--text); letter-spacing: 0.03em; }
+  #p3-recon .dim, #p3-ephem .dim { opacity: 0.6; }
+  .p3-info-btn {
+    background: none; border: 1px solid var(--border); color: var(--accent);
+    font-family: var(--mono); font-size: 12px; width: 22px; height: 22px; border-radius: 50%;
+    cursor: pointer; line-height: 1; padding: 0;
+  }
+  .p3-info-btn:hover { border-color: var(--accent); }
+  .p3-spacer { flex: 1; }
+  #p3-ephem, #p3-fit, #p3-sched-msg, .p3-note {
+    font-family: var(--mono); font-size: 12px; color: var(--text); letter-spacing: 0.03em; line-height: 1.6;
+  }
+  #p3-ephem b, #p3-fit b { color: var(--accent); font-weight: normal; }
+  #p3-debug {
+    display: none; font-family: var(--mono); font-size: 11px; color: var(--warn);
+    white-space: pre-line; line-height: 1.4;
+  }
+  #p3-noeph {
+    display: none; border: 1px dashed var(--warn); border-radius: 4px; padding: 14px;
+    font-family: var(--mono); font-size: 13px; color: var(--warn); line-height: 1.7;
+  }
+  .p3-cv { display: block; width: 100%; border-radius: 3px; background: #05080f; }
+  #p3-date { cursor: pointer; }
+  .p3-plan-top { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+  #p3-cal-box { font-family: var(--mono); font-size: 11px; color: var(--text); }
+  #p3-cal-box label { display: block; margin-bottom: 6px; letter-spacing: 0.03em; }
+  #p3-cal { display: flex; gap: 12px; }
+  .p3-month { font-family: var(--mono); font-size: 11px; }
+  .p3-month-name { color: var(--accent); letter-spacing: 0.1em; margin-bottom: 3px; text-align: center; }
+  .p3-grid { display: grid; grid-template-columns: repeat(7, 20px); gap: 2px; }
+  .p3-dow { text-align: center; opacity: 0.55; font-size: 9px; }
+  .p3-day {
+    text-align: center; height: 18px; line-height: 18px; font-size: 10px; cursor: pointer;
+    border-radius: 2px; border: 1px solid transparent; position: relative;
+  }
+  .p3-day:hover { border-color: var(--accent); }
+  .p3-day.inview { background: #0f1a2c; }
+  .p3-day.sched { color: #05080f; font-weight: bold; }
+  .p3-day .two {
+    position: absolute; top: -5px; right: -4px; font-size: 8px; line-height: 10px;
+    background: #fff; color: #05080f; border-radius: 5px; padding: 0 2px;
+  }
+  #p3-sched-box { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
+  .p3-chip {
+    display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px;
+    padding: 2px 0;
+  }
+  .p3-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .p3-chip button {
+    background: none; border: 1px solid var(--border); color: var(--text); font-family: var(--mono);
+    font-size: 10px; padding: 0 5px; cursor: pointer; border-radius: 2px;
+  }
+  .p3-chip button:hover { border-color: var(--danger); color: var(--danger); }
+  #p3-run:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .p3-ctl { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; flex-wrap: wrap; }
+  .p3-ctl select { background: var(--bg); border: 1px solid var(--border); color: var(--text);
+                   font-family: var(--mono); font-size: 11px; padding: 1px 4px; }
+  .p3-ctl input[type=range] { flex: 1; min-width: 120px; }
+  .p3-ctl .val { color: var(--accent); min-width: 110px; text-align: right; }
+  #p3-unlock-ctrls { display: none; flex-direction: column; gap: 6px; margin-top: 6px;
+                     border: 1px solid var(--border); border-radius: 4px; padding: 8px 10px; background: #070b14; }
+  #p3-obs-table { font-family: var(--mono); font-size: 12px; border-collapse: collapse; }
+  #p3-obs-table td, #p3-obs-table th { padding: 2px 10px 2px 0; text-align: left; font-weight: normal; }
+  #p3-obs-table th { opacity: 0.6; }
+  #p3-popup {
+    display: none; position: fixed; inset: 0; background: #000a; z-index: 50;
+    align-items: center; justify-content: center;
+  }
+  #p3-popup .box {
+    background: var(--panel-bg); border: 1px solid var(--accent); border-radius: 4px;
+    max-width: 640px; max-height: 85vh; overflow-y: auto; padding: 18px 22px;
+    font-family: var(--mono); font-size: 13px; line-height: 1.7; color: var(--text);
+  }
+  #p3-popup h3 { font-weight: normal; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 8px; }
+  #p3-popup ol { padding-left: 20px; }
+  #p3-popup li { margin-bottom: 6px; }
+  #p3-popup .eq { color: var(--accent); }
+  #back-rv-btn { display: none; border-color: var(--accent2); color: var(--accent2); }
   .cp-debug {
     font-family: var(--mono); font-size: 10px; color: var(--warn); letter-spacing: 0.04em;
     white-space: pre-line;
@@ -424,7 +528,8 @@
   <nav id="phase-nav">
     <button class="phase-tab active" id="tab-p1">1 · Light Curves</button>
     <button class="phase-tab" id="tab-p2" disabled>2 · Imaging</button>
-    <button class="phase-tab" id="tab-p3" disabled>3 · Radial Velocity</button>
+    <button class="phase-tab" id="tab-p3" disabled>3 · Recon RV</button>
+    <button class="phase-tab" id="tab-p4" disabled>4 · Precision RV</button>
   </nav>
   <div id="status">● LOADING</div>
 </header>
@@ -459,6 +564,7 @@
       <button class="hdr-btn" id="undo-btn"  style="display:none">⌫ Undo</button>
       <button class="hdr-btn" id="reset-btn" style="display:none">↺ Reset</button>
       <button class="hdr-btn" id="flag-btn"  style="display:none">⚑ Flag</button>
+      <button class="hdr-btn" id="back-rv-btn">← Back to RV</button>
     </div>
 
     <!-- Scrollable plot area -->
@@ -553,12 +659,107 @@
   </div>
 </div>
 
-<!-- Phase 3 (placeholder until radial velocity is built) -->
+<!-- Phase 3: reconnaissance (low-precision) radial velocities -->
 <div id="phase3-view">
-  <h2>Phase 3 &mdash; Radial Velocity</h2>
-  <p>Radial-velocity follow-up is not built yet.<br>
-     Contaminated targets are greyed out.</p>
-  <div id="p3-list"></div>
+  <div id="p3-left"><div id="p3-list"></div></div>
+  <div id="p3-right">
+    <div id="p3-empty">Select a candidate on the left</div>
+    <div id="p3-main">
+      <div id="p3-head">
+        <div class="p3-head-row">
+          <span id="p3-name"></span>
+          <span class="p2-badge contaminated" id="p3-contam" style="display:none">⚠ Contaminated (imaging)</span>
+          <span class="p3-spacer"></span>
+          <button class="hdr-btn" id="p3-edit" title="Jump to this star in Phase 1 to refine its period and T₀">✎ Edit transit fit</button>
+          <button class="p2-verdict clean" id="p3-adv">Advance</button>
+          <button class="p2-verdict contaminated" id="p3-rej" style="--warn:var(--danger)">Reject</button>
+        </div>
+        <div class="p3-head-row">
+          <span id="p3-recon"></span>
+          <button class="p3-info-btn" id="p3-info" title="How these stellar values are derived">i</button>
+        </div>
+        <div id="p3-ephem"></div>
+        <div id="p3-debug"></div>
+      </div>
+
+      <div id="p3-noeph">
+        No period measured for this star yet.<br>
+        Mark at least two transits in Phase 1 (use <b>✎ Edit transit fit</b>), then come back to plan observations.
+      </div>
+
+      <div id="p3-plan">
+        <div class="sec-label">Plan 5 observations</div>
+        <div class="p3-plan-top">
+          <div id="p3-cal-box">
+            <label><input type="checkbox" id="p3-cal-sched"> clicking a date schedules an observation</label>
+            <div id="p3-cal"></div>
+          </div>
+          <div id="p3-sched-box">
+            <div id="p3-chips"></div>
+            <div id="p3-sched-msg"></div>
+            <div><button class="hdr-btn" id="p3-run" disabled>▶ Run observations</button></div>
+          </div>
+        </div>
+        <div class="p3-ctl" style="margin-top:6px">
+          <span>Predicted RV vs date</span><span class="dim" style="opacity:.6">(no vertical scale)</span>
+          <span class="p3-spacer"></span>
+          <span>span</span>
+          <select id="p3-span">
+            <option value="7">1 week</option><option value="14" selected>2 weeks</option>
+            <option value="31">1 month</option><option value="91">all 3 months</option>
+          </select>
+        </div>
+        <canvas id="p3-date" class="p3-cv"></canvas>
+        <div class="p3-note">Click a night to schedule an observation (up to 2 per night) · drag or scroll to pan.
+          Each night’s window is 19:30–01:30; the exact time is random within it.</div>
+        <div class="sec-label">Predicted RV vs orbital phase</div>
+        <canvas id="p3-phase" class="p3-cv"></canvas>
+        <div class="p3-note">Solid stripe: the observing window. Faint halo: ±2σ uncertainty in the predicted phase on that date
+          (it grows with time since the TESS transits).</div>
+      </div>
+
+      <div id="p3-results">
+        <div class="sec-label">Radial velocities</div>
+        <canvas id="p3-rv" class="p3-cv"></canvas>
+        <div id="p3-fit"></div>
+        <div>
+          <label class="p3-ctl"><input type="checkbox" id="p3-unlock"> Unlock period &amp; T₀ — explore other foldings (Phase 1 values stay official)</label>
+          <div id="p3-unlock-ctrls">
+            <div class="p3-ctl">
+              <span>P</span>
+              <button class="nudge" data-p="-0.01">−0.01</button><button class="nudge" data-p="-0.0001">−0.0001</button>
+              <input type="range" id="p3-uP">
+              <button class="nudge" data-p="0.0001">+0.0001</button><button class="nudge" data-p="0.01">+0.01</button>
+              <span class="val" id="p3-uP-val"></span>
+            </div>
+            <div class="p3-ctl">
+              <span>T₀</span>
+              <button class="nudge" data-t="-0.1">−0.1</button><button class="nudge" data-t="-0.001">−0.001</button>
+              <input type="range" id="p3-uT">
+              <button class="nudge" data-t="0.001">+0.001</button><button class="nudge" data-t="0.1">+0.1</button>
+              <span class="val" id="p3-uT-val"></span>
+            </div>
+            <div class="p3-ctl"><button class="hdr-btn" id="p3-ureset" style="padding:2px 10px;font-size:12px">Reset to Phase 1 values</button></div>
+          </div>
+        </div>
+        <table id="p3-obs-table"></table>
+        <div class="sec-label">Cross-correlation functions (one per observation)</div>
+        <canvas id="p3-ccf" class="p3-cv"></canvas>
+        <div class="p3-note">Each curve is the spectrum cross-correlated with a template: a dip where the star’s lines are.
+          Its centre is the measured RV (tick marks). Look for anything else in the curves.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Phase 3 info popup -->
+<div id="p3-popup"><div class="box" id="p3-popup-box"></div></div>
+
+<!-- Phase 4 (placeholder until precision RV is built) -->
+<div id="phase4-view">
+  <h2>Phase 4 &mdash; Precision Radial Velocity</h2>
+  <p>High-precision RV follow-up is not built yet.<br>These candidates advanced from reconnaissance.</p>
+  <div id="p4-list"></div>
 </div>
 
 <!-- Footer -->
@@ -622,6 +823,125 @@ def to_b64(fig):
     buf.seek(0)
     return base64.b64encode(buf.read()).decode()
 `,
+'stars': String.raw`"""Stellar properties: spectral-type table, magnitudes, bolometric corrections,
+and the inverse (spectral-type label from a measured Teff and log g).
+
+Standalone:   python stars.py          # prints the table with absolute TESS mags
+Pure numpy; used by generate.py (truth) and rv.py (recon "measurements").
+
+Values are rounded main-sequence / giant-branch numbers in the spirit of
+Pecaut & Mamajek (2013).  They are teaching-grade, not a calibration.
+"""
+import numpy as np
+
+TEFF_SUN = 5772.0
+MBOL_SUN = 4.74
+
+# label, Teff [K], mass [Msun], radius [Rsun], sampling weight, luminosity class
+TABLE = [
+    ('A5 V',  8100, 1.85, 1.70, 0.04, 'V'),
+    ('F0 V',  7220, 1.59, 1.60, 0.08, 'V'),
+    ('F5 V',  6510, 1.33, 1.40, 0.13, 'V'),
+    ('F8 V',  6170, 1.18, 1.20, 0.09, 'V'),
+    ('G0 V',  5920, 1.06, 1.10, 0.10, 'V'),
+    ('G2 V',  5770, 1.00, 1.00, 0.09, 'V'),
+    ('G5 V',  5660, 0.97, 0.93, 0.08, 'V'),
+    ('K0 V',  5270, 0.88, 0.85, 0.09, 'V'),
+    ('K3 V',  4830, 0.78, 0.75, 0.07, 'V'),
+    ('K5 V',  4440, 0.70, 0.68, 0.05, 'V'),
+    ('M0 V',  3850, 0.57, 0.59, 0.03, 'V'),
+    ('M2 V',  3560, 0.44, 0.44, 0.02, 'V'),
+    ('M4 V',  3210, 0.23, 0.26, 0.01, 'V'),
+    ('G8 III', 4950, 2.00, 9.0, 0.03, 'III'),
+    ('K1 III', 4600, 1.30, 11.0, 0.03, 'III'),
+]
+DWARFS = [r for r in TABLE if r[5] == 'V']
+GIANTS = [r for r in TABLE if r[5] == 'III']
+
+# Finer Teff grid used only to name a measured Teff (dwarf scale; fine for giants too)
+SUBTYPES = [('A0', 9700), ('A5', 8100), ('F0', 7220), ('F2', 6810), ('F5', 6510),
+            ('F8', 6170), ('G0', 5920), ('G2', 5770), ('G5', 5660), ('G8', 5490),
+            ('K0', 5270), ('K2', 5040), ('K3', 4830), ('K5', 4440), ('K7', 4050),
+            ('M0', 3850), ('M1', 3680), ('M2', 3560), ('M3', 3430), ('M4', 3210),
+            ('M5', 3060)]
+
+
+def tmag_from_brightness(b):
+    """The game's 0..1 'brightness' -> apparent TESS magnitude of everything in
+    the TESS aperture (b=1 -> T=7.0, b=0.2 -> T=11.4)."""
+    return 12.5 - 5.5 * b
+
+
+def bc_tess(teff):
+    """Bolometric correction in the TESS band (M_bol - M_T).  Smooth toy fit,
+    ~0.5 mag for Sun-like stars, smaller for very hot or very cool stars."""
+    x = np.log10(np.asarray(teff, float) / 5800.0)
+    return 0.5 - 3.0 * x ** 2
+
+
+def luminosity(radius, teff):
+    return radius ** 2 * (teff / TEFF_SUN) ** 4
+
+
+def abs_tmag(radius, teff):
+    mbol = MBOL_SUN - 2.5 * np.log10(luminosity(radius, teff))
+    return mbol - bc_tess(teff)
+
+
+def logg(mass, radius):
+    return 4.438 + np.log10(mass) - 2.0 * np.log10(radius)
+
+
+def distance_pc(app_tmag, radius, teff):
+    return 10.0 ** ((app_tmag - abs_tmag(radius, teff) + 5.0) / 5.0)
+
+
+def row(label):
+    return next(r for r in TABLE if r[0] == label)
+
+
+def props(label):
+    """dict of true stellar properties for a table entry."""
+    lab, teff, m, r, _, lc = row(label)
+    return dict(spt=lab, teff=float(teff), mass=float(m), radius=float(r),
+                logg=float(logg(m, r)), lum_class=lc)
+
+
+def draw_type(rng, app_tmag, giants=True, allowed=None, dmin=10.0, dmax=2000.0):
+    """Draw a spectral type from the weighted table, rejecting types that would
+    put a star of this apparent magnitude closer than dmin or beyond dmax."""
+    rows = [r for r in TABLE if (giants or r[5] == 'V') and (allowed is None or r[0] in allowed)]
+    ok = [r for r in rows if dmin <= distance_pc(app_tmag, r[3], r[1]) <= dmax]
+    pool = ok or rows
+    w = np.array([r[4] for r in pool]); w = w / w.sum()
+    return pool[int(rng.choice(len(pool), p=w))][0]
+
+
+def label_from(teff, logg_val):
+    """Spectral type + luminosity class from measured Teff and log g."""
+    name = min(SUBTYPES, key=lambda s: abs(s[1] - teff))[0]
+    lc = 'V' if logg_val >= 3.9 else 'IV' if logg_val >= 3.4 else 'III'
+    return f'{name} {lc}'
+
+
+def ms_mass_from_teff(teff):
+    """Main-sequence mass from Teff (the 'stellar models' step for dwarfs)."""
+    t = np.array([r[1] for r in DWARFS], float)[::-1]
+    m = np.array([r[2] for r in DWARFS], float)[::-1]
+    return float(np.interp(teff, t, m))
+
+
+def mass_lum_ratio(q):
+    """Rough flux ratio of a main-sequence companion of mass ratio q (L ~ M^4)."""
+    return float(np.clip(q, 0.0, 1.0)) ** 4
+
+
+if __name__ == '__main__':
+    print(f"{'type':7s} {'Teff':>5s} {'M':>5s} {'R':>5s} {'logg':>5s} {'M_T':>6s}   d(T=7..11.4)")
+    for lab, teff, m, r, w, lc in TABLE:
+        print(f"{lab:7s} {teff:5d} {m:5.2f} {r:5.2f} {logg(m, r):5.2f} {abs_tmag(r, teff):6.2f}   "
+              f"{distance_pc(7.0, r, teff):6.0f}..{distance_pc(11.4, r, teff):6.0f} pc")
+`,
 'generate': String.raw`"""Star field + light-curve generation (ground truth).
 
 Standalone:   python generate.py --seed 42 [--n 25]
@@ -629,6 +949,7 @@ Nothing here knows about the browser, Pyodide, or Matplotlib.
 """
 import json
 import numpy as np
+import stars as stars_mod
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Companion / distance model. Ground truth lives here (and in the star dicts);
@@ -648,8 +969,6 @@ LOGA_SIGMA     = 1.5
 SEP_MIN, SEP_MAX = 0.03, 4.0     # arcsec
 RESOLVE_MIN    = 0.05            # arcsec (~0.85 x the 0.06" imager FWHM)
 DMAG_PER_DEX   = 7.5
-DIST_MEDIAN_PC = 200.0           # typical TESS planet host (Ziegler+2021)
-DIST_SIGMA_DEX = 0.30
 
 # Per-star truth that is not part of the JSON the UI sees (blend EB parameters,
 # dilution factor).  Rebuilt by generate_starfield.
@@ -664,14 +983,20 @@ def _contrast_limit(sep, brightness):
 def _detectable(sep, dmag, brightness):
     return bool(sep >= RESOLVE_MIN and dmag <= _contrast_limit(sep, brightness))
 
+BG_FRAC        = 0.06     # chance alignment with an unrelated (non-eclipsing) background star
+
+
 def _bound_companion(srng, dist_pc, brightness):
-    """Physically bound companion, or None.  Same distance as the primary."""
+    """Physically bound companion, or None.  Same distance as the primary.
+    The separation is provisional: _finalize() rescales it once the primary's
+    final distance is known (the companion's light changes the distance)."""
     if srng.random() >= COMP_FRAC:
         return None
-    sep = None
+    sep = a = proj = None
     for _ in range(200):                       # truncated log-normal in a
-        a   = 10 ** srng.normal(LOGA_MEAN, LOGA_SIGMA)
-        s   = a * srng.uniform(0.3, 1.0) / dist_pc     # projection factor
+        a    = 10 ** srng.normal(LOGA_MEAN, LOGA_SIGMA)
+        proj = srng.uniform(0.3, 1.0)          # projection factor
+        s    = a * proj / dist_pc
         if SEP_MIN <= s <= SEP_MAX:
             sep = s
             break
@@ -680,18 +1005,153 @@ def _bound_companion(srng, dist_pc, brightness):
     q    = srng.uniform(0.1, 1.0)
     dmag = DMAG_PER_DEX * np.log10(1.0 / q)
     pa   = srng.uniform(0.0, 360.0)
+    inc  = float(np.degrees(np.arccos(srng.uniform(0.0, 1.0))))   # isotropic orbit
     return dict(sep_arcsec=float(sep), pa_deg=float(pa), dmag=float(dmag),
                 bound=True, is_eb=False, dist_pc=float(dist_pc),
+                q=float(q), a_au=float(a), proj=float(proj), inc_deg=inc,
                 detectable=_detectable(sep, dmag, brightness))
 
-def generate_starfield(seed=42, n_stars=25):
+
+def _chance_sep(rng):
+    """Separation of a chance alignment: uniform per unit sky area in the imaging window."""
+    u = rng.uniform((SEP_MIN / SEP_MAX) ** 2, 1.0)
+    return float(SEP_MAX * np.sqrt(u))
+
+
+def _background(rng, sep, dmag, is_eb):
+    """Unbound star far behind the target (eclipsing or not)."""
+    return dict(sep_arcsec=float(sep), pa_deg=float(rng.uniform(0.0, 360.0)), dmag=float(dmag),
+                bound=False, is_eb=bool(is_eb), dist_factor=float(rng.uniform(1.5, 5.0)),
+                dist_pc=0.0, detectable=False)                 # dist/detectable set in _finalize
+
+
+def _make_blend(s, brng, sep, dmag):
+    """Turn star s into a blended background eclipsing binary."""
+    f_eb = 1.0 / (1.0 + 10 ** (0.4 * dmag))                    # EB's share of the light
+    obs  = float(brng.uniform(0.004, 0.02))                     # depth the student sees
+    d1   = float(min(obs / f_eb, 0.7))                          # intrinsic eclipse depth
+    P    = float(brng.uniform(1.0, 10.0))
+    s['type']      = 'blend_eb'
+    s['companion'] = _background(brng, sep, dmag, True)
+    _truth[s['id']] = dict(dilution=f_eb,
+                           blend=dict(period=P, t0=float(brng.uniform(0, P)),
+                                      dur_frac=float(brng.uniform(0.03, 0.08)),
+                                      d1=d1, d2=float(d1 * brng.uniform(0.05, 0.9))))
+
+
+def _set_spectral_type(s, label, trng):
+    """Copy true stellar properties for ${'`'}label${'`'} onto star s, plus [Fe/H] and v sin i."""
+    p = stars_mod.props(label)
+    s.update(spt=p['spt'], teff=p['teff'], mass=p['mass'], radius=p['radius'],
+             logg=p['logg'], lum_class=p['lum_class'])
+    teff = p['teff']
+    if p['lum_class'] == 'III':
+        vsini = trng.uniform(1.0, 5.0)
+    elif teff > 7800:
+        vsini = trng.uniform(80.0, 150.0)
+    elif teff > 6900:
+        vsini = trng.uniform(30.0, 80.0)
+    elif teff > 6300:
+        vsini = trng.uniform(8.0, 20.0)
+    elif teff > 6000:
+        vsini = trng.uniform(4.0, 10.0)
+    else:
+        vsini = trng.uniform(1.0, 5.0)
+    s['vsini'] = float(vsini)
+    s['feh']   = float(np.clip(trng.normal(-0.05, 0.2), -0.8, 0.5))
+
+
+PULSATOR_TYPES = ('A5 V', 'F0 V', 'F5 V')          # gamma Dor / delta Sct territory
+
+
+def _finalize(s, z_plx):
+    """Distance, parallax, final companion geometry, dilution truth.
+
+    ${'`'}brightness${'`'} is the total light in the TESS aperture.  The primary alone is
+    fainter by its companion's share, and its distance follows from that, so a
+    student who later uses the total brightness overestimates the luminosity."""
+    T = stars_mod.tmag_from_brightness(s['brightness'])
+    c = s['companion']
+    F = 10 ** (-0.4 * c['dmag']) if c else 0.0
+    T1 = T + 2.5 * np.log10(1.0 + F)
+    d = float(np.clip(stars_mod.distance_pc(T1, s['radius'], s['teff']), 5.0, 3000.0))
+    s['tmag'] = float(T)
+    s['distance_pc'] = d
+    perr = float(0.02 + 0.08 * (1.0 - s['brightness']))            # mas, Gaia-like
+    s['parallax_err_mas'] = perr
+    s['parallax_mas'] = float(1000.0 / d + z_plx * perr)
+    if c:
+        if c['bound']:
+            if c.get('fix_sep'):                                    # debug scenarios fix the angle
+                c['a_au'] = float(c['sep_arcsec'] * d / c['proj'])
+            sep = c['a_au'] * c['proj'] / d
+            sep = float(np.clip(sep, SEP_MIN, SEP_MAX))
+            c['a_au'] = float(sep * d / c['proj'])
+            c['sep_arcsec'] = sep
+            c['dist_pc'] = d
+        else:
+            c['dist_pc'] = float(d * c['dist_factor'])
+        c['detectable'] = _detectable(c['sep_arcsec'], c['dmag'], s['brightness'])
+        if not c['is_eb']:                    # any non-EB neighbour dilutes the host's own signal
+            _truth[s['id']] = dict(dilution=1.0 / (1.0 + F))
+
+
+# Debug field: one star per scenario, so every path through the pipeline can be exercised.
+SCENARIOS = ['clean_planet', 'planet_bound', 'planet_bg', 'eb', 'beb_bright',
+             'beb_faint', 'pulsator', 'quiet', 'giant_transit']
+
+
+def _force_scenarios(stars, seed):
+    if len(stars) < len(SCENARIOS):
+        return
+    frng = np.random.default_rng([seed, 10])
+    ids  = [int(i) for i in frng.permutation(len(stars))][:len(SCENARIOS)]
+    for role, i in zip(SCENARIOS, ids):
+        s    = stars[i]
+        rr   = np.random.default_rng([seed, 11, i])
+        T    = stars_mod.tmag_from_brightness(s['brightness'])
+        _truth.pop(i, None)
+        s['companion'] = None
+        s['scenario']  = role
+        spt = None
+        if role == 'clean_planet':
+            s['type'] = 'transit'; spt = 'G2 V'
+        elif role == 'planet_bound':
+            s['type'] = 'transit'; spt = 'K0 V'
+            q = 10 ** (-2.0 / DMAG_PER_DEX)
+            s['companion'] = dict(sep_arcsec=0.6, pa_deg=float(rr.uniform(0, 360)), dmag=2.0,
+                                  bound=True, is_eb=False, dist_pc=0.0, q=float(q),
+                                  a_au=0.0, proj=0.8, inc_deg=60.0, fix_sep=True, detectable=False)
+        elif role == 'planet_bg':
+            s['type'] = 'transit'; spt = 'F8 V'
+            s['companion'] = _background(rr, 1.0, 3.0, False)
+        elif role == 'eb':
+            s['type'] = 'eb'; spt = 'G5 V'
+        elif role == 'beb_bright':
+            spt = 'G0 V'; _make_blend(s, rr, 0.6, 1.5)
+        elif role == 'beb_faint':
+            spt = 'K0 V'; _make_blend(s, rr, 2.8, 3.5)
+        elif role == 'pulsator':
+            s['type'] = 'pulsating'; spt = 'F0 V'
+        elif role == 'quiet':
+            s['type'] = 'boring'; spt = stars_mod.draw_type(rr, T, giants=False)
+        elif role == 'giant_transit':
+            s['type'] = 'transit'; spt = 'K1 III'
+        _set_spectral_type(s, spt, rr)
+
+
+def generate_starfield(seed=42, n_stars=25, debug=False):
+    """JSON list of stars.  Each carries its ground truth (system type, spectral
+    type, companion, distance); what a student may see is decided by the UI.
+    debug=True forces one star per entry of SCENARIOS."""
     rng   = np.random.default_rng(seed)
     types = ['boring']*5 + ['pulsating', 'transit', 'transit', 'eb']
     stars = []
+    zs    = {}
     _truth.clear()
     _stars.clear()
     for i in range(n_stars):
-        # Existing draws, unchanged -> same positions/brightness/types as before.
+        # Main stream: positions, brightness, system type.
         s = {
             'id':         i,
             'x':          float(rng.uniform(0.05, 0.95)),
@@ -699,19 +1159,21 @@ def generate_starfield(seed=42, n_stars=25):
             'brightness': float(rng.uniform(0.2, 1.0)),
             'type':       str(rng.choice(types)),
         }
-        # New truth, from per-star streams so it can never perturb the above.
-        srng  = np.random.default_rng([seed, 1, i])
-        dist  = float(np.clip(10 ** srng.normal(np.log10(DIST_MEDIAN_PC), DIST_SIGMA_DEX), 25.0, 800.0))
-        perr  = float(0.02 + 0.08 * (1.0 - s['brightness']))        # mas, Gaia-like
-        s['distance_pc']       = dist                                # truth (foreground/primary)
-        s['parallax_mas']      = float(1000.0 / dist + srng.normal(0.0, perr))   # measured
-        s['parallax_err_mas']  = perr
-        s['companion']         = _bound_companion(srng, dist, s['brightness'])
+        # Per-star streams, so adding a property never perturbs the others.
+        srng = np.random.default_rng([seed, 1, i])
+        trng = np.random.default_rng([seed, 5, i])
+        zs[i] = float(srng.normal(0.0, 1.0))                       # parallax error draw
+        T = stars_mod.tmag_from_brightness(s['brightness'])
+        allowed = PULSATOR_TYPES if s['type'] == 'pulsating' else None
+        giants  = s['type'] not in ('pulsating', 'eb')
+        _set_spectral_type(s, stars_mod.draw_type(trng, T, giants=giants, allowed=allowed), trng)
+        d0 = stars_mod.distance_pc(T, s['radius'], s['teff'])
+        s['companion'] = _bound_companion(srng, d0, s['brightness'])
         stars.append(s)
 
-    # Blended background eclipsing binaries.  Converted from 'boring' stars so
-    # no planet / EB / pulsator light curve in the field changes.  The first one
-    # is forced to be an easy imaging detection so there is always one to debug.
+    # Blended background eclipsing binaries, converted from 'boring' stars.  The
+    # first one is forced to be an easy imaging detection so there is always
+    # one to debug.
     brng   = np.random.default_rng([seed, 2])
     n_bl   = max(2, int(round(0.08 * n_stars)))
     boring = [s['id'] for s in stars if s['type'] == 'boring']
@@ -719,31 +1181,23 @@ def generate_starfield(seed=42, n_stars=25):
     pool   = boring if len(boring) >= n_bl else boring + others
     chosen = [int(i) for i in brng.permutation(pool)][:n_bl]
     for k, i in enumerate(chosen):
-        s = stars[i]
         if k == 0:
             sep  = float(brng.uniform(0.5, 2.5));  dmag = float(brng.uniform(1.5, 3.5))
         else:                                       # chance alignment: uniform on the sky
-            u    = brng.uniform((SEP_MIN / SEP_MAX) ** 2, 1.0)
-            sep  = float(SEP_MAX * np.sqrt(u));    dmag = float(brng.uniform(1.0, 3.8))
-        f_eb   = 1.0 / (1.0 + 10 ** (0.4 * dmag))                 # EB's share of the light
-        obs    = float(brng.uniform(0.004, 0.02))                 # depth the student sees
-        d1     = float(min(obs / f_eb, 0.7))                      # intrinsic eclipse depth
-        P      = float(brng.uniform(1.0, 10.0))
-        s['type']      = 'blend_eb'
-        s['companion'] = dict(sep_arcsec=sep, pa_deg=float(brng.uniform(0.0, 360.0)),
-                              dmag=dmag, bound=False, is_eb=True,
-                              dist_pc=float(s['distance_pc'] * brng.uniform(1.5, 5.0)),
-                              detectable=_detectable(sep, dmag, s['brightness']))
-        _truth[i] = dict(dilution=f_eb,
-                         blend=dict(period=P, t0=float(brng.uniform(0, P)),
-                                    dur_frac=float(brng.uniform(0.03, 0.08)),
-                                    d1=d1, d2=float(d1 * brng.uniform(0.05, 0.9))))
-    # Bound companions dilute the host's own signal: host keeps 1/(1+10^(-0.4 dm)).
+            sep  = _chance_sep(brng);              dmag = float(brng.uniform(1.0, 3.8))
+        _make_blend(stars[i], brng, sep, dmag)
+
+    # Unrelated (non-eclipsing) background stars: they only dilute.
     for s in stars:
-        c = s['companion']
-        if c and c['bound']:
-            _truth[s['id']] = dict(dilution=1.0 / (1.0 + 10 ** (-0.4 * c['dmag'])))
+        if s['companion'] is None:
+            bg = np.random.default_rng([seed, 9, s['id']])
+            if bg.random() < BG_FRAC:
+                s['companion'] = _background(bg, _chance_sep(bg), float(bg.uniform(1.0, 5.0)), False)
+
+    if debug:
+        _force_scenarios(stars, seed)
     for s in stars:
+        _finalize(s, zs[s['id']])
         _stars[s['id']] = s
     return json.dumps(stars)
 
@@ -823,14 +1277,17 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(description='Generate a TESS-game star field and print a summary.')
     ap.add_argument('--seed', type=int, default=42)
     ap.add_argument('--n', type=int, default=25)
+    ap.add_argument('--debug', action='store_true', help='force one star per debug scenario')
     a = ap.parse_args()
-    for s in json.loads(generate_starfield(a.seed, a.n)):
+    for s in json.loads(generate_starfield(a.seed, a.n, a.debug)):
         c = s['companion']
+        kind = lambda c: 'BG-EB' if c['is_eb'] else ('bound' if c['bound'] else 'BG-star')
         comp = '-' if not c else (
-            f"{'BG-EB' if c['is_eb'] else 'bound'} sep={c['sep_arcsec']:.2f}\" "
+            f"{kind(c)} sep={c['sep_arcsec']:.2f}\" "
             f"dm={c['dmag']:.1f} {'detectable' if c['detectable'] else 'hidden'}")
-        print(f"#{s['id']:<3d} {s['type']:<9s} b={s['brightness']:.2f} "
-              f"d={s['distance_pc']:4.0f}pc plx={s['parallax_mas']:5.2f}  {comp}")
+        print(f"#{s['id']:<3d} {s['type']:<9s} {s['spt']:<7s} b={s['brightness']:.2f} "
+              f"d={s['distance_pc']:5.0f}pc plx={s['parallax_mas']:6.2f}  {comp}"
+              f"  {s.get('scenario', '')}")
 `,
 'analysis': String.raw`"""Pure-numpy light-curve analysis: phase folding, vectorised BLS box fit,
 iterative period search, and the box-depth refinement used by the plots.
@@ -1175,6 +1632,464 @@ if __name__ == '__main__':
     fig.savefig(a.out, dpi=100)
     print('wrote', a.out)
 `,
+'rv': String.raw`"""Phase 3: reconnaissance (low-precision) radial velocities.
+
+Standalone:   python rv.py --seed 0 --star 13 --debug
+              python rv.py --seed 0 --star 13 --debug --nights 0 0 10 20 40
+
+Everything about a system's spectrum is modelled as a set of *components* that
+put light into the spectrograph fiber (the target, plus any companion star,
+background eclipsing binary or background star close enough to leak in).
+Each component has a velocity law v(t) and a Gaussian cross-correlation (CCF)
+dip.  The measured RV is the centre of a single-Gaussian fit to the summed CCF
+near the target's dip, plus Gaussian noise of SIGMA_RV.  So a blend only pulls
+the velocity when its lines overlap the target's (see the design notes).
+
+Pure numpy.  Truth comes from generate.py; nothing here builds JSON.
+"""
+import numpy as np
+import generate
+import analysis
+import stars as st
+
+# ── Physical constants (SI) ─────────────────────────────────────────────────
+G, MSUN, MJUP = 6.674e-11, 1.989e30, 1.898e27
+RSUN, RJUP, DAY = 6.957e8, 7.1492e7, 86400.0
+
+# ── Observing set-up ────────────────────────────────────────────────────────
+MONTHS     = [('Month 1', 30), ('Month 2', 31), ('Month 3', 30)]
+N_NIGHTS   = sum(n for _, n in MONTHS)        # 91
+CAL0       = 57.0           # TESS time (d) of Month 1 Day 1, 00:00 -- a month after the sector (t=0..27)
+WIN_START  = 19.5 / 24.0    # each night's window opens at 19:30 ...
+WIN_LEN    = 6.0 / 24.0     # ... and lasts 6 h
+N_OBS      = 5
+MAX_PER_NIGHT = 2
+SIGMA_RV   = 0.200          # km/s, per observation
+FIBER_ARCSEC = 2.3          # TRES-like reconnaissance spectrograph
+SEEING_ARCSEC = 1.5
+FWHM_INST  = 6.8            # km/s, c / R for R ~ 44,000
+FWHM_MACRO = 5.0            # km/s, thermal + macroturbulence
+LINE_DEPTH = 0.5            # CCF contrast of an unblended, slowly rotating star
+CCF_NOISE  = 0.004          # per-pixel noise on the displayed CCF
+
+
+# ── Calendar ────────────────────────────────────────────────────────────────
+def night_window(n):
+    """(start, end) in TESS days of night n (0 = Month 1 Day 1)."""
+    s = CAL0 + n + WIN_START
+    return s, s + WIN_LEN
+
+
+def night_label(n):
+    for name, days in MONTHS:
+        if n < days:
+            return f'{name}, Day {n + 1}'
+        n -= days
+    raise ValueError('night outside the calendar')
+
+
+def clock(t):
+    """Local clock time hh:mm of TESS time t."""
+    m = int(round(((t % 1.0) * 24 * 60))) % (24 * 60)
+    return f'{m // 60:02d}:{m % 60:02d}'
+
+
+def validate_nights(nights):
+    nights = [int(n) for n in nights]
+    if len(nights) != N_OBS:
+        raise ValueError(f'need exactly {N_OBS} nights')
+    for n in nights:
+        if not 0 <= n < N_NIGHTS:
+            raise ValueError(f'night {n} outside the calendar')
+        if nights.count(n) > MAX_PER_NIGHT:
+            raise ValueError(f'night {n} used more than {MAX_PER_NIGHT} times')
+    return sorted(nights)
+
+
+def obs_times(seed, star_id, nights):
+    """Actual observation times: random inside each night's window; two
+    observations on the same night are at least half a window apart."""
+    nights = validate_nights(nights)
+    out = []
+    for n in sorted(set(nights)):
+        rng = np.random.default_rng([seed, 7, star_id, n])
+        a, _ = night_window(n)
+        if nights.count(n) == 1:
+            out.append(a + rng.uniform(0, WIN_LEN))
+        else:
+            while True:
+                t1, t2 = rng.uniform(0, WIN_LEN, 2)
+                if abs(t1 - t2) >= WIN_LEN / 2:
+                    out += sorted([a + t1, a + t2])
+                    break
+    return np.array(out)
+
+
+# ── Orbits ──────────────────────────────────────────────────────────────────
+def semi_amplitude(P_days, m1_sun, m2_sun, sini=1.0):
+    """K of body 1 (km/s) for a circular orbit with companion mass m2."""
+    m1, m2 = m1_sun * MSUN, m2_sun * MSUN
+    return (2 * np.pi * G / (P_days * DAY)) ** (1 / 3) * m2 * sini / (m1 + m2) ** (2 / 3) / 1e3
+
+
+def msini(K_kms, P_days, m1_sun):
+    """Minimum companion mass (Msun) from the full mass function (not the
+    planet approximation), so it stays right for stellar companions."""
+    K = abs(K_kms) * 1e3
+    if K <= 0 or P_days <= 0 or m1_sun <= 0:
+        return 0.0
+    f = P_days * DAY * K ** 3 / (2 * np.pi * G)
+    m1 = m1_sun * MSUN
+    lo, hi = 0.0, 1000 * MSUN
+    for _ in range(200):
+        mid = 0.5 * (lo + hi)
+        if mid ** 3 / (m1 + mid) ** 2 < f:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi) / MSUN
+
+
+# ── Fiber coupling ──────────────────────────────────────────────────────────
+_coupling_cache = {}
+
+
+def fiber_coupling(sep_arcsec, fiber=FIBER_ARCSEC, seeing=SEEING_ARCSEC):
+    """Fraction of a star's light entering a circular fiber centred sep away,
+    relative to the same star on axis (Gaussian seeing)."""
+    key = (fiber, seeing)
+    if key not in _coupling_cache:
+        s = seeing / 2.3548
+        seps = np.linspace(0, fiber / 2 + 4 * seeing, 120)
+        x = np.linspace(-fiber / 2, fiber / 2, 161)
+        X, Y = np.meshgrid(x, x)
+        inside = X ** 2 + Y ** 2 <= (fiber / 2) ** 2
+        frac = np.array([np.exp(-((X[inside] - d) ** 2 + Y[inside] ** 2) / (2 * s * s)).sum()
+                         for d in seps])
+        _coupling_cache[key] = (seps, frac / frac[0])
+    seps, frac = _coupling_cache[key]
+    return float(np.interp(sep_arcsec, seps, frac, right=0.0))
+
+
+# ── System model ────────────────────────────────────────────────────────────
+def _fwhm(vsini):
+    return float(np.sqrt(FWHM_INST ** 2 + FWHM_MACRO ** 2 + (1.5 * vsini) ** 2))
+
+
+def _comp(name, light, teff, logg, fwhm, vel):
+    return dict(name=name, light=float(light), teff=float(teff), logg=float(logg),
+                fwhm=float(fwhm), vel=vel)
+
+
+def _ms_teff_from_mass(m):
+    d = st.DWARFS
+    return float(np.interp(m, [r[2] for r in d][::-1], [r[1] for r in d][::-1]))
+
+
+def _ms_lum(m):
+    return float(m) ** 4
+
+
+def system(star, seed):
+    """Components that put light into the fiber, plus a truth summary.
+
+    Velocities are km/s.  Transit / primary eclipse at T0, with the target
+    moving away from us just before and toward us just after:
+    v_target = gamma - K1 sin(2 pi (t - T0) / P)."""
+    sid, typ = star['id'], star['type']
+    _, _, _, p = generate.gen_flux(sid, typ, star['brightness'], seed)
+    rng   = np.random.default_rng([seed, 6, sid])
+    gamma = float(rng.normal(0.0, 25.0))
+    M1, R1 = star['mass'], star['radius']
+    L1    = float(st.luminosity(R1, star['teff']))
+    terms = []                                 # target velocity terms: functions of t
+    comps = []
+    truth = dict(gamma=gamma, K1=0.0, companion=None)
+
+    def sin_term(K, P, T0, sign=-1.0):
+        return lambda t: sign * K * np.sin(2 * np.pi * (np.asarray(t) - T0) / P)
+
+    if typ == 'transit':
+        P, T0 = p['period'], p['t0']
+        rc = R1 * np.sqrt(p['depth'])                      # companion radius, Rsun
+        rj = rc * RSUN / RJUP
+        if rj <= 1.8:                                      # a planet
+            if rj > 0.8:
+                mp = float(np.clip(10 ** rng.normal(0.0, 0.35), 0.2, 8.0))
+            elif rj > 0.4:
+                mp = float(rng.uniform(0.1, 0.4))
+            else:
+                mp = float((rj * 11.21) ** 1.7 / 317.8)
+            m2 = mp * MJUP / MSUN
+            K1 = semi_amplitude(P, M1, m2)
+            terms.append(sin_term(K1, P, T0))
+            truth.update(K1=K1, companion=dict(kind='planet', mass_mjup=mp, radius_rjup=float(rj),
+                                               period=P, t0=T0))
+        else:                                              # too big: a low-mass star
+            m2 = float(np.clip(rc, 0.08, 0.9 * M1))
+            K1 = semi_amplitude(P, M1, m2)
+            K2 = K1 * M1 / m2
+            terms.append(sin_term(K1, P, T0))
+            comps.append(_comp('eclipsing companion', _ms_lum(m2) / L1, _ms_teff_from_mass(m2), 4.8,
+                               _fwhm(3.0), (lambda g=gamma, f=sin_term(K2, P, T0, +1): lambda t: g + f(t))()))
+            truth.update(K1=K1, companion=dict(kind='star', mass_sun=m2, radius_rjup=float(rj),
+                                               period=P, t0=T0))
+    elif typ == 'eb':
+        P, T0 = p['period'], p['t0']
+        m2 = float(M1 * rng.uniform(0.4, 0.95))
+        K1 = semi_amplitude(P, M1, m2)
+        K2 = K1 * M1 / m2
+        terms.append(sin_term(K1, P, T0))
+        comps.append(_comp('EB secondary', _ms_lum(m2) / L1, _ms_teff_from_mass(m2), 4.6,
+                           _fwhm(3.0), (lambda g=gamma, f=sin_term(K2, P, T0, +1): lambda t: g + f(t))()))
+        truth.update(K1=K1, companion=dict(kind='star', mass_sun=m2, period=P, t0=T0))
+    elif typ == 'pulsating':
+        Kp = 100.0 * p['amp']                              # ~1 km/s per 1% flux amplitude
+        Pp = p['period']
+        terms.append(lambda t, Kp=Kp, Pp=Pp: Kp * np.cos(2 * np.pi * np.asarray(t) / Pp))
+        truth.update(K1=Kp, companion=dict(kind='pulsation', period=Pp))
+
+    c = star.get('companion')
+    if c and c['is_eb']:                                   # blended background EB
+        b = generate._truth[sid]['blend']
+        P, T0 = b['period'], b['t0']
+        g_bg = gamma + float(rng.normal(0.0, 20.0))
+        ma = float(rng.uniform(0.7, 1.3)); mb = float(ma * rng.uniform(0.5, 0.95))
+        Ka = semi_amplitude(P, ma, mb); Kb = Ka * ma / mb
+        lt = 10 ** (-0.4 * c['dmag']) * fiber_coupling(c['sep_arcsec'])
+        la, lb = lt * _ms_lum(ma) / (_ms_lum(ma) + _ms_lum(mb)), lt * _ms_lum(mb) / (_ms_lum(ma) + _ms_lum(mb))
+        for nm, l, m, f in [('background EB primary', la, ma, sin_term(Ka, P, T0)),
+                            ('background EB secondary', lb, mb, sin_term(Kb, P, T0, +1))]:
+            comps.append(_comp(nm, l, _ms_teff_from_mass(m), 4.5, _fwhm(3.0),
+                               (lambda g=g_bg, f=f: lambda t: g + f(t))()))
+        truth['blend'] = dict(gamma=g_bg, Ka=Ka, Kb=Kb, period=P, t0=T0,
+                              light_in_fiber=lt, coupling=fiber_coupling(c['sep_arcsec']))
+    elif c and not c['bound']:                             # static background star
+        g_bg = gamma + float(rng.normal(0.0, 30.0))
+        l = 10 ** (-0.4 * c['dmag']) * fiber_coupling(c['sep_arcsec'])
+        comps.append(_comp('background star', l, float(rng.uniform(4500, 6500)), 4.4, _fwhm(3.0),
+                           (lambda g=g_bg: lambda t: g + 0.0 * np.asarray(t))()))
+        truth['background'] = dict(gamma=g_bg, light_in_fiber=l)
+    elif c and c['bound']:                                 # wide bound companion
+        m2 = c['q'] * M1
+        mt = M1 + m2
+        vrel = 29.78 * np.sqrt(mt / c['a_au']) * np.sin(np.radians(c['inc_deg']))
+        Pb = 365.25 * np.sqrt(c['a_au'] ** 3 / mt)
+        ph0 = float(rng.uniform(0, 2 * np.pi))
+        orb = lambda t, Pb=Pb, ph0=ph0: np.sin(2 * np.pi * np.asarray(t) / Pb + ph0)
+        terms.append(lambda t, k=vrel * m2 / mt, orb=orb: -k * orb(t))
+        l = 10 ** (-0.4 * c['dmag']) * fiber_coupling(c['sep_arcsec'])
+        comps.append(_comp('bound companion', l, _ms_teff_from_mass(m2), 4.6, _fwhm(3.0),
+                           (lambda g=gamma, k=vrel * M1 / mt, orb=orb: lambda t: g + k * orb(t))()))
+        truth['bound'] = dict(period_yr=Pb / 365.25, K_target=vrel * m2 / mt, light_in_fiber=l)
+
+    target_vel = lambda t, terms=tuple(terms): gamma + sum((f(t) for f in terms), 0.0 * np.asarray(t, float))
+    comps.insert(0, _comp('target', 1.0, star['teff'], star['logg'], _fwhm(star['vsini']), target_vel))
+    return dict(comps=comps, truth=truth, gamma=gamma)
+
+
+def weights(comps):
+    L = np.array([c['light'] for c in comps])
+    return L / L.sum()
+
+
+def ccf_model(comps, t, v):
+    """Noise-free summed CCF at time t on velocity grid v."""
+    w = weights(comps)
+    out = np.ones_like(v, dtype=float)
+    for c, wk in zip(comps, w):
+        sig = c['fwhm'] / 2.3548
+        depth = min(LINE_DEPTH * wk * (9.0 / c['fwhm']) ** 0.5, 0.95)
+        out -= depth * np.exp(-0.5 * ((v - float(c['vel'](t))) / sig) ** 2)
+    return out
+
+
+def fit_ccf_centre(comps, t):
+    """Centre of a single-Gaussian (target-width) fit to the summed CCF,
+    searched near the target's dip -- what a pipeline would report."""
+    tgt = comps[0]
+    v0 = float(tgt['vel'](t)); F = tgt['fwhm']; sig = F / 2.3548
+    v = np.arange(v0 - 4 * F, v0 + 4 * F, 0.05)
+    y = 1.0 - ccf_model(comps, t, v)
+    cs = np.arange(v0 - 1.5 * F, v0 + 1.5 * F, 0.02)
+    # least squares with fixed width & free depth: maximise sum(y g)^2 / sum(g^2)
+    score = np.array([np.dot(y, g) ** 2 / np.dot(g, g)
+                      for g in (np.exp(-0.5 * ((v - c) / sig) ** 2) for c in cs)])
+    i = int(np.argmax(score))
+    if 0 < i < len(cs) - 1:                                # parabolic refinement
+        a, b, c = score[i - 1], score[i], score[i + 1]
+        den = a - 2 * b + c
+        off = 0.5 * (a - c) / den if den != 0 else 0.0
+        return float(cs[i] + off * (cs[1] - cs[0]))
+    return float(cs[i])
+
+
+# ── Observing ───────────────────────────────────────────────────────────────
+def observe(star, seed, nights):
+    """Run a 5-night schedule: times, RVs, and the CCF of each observation."""
+    nights = validate_nights(nights)
+    sysm = system(star, seed)
+    comps = sysm['comps']
+    times = obs_times(seed, star['id'], nights)
+    nrng = np.random.default_rng([seed, 12, star['id']])
+    rv = np.array([fit_ccf_centre(comps, t) for t in times]) + nrng.normal(0, SIGMA_RV, len(times))
+
+    # Display grid: centred on the measured RVs, wide enough for every visible dip.
+    centre = float(np.median(rv))
+    half = 3.0 * comps[0]['fwhm']
+    w = weights(comps)
+    for c, wk in zip(comps[1:], w[1:]):
+        if LINE_DEPTH * wk > CCF_NOISE:
+            vs = [float(c['vel'](t)) for t in times]
+            half = max(half, max(abs(x - centre) for x in vs) + 2.5 * c['fwhm'])
+    half = float(np.clip(half, 60.0, 300.0))
+    v = np.linspace(centre - half, centre + half, 401)
+    ccfs = [ccf_model(comps, t, v) + nrng.normal(0, CCF_NOISE, v.size) for t in times]
+    return dict(times=times, rv=rv, err=np.full(len(times), SIGMA_RV), nights=nights,
+                v=v, ccfs=np.array(ccfs), system=sysm)
+
+
+# ── Reconnaissance stellar parameters ───────────────────────────────────────
+def recon(star, seed, comps):
+    """Spectroscopic Teff/log g/[Fe/H]/v sin i, and the derived radius and
+    mass (spectrum + Gaia parallax + total TESS magnitude).  Light from any
+    companion in the fiber biases the spectrum; light from any companion in
+    the TESS aperture biases the luminosity."""
+    rng = np.random.default_rng([seed, 13, star['id']])
+    w = weights(comps)
+    teff = float(np.dot(w, [c['teff'] for c in comps]) + rng.normal(0, 100))
+    lg = float(np.dot(w, [c['logg'] for c in comps]) + rng.normal(0, 0.10))
+    feh = float(star['feh'] + rng.normal(0, 0.08))
+    vsini = float(max(0.5, star['vsini'] * (1 + rng.normal(0, 0.08))))
+    plx, eplx = star['parallax_mas'], star['parallax_err_mas']
+    d = 1000.0 / plx
+    T = star['tmag']
+    MT = T - 5 * np.log10(d / 10)
+    bc = float(st.bc_tess(teff))
+    mbol = MT + bc
+    L = 10 ** (-0.4 * (mbol - st.MBOL_SUN))
+    R = float(np.sqrt(L) / (teff / st.TEFF_SUN) ** 2)
+    eR = R * float(np.hypot(2 * 100 / teff, eplx / plx))
+    if lg >= 3.9:
+        M = st.ms_mass_from_teff(teff); how = 'main-sequence models (Teff)'
+    else:
+        M = float(10 ** (lg - 4.438) * R ** 2); how = 'surface gravity and radius (M = g R² / G)'
+    return dict(spt=st.label_from(teff, lg), teff=teff, eteff=100.0, logg=lg, elogg=0.10,
+                feh=feh, efeh=0.08, vsini=vsini, mass=float(M), emass=0.1 * float(M), mass_method=how,
+                radius=R, eradius=eR, parallax=plx, eparallax=eplx, distance=d, tmag=T,
+                abs_tmag=float(MT), bc=bc, mbol=float(mbol), lum=float(L))
+
+
+# ── Fitting ─────────────────────────────────────────────────────────────────
+def fit_sine(t, rv, err, P, T0):
+    """Linear least squares for v = gamma - K sin(2 pi (t - T0) / P).
+    K is signed: K < 0 means the RVs move opposite to a transiting companion."""
+    t, rv, err = map(lambda a: np.asarray(a, float), (t, rv, err))
+    s = -np.sin(2 * np.pi * (t - T0) / P)
+    A = np.vstack([np.ones_like(t), s]).T
+    W = 1.0 / err ** 2
+    AtWA = A.T @ (A * W[:, None])
+    cov = np.linalg.inv(AtWA)
+    gamma, K = cov @ (A.T @ (W * rv))
+    resid = rv - (gamma + K * s)
+    chi2 = float(np.sum(resid ** 2 * W))
+    dof = max(len(t) - 2, 1)
+    return dict(gamma=float(gamma), K=float(K), egamma=float(np.sqrt(cov[0, 0])),
+                eK=float(np.sqrt(cov[1, 1])), chi2=chi2, chi2r=chi2 / dof, dof=dof)
+
+
+def mass_summary(K, eK, P, m1):
+    m = msini(K, P, m1)
+    hi = msini(abs(K) + eK, P, m1)
+    lo = msini(max(abs(K) - eK, 0.0), P, m1)
+    return dict(msini_sun=m, msini_mjup=m * MSUN / MJUP,
+                emsini_mjup=0.5 * (hi - lo) * MSUN / MJUP)
+
+
+# ── Ephemeris from the Phase 1 light curve ─────────────────────────────────
+def ephemeris(t, flux, sigma, period, t0, n=61):
+    """The student's ephemeris with uncertainties from the box-model chi^2.
+
+    Period stays the student's; T0 becomes the box-fit centre.  sigma_T0 and
+    sigma_P are the half-widths of the Delta chi^2 <= 1 region of each profile
+    (the other parameter minimised over).  T0 is quoted at the epoch nearest
+    the middle of the data, where it is least correlated with P."""
+    t, flux = np.asarray(t, float), np.asarray(flux, float)
+    P = float(period)
+    ph = analysis.fold_phase(t, t0, P)
+    c0, w, _, _, _ = analysis.bls_vectorized(ph, flux, sigma)
+    tc = t0 + c0 * P
+    mid = 0.5 * (t.min() + t.max())
+    tref = tc + np.round((mid - tc) / P) * P
+    half = w * P                                           # box half-duration (d)
+    ncyc = max((t.max() - t.min()) / 2 / P, 1.0)
+    dT = np.linspace(-half, half, n)
+    dP = np.linspace(-1, 1, n) * half / ncyc
+    var = sigma ** 2
+    C = np.empty((n, n))
+    for i, dp in enumerate(dP):
+        Pi = P + dp
+        x = (t[None, :] - (tref + dT[:, None])) / Pi
+        x = x - np.round(x)
+        inb = np.abs(x) * Pi < half
+        nin = inb.sum(1); nout = t.size - nin
+        sin_ = (inb * flux).sum(1)
+        mi = np.where(nin > 0, sin_ / np.maximum(nin, 1), 1.0)
+        mo = (flux.sum() - sin_) / np.maximum(nout, 1)
+        model = np.where(inb, mi[:, None], mo[:, None])
+        C[i] = ((flux[None, :] - model) ** 2).sum(1) / var
+    cmin = C.min()
+    i0 = n // 2                                            # dP = 0: the student's period
+    tref = float(tref + dT[int(np.argmin(C[i0]))])
+
+    def half_width(prof, grid):
+        ok = grid[prof <= prof.min() + 1.0]
+        step = grid[1] - grid[0]
+        return float(max((ok.max() - ok.min()) / 2, step / 2)), bool(ok.min() <= grid[0] or ok.max() >= grid[-1])
+
+    sT, capT = half_width(C.min(axis=0), dT)
+    sP, capP = half_width(C.min(axis=1), dP)
+    return dict(period=P, t0=tref, sig_t0=sT, sig_p=sP, capped=capT or capP,
+                duration=2 * half, chi2_min=float(cmin))
+
+
+def phase_sigma(t, eph):
+    """1-sigma uncertainty in predicted orbital phase at time t."""
+    n = (np.asarray(t, float) - eph['t0']) / eph['period']
+    return np.sqrt(eph['sig_t0'] ** 2 + (n * eph['sig_p']) ** 2) / eph['period']
+
+
+if __name__ == '__main__':
+    import argparse, json
+    ap = argparse.ArgumentParser(description='Simulate one star\'s reconnaissance RVs.')
+    ap.add_argument('--seed', type=int, default=0)
+    ap.add_argument('--n', type=int, default=25)
+    ap.add_argument('--star', type=int, default=0)
+    ap.add_argument('--debug', action='store_true')
+    ap.add_argument('--nights', type=int, nargs=N_OBS, default=[0, 6, 13, 27, 45])
+    a = ap.parse_args()
+    S = json.loads(generate.generate_starfield(a.seed, a.n, a.debug))
+    s = S[a.star]
+    print(f"star {s['id']}  {s['type']}  {s['spt']}  {s.get('scenario', '')}  companion={s['companion']}")
+    r = observe(s, a.seed, a.nights)
+    for c in r['system']['comps']:
+        print(f"  component {c['name']:<24s} light={c['light']:.4f} fwhm={c['fwhm']:.1f} km/s")
+    print('  truth', {k: v for k, v in r['system']['truth'].items()})
+    for n, t, v in zip(r['nights'], r['times'], r['rv']):
+        print(f"  {night_label(n):<16s} {clock(t)}  t={t:8.4f}  RV={v:9.3f} km/s")
+    rc = recon(s, a.seed, r['system']['comps'])
+    print(f"  recon: {rc['spt']}  Teff={rc['teff']:.0f}  logg={rc['logg']:.2f}  "
+          f"R={rc['radius']:.2f}  M={rc['mass']:.2f}   (true {s['spt']} R={s['radius']} M={s['mass']})")
+    p = r['system']['truth'].get('companion') or {}
+    if 'period' in p:
+        t, f, sig, _ = generate.gen_flux(s['id'], s['type'], s['brightness'], a.seed)
+        eph = ephemeris(t, f, sig, p['period'], p.get('t0', 0.0))
+        fit = fit_sine(r['times'], r['rv'], r['err'], eph['period'], eph['t0'])
+        ms = mass_summary(fit['K'], fit['eK'], eph['period'], rc['mass'])
+        print(f"  ephemeris {eph}")
+        print(f"  fit K={fit['K']:.3f}±{fit['eK']:.3f} km/s chi2r={fit['chi2r']:.2f}  "
+              f"m sin i = {ms['msini_mjup']:.2f} MJup ({ms['msini_sun']:.3f} Msun)")
+`,
 'bridge': String.raw`"""Thin JS-facing API.  The page calls these functions by name through
 pyodide.runPython and gets JSON strings back.  This is the only module that
 holds state (the per-star light-curve cache) or builds JSON; everything else
@@ -1187,10 +2102,12 @@ import generate
 import analysis
 import plots
 import imaging
+import rv
 from plot_utils import to_b64
 
 __all__ = ['generate_starfield', 'make_lightcurve', 'find_best_period',
-           'make_folded_plot', 'make_oddeven_plot', 'make_psf_image']
+           'make_folded_plot', 'make_oddeven_plot', 'make_psf_image',
+           'p3_calendar', 'p3_ephemeris', 'p3_observe', 'p3_fit']
 
 # Per-star light-curve cache: filled by make_lightcurve, read by the others.
 _star_data = {}
@@ -1200,8 +2117,8 @@ LABELS = dict(boring='Quiet Star', pulsating='Pulsating Star',
               blend_eb='Blended Background EB')
 
 
-def generate_starfield(seed=42, n_stars=25):
-    return generate.generate_starfield(seed, n_stars)
+def generate_starfield(seed=42, n_stars=25, debug=False):
+    return generate.generate_starfield(seed, n_stars, debug)
 
 
 def make_lightcurve(star_id, star_type, brightness, seed):
@@ -1304,6 +2221,63 @@ def make_psf_image(star_id, seed):
         img=enc(r['img']), ref=enc(r['ref']),
         debug=r['truth'],
     ))
+
+
+# ── Phase 3: reconnaissance radial velocities ──────────────────────────────
+def _lc(star_id, seed):
+    """Cached light curve for a star (regenerated if Phase 1 never loaded it)."""
+    d = _star_data.get(star_id)
+    if d is None:
+        s = generate._stars[star_id]
+        t, flux, sigma, params = generate.gen_flux(star_id, s['type'], s['brightness'], seed)
+        d = _star_data[star_id] = dict(t=t, flux=flux, sigma=sigma, params=params)
+    return d
+
+
+def p3_calendar():
+    """Observing constants, so the page never duplicates them."""
+    return json.dumps(dict(months=rv.MONTHS, n_nights=rv.N_NIGHTS, cal0=rv.CAL0,
+                           win_start=rv.WIN_START, win_len=rv.WIN_LEN, n_obs=rv.N_OBS,
+                           max_per_night=rv.MAX_PER_NIGHT, sigma_rv=rv.SIGMA_RV,
+                           fiber=rv.FIBER_ARCSEC, seeing=rv.SEEING_ARCSEC))
+
+
+def p3_ephemeris(star_id, seed, period, t0):
+    """Student's ephemeris (P from Phase 1, T0 = box-fit centre) with
+    Delta-chi^2 = 1 uncertainties.  JSON: {period, t0, sig_t0, sig_p, ...}"""
+    d = _lc(star_id, seed)
+    return json.dumps(rv.ephemeris(d['t'], d['flux'], d['sigma'], float(period), float(t0)))
+
+
+def p3_observe(star_id, seed, nights_json):
+    """Run a 5-night schedule.  Returns times, RVs, per-observation CCFs and
+    the reconnaissance stellar parameters.  ${'`'}debug${'`'} holds the truth."""
+    s = generate._stars[star_id]
+    r = rv.observe(s, seed, json.loads(nights_json))
+    rc = rv.recon(s, seed, r['system']['comps'])
+    comps = [dict(name=c['name'], light=c['light'], fwhm=c['fwhm'])
+             for c in r['system']['comps']]
+    return json.dumps(dict(
+        times=[float(x) for x in r['times']],
+        rv=[round(float(x), 4) for x in r['rv']],
+        err=[float(x) for x in r['err']],
+        nights=r['nights'],
+        labels=[rv.night_label(n) for n in r['nights']],
+        clocks=[rv.clock(t) for t in r['times']],
+        v=[round(float(x), 3) for x in r['v']],
+        ccfs=[[round(float(x), 4) for x in row] for row in r['ccfs']],
+        recon=rc,
+        debug=dict(truth=r['system']['truth'], comps=comps),
+    ), default=float)
+
+
+def p3_fit(payload_json):
+    """Sinusoid fit at a given ephemeris + minimum companion mass.
+    payload: {t, rv, err, period, t0, mass}."""
+    p = json.loads(payload_json)
+    f = rv.fit_sine(p['t'], p['rv'], p['err'], p['period'], p['t0'])
+    f.update(rv.mass_summary(f['K'], f['eK'], p['period'], p['mass']))
+    return json.dumps(f)
 `,
 };
 // <<< PY_BUNDLE
@@ -1337,14 +2311,16 @@ const DEBUG   = true;  // show ground truth (true P/T0/depth, hidden binaries) i
 //   controls live on Phase 1, so they're editable only while Phase 1 is still
 //   the furthest phase reached; once the user proceeds they lock for good.
 let viewPhase = 1, maxPhase = 1;
+let P3 = null;      // Phase 3 observing constants (from Python: rv.py)
 const flagsEditable = () => maxPhase === 1;
 
 // Debug-only ground truth for a star's companion / distance (never shown to students).
 function companionText(s) {
   const c = s.companion;
-  const plx = `plx=${s.parallax_mas.toFixed(2)}±${s.parallax_err_mas.toFixed(2)} mas (d=${s.distance_pc.toFixed(0)} pc)`;
+  const plx = `${s.spt} R=${s.radius}R☉ · plx=${s.parallax_mas.toFixed(2)}±${s.parallax_err_mas.toFixed(2)} mas (d=${s.distance_pc.toFixed(0)} pc)` +
+              (s.scenario ? ` · scenario: ${s.scenario}` : '');
   if (!c) return `SINGLE (no companion)\n${plx}`;
-  const kind = c.is_eb ? `BG-EB @${c.dist_pc.toFixed(0)}pc` : 'BOUND';
+  const kind = c.is_eb ? `BG-EB @${c.dist_pc.toFixed(0)}pc` : c.bound ? 'BOUND' : `BG-STAR @${c.dist_pc.toFixed(0)}pc`;
   const det  = c.detectable ? 'detectable' : 'NOT detectable';
   return `${kind} sep=${c.sep_arcsec.toFixed(2)}" (${(c.sep_arcsec*s.distance_pc).toFixed(0)} AU@fg) PA=${c.pa_deg.toFixed(0)}° Δm=${c.dmag.toFixed(1)} ${det}\n${plx}`;
 }
@@ -1380,7 +2356,9 @@ async function boot() {
     msg.textContent = 'Loading Python modules…';
     loadPythonModules();
     msg.textContent = 'Generating star field…';
-    stars = JSON.parse(pyodide.runPython(`generate_starfield(seed=${SEED}, n_stars=${N_STARS})`));
+    stars = JSON.parse(pyodide.runPython(
+      `generate_starfield(seed=${SEED}, n_stars=${N_STARS}, debug=${DEBUG ? 'True' : 'False'})`));
+    P3 = JSON.parse(pyodide.runPython('p3_calendar()'));
     document.getElementById('star-count').textContent = stars.length;
     document.getElementById('star-total').textContent  = stars.length;
     statusEl.textContent = '● READY';
@@ -1417,11 +2395,22 @@ function resizeCanvas() {
 }
 
 const starPos   = s => ({ x: s.x * fieldCanvas.width, y: s.y * fieldCanvas.height });
-const starR     = s => 1.5 + s.brightness * 4.5;
-const starColor = s => {
-  const b = s.brightness;
-  return b > 0.85 ? '#b8d8ff' : b > 0.65 ? '#ffffff' : b > 0.45 ? '#ffe9c4' : '#ffcc88';
-};
+const starR     = s => 1.5 + s.brightness * 4.5;          // dot size: brightness
+// Dot colour: spectral type (via Teff).  Artistic, not a calibrated colour scale.
+const TEFF_COLORS = [[3200, [255,138,74]], [3900, [255,179,107]], [4600, [255,210,154]],
+                     [5300, [255,233,196]], [5800, [255,246,232]], [6500, [244,246,255]],
+                     [7300, [214,227,255]], [8200, [184,208,255]]];
+function teffColor(T) {
+  const c = TEFF_COLORS;
+  if (T <= c[0][0]) return rgbHex(c[0][1]);
+  for (let i = 1; i < c.length; i++) if (T <= c[i][0]) {
+    const f = (T - c[i-1][0]) / (c[i][0] - c[i-1][0]);
+    return rgbHex(c[i-1][1].map((v, k) => v + f * (c[i][1][k] - v)));
+  }
+  return rgbHex(c[c.length-1][1]);
+}
+function rgbHex(a) { return '#' + a.map(v => Math.round(v).toString(16).padStart(2, '0')).join(''); }
+const starColor = s => teffColor(s.teff);
 
 function drawStars() {
   fCtx.clearRect(0, 0, fieldCanvas.width, fieldCanvas.height);
@@ -1885,7 +2874,7 @@ function syncFlagCount() {
 
 function updateProceedBtn() {
   const b = document.getElementById('proceed-btn');
-  b.style.display = viewPhase === 3 ? 'none' : 'inline-block';
+  b.style.display = viewPhase === 4 ? 'none' : 'inline-block';
   if (viewPhase === 1) {
     if (maxPhase === 1) {
       b.textContent = 'Proceed to Follow-up Imaging →';
@@ -1903,10 +2892,30 @@ function updateProceedBtn() {
     } else {
       b.textContent = 'Go to Phase 3 →'; b.disabled = false; b.title = '';
     }
+  } else if (viewPhase === 3) {
+    if (maxPhase === 3) {
+      const left = p3Cands().filter(s => !p3State(s.id).verdict).length;
+      b.textContent = 'Proceed to Precision RV →';
+      b.disabled    = left > 0;
+      b.title       = left > 0 ? `Advance or reject every candidate first (${left} left)` : '';
+    } else {
+      b.textContent = 'Go to Phase 4 →'; b.disabled = false; b.title = '';
+    }
   }
 }
 
 document.getElementById('proceed-btn').addEventListener('click', () => {
+  if (viewPhase === 3) {
+    if (maxPhase >= 4) { setViewPhase(4); return; }
+    const left = p3Cands().filter(s => !p3State(s.id).verdict).length;
+    if (left > 0) return;
+    const nAdv = p3Cands().filter(s => p3State(s.id).verdict === 'advance').length;
+    if (!confirm(`Lock in your decisions and send ${nAdv} candidate${nAdv === 1 ? '' : 's'} to precision RV?\n\n` +
+                 'You can come back to look at the reconnaissance data, but the decisions will be locked.')) return;
+    maxPhase = 4;
+    setViewPhase(4);
+    return;
+  }
   if (viewPhase === 2) {
     if (maxPhase >= 3) { setViewPhase(3); return; }
     const left = p2Cands().filter(s => !p2State(s.id).verdict).length;
@@ -1934,14 +2943,21 @@ document.getElementById('proceed-btn').addEventListener('click', () => {
 document.getElementById('tab-p1').addEventListener('click', () => setViewPhase(1));
 document.getElementById('tab-p2').addEventListener('click', () => { if (maxPhase >= 2) setViewPhase(2); });
 document.getElementById('tab-p3').addEventListener('click', () => { if (maxPhase >= 3) setViewPhase(3); });
+document.getElementById('tab-p4').addEventListener('click', () => { if (maxPhase >= 4) setViewPhase(4); });
 
 function setViewPhase(n) {
   viewPhase = n;
   document.querySelector('.main').style.display = n === 1 ? '' : 'none';
   document.getElementById('phase2-view').style.display = n === 2 ? 'flex' : 'none';
   document.getElementById('phase3-view').style.display = n === 3 ? 'flex' : 'none';
+  document.getElementById('phase4-view').style.display = n === 4 ? 'flex' : 'none';
   document.getElementById('tab-p3').classList.toggle('active', n === 3);
   document.getElementById('tab-p3').disabled = maxPhase < 3;
+  document.getElementById('tab-p4').classList.toggle('active', n === 4);
+  document.getElementById('tab-p4').disabled = maxPhase < 4;
+  if (n === 3) p3ReturnId = null;
+  document.getElementById('back-rv-btn').style.display = (n === 1 && p3ReturnId !== null) ? 'inline-block' : 'none';
+  if (n !== 1 && currentStar) saveStarCache(currentStar.id);   // later phases read the latest P / T0
   document.getElementById('tab-p1').classList.toggle('active', n === 1);
   document.getElementById('tab-p2').classList.toggle('active', n === 2);
   document.getElementById('tab-p2').disabled = maxPhase < 2;
@@ -1950,8 +2966,10 @@ function setViewPhase(n) {
     requestAnimationFrame(syncOverlay);
   } else if (n === 2) {
     renderPhase2();
-  } else {
+  } else if (n === 3) {
     renderPhase3();
+  } else {
+    renderPhase4();
   }
   updateFlagBtn();
   updateProceedBtn();
@@ -2276,19 +3294,654 @@ function p2Mark(v) {
     .observe(document.getElementById('p2-viewer'));
 })();
 
+// ═══════════════════════════════════════════════════════════════════════
+//  PHASE 3 — reconnaissance (low-precision) radial velocities
+//  Physics lives in Python (rv.py via bridge.p3_*); this section is UI only.
+//  Flow per star: plan 5 nights → Run → results (RVs, fit, CCFs) → Advance / Reject.
+// ═══════════════════════════════════════════════════════════════════════
+const p3Editable = () => maxPhase === 3;
+const p3 = new Map();      // star id -> state (see p3State)
+let p3Cur = null;          // star shown on the right
+let p3ReturnId = null;     // set by "Edit transit fit": the star to return to from Phase 1
+const P3_COLORS = ['#f3c84a', '#f35a9a', '#3a7ff6', '#c84af3', '#4af3c8'];
+const p3Cands = () => p2Cands();          // every flagged star comes in (Clean and Contaminated)
+
+function p3State(id) {
+  if (!p3.has(id)) p3.set(id, {
+    nights: [],            // scheduled night indices (≤ 5, ≤ 2 per night)
+    result: null,          // bridge.p3_observe output once run
+    verdict: null,         // 'advance' | 'reject'
+    eph: null, ephKey: '', // cached Phase 1 ephemeris with uncertainties
+    unlock: false, uP: null, uT0: null,   // exploration fold (results view only)
+    viewStart: 0,          // first night shown in the date view
+  });
+  return p3.get(id);
+}
+
+// Latest Phase 1 period / T0 for a star (live: the current star's globals, else its cache)
+function p3Phase1(id) {
+  if (currentStar && currentStar.id === id) return { P: currentPeriod, t0: currentT0 };
+  const c = starCache.get(id);
+  return c ? { P: c.currentPeriod, t0: c.currentT0 } : { P: null, t0: null };
+}
+
+function p3Ephem(id) {
+  const st = p3State(id), { P, t0 } = p3Phase1(id);
+  if (P == null || t0 == null) { st.eph = null; st.ephKey = ''; return null; }
+  const key = `${P}|${t0}`;
+  if (st.ephKey !== key) {
+    st.eph = JSON.parse(pyodide.runPython(`p3_ephemeris(${id}, ${SEED}, ${P}, ${t0})`));
+    st.ephKey = key;
+  }
+  return st.eph;
+}
+
+// The fold used for the results view: Phase 1 ephemeris, or the unlocked exploration values
+function p3Fold(st) {
+  if (st.unlock && st.uP != null) return { P: st.uP, t0: st.uT0 };
+  return st.eph ? { P: st.eph.period, t0: st.eph.t0 } : null;
+}
+
+const nightStart = n => P3.cal0 + n + P3.win_start;
+function nightLabel(n, short = false) {
+  for (const [name, days] of P3.months) {
+    if (n < days) return short ? `${name.replace('Month ', 'M')}·D${n + 1}` : `${name}, Day ${n + 1}`;
+    n -= days;
+  }
+  return '?';
+}
+const phaseOf = (t, P, t0) => { let x = ((t - t0) / P) % 1; if (x < -0.5) x += 1; if (x >= 0.5) x -= 1; return x; };
+const phaseSigma = (t, e) => Math.hypot(e.sig_t0, ((t - e.t0) / e.period) * e.sig_p) / e.period;
+
+// Colour of each scheduled observation (by order in the sorted schedule)
+const p3Sorted = st => [...st.nights].sort((a, b) => a - b);
+
+// ── Left list ────────────────────────────────────────────────────────────
 function renderPhase3() {
   const list = document.getElementById('p3-list');
+  const scroll = document.getElementById('p3-left').scrollTop;
+  list.innerHTML = '';
+  const cands = p3Cands();
+  const done = cands.filter(s => p3State(s.id).verdict).length;
+  const hdr = document.createElement('div');
+  hdr.className = 'cp-section-label';
+  hdr.textContent = `Candidates — ${done} / ${cands.length} decided`;
+  list.appendChild(hdr);
+  cands.forEach(s => {
+    const st = p3State(s.id), contam = p2State(s.id).verdict === 'contaminated';
+    const row = document.createElement('div');
+    row.className = 'cp-row' + (p3Cur && p3Cur.id === s.id ? ' active' : '');
+    const meta = st.result ? `observed · ${st.result.recon.spt}`
+               : st.nights.length ? `${st.nights.length} / ${P3.n_obs} scheduled` : 'not scheduled';
+    row.innerHTML = `<span class="cp-name-block"><span class="cp-name">Star ${s.id}</span>
+      <span class="cp-meta">${meta}</span></span>
+      <span class="p3-badges">
+        ${contam ? '<span class="p2-badge contaminated">⚠ contaminated</span>' : ''}
+        <span class="p2-badge ${st.verdict || ''}">${st.verdict ? st.verdict.toUpperCase() : 'undecided'}</span>
+      </span>`;
+    row.insertBefore(makeStarThumb(s), row.firstChild);
+    row.addEventListener('click', () => p3Select(s));
+    list.appendChild(row);
+  });
+  document.getElementById('p3-left').scrollTop = scroll;
+  if (p3Cur && !cands.some(s => s.id === p3Cur.id)) p3Cur = null;
+  if (!p3Cur && cands.length) p3Cur = cands[0];
+  p3Render();
+  updateProceedBtn();
+}
+
+function p3Select(s) {
+  p3Cur = s;
+  document.querySelectorAll('#p3-list .cp-row').forEach(r => r.classList.remove('active'));
+  renderPhase3();
+  document.getElementById('p3-right').scrollTop = 0;
+}
+
+// ── Right panel ──────────────────────────────────────────────────────────
+function p3Render() {
+  const main = document.getElementById('p3-main');
+  document.getElementById('p3-empty').style.display = p3Cur ? 'none' : 'flex';
+  main.style.display = p3Cur ? 'flex' : 'none';
+  if (!p3Cur) return;
+  const s = p3Cur, st = p3State(s.id);
+  const eph = p3Ephem(s.id);
+
+  document.getElementById('p3-name').textContent = `Star #${s.id}`;
+  document.getElementById('p3-contam').style.display =
+    p2State(s.id).verdict === 'contaminated' ? 'inline-block' : 'none';
+  const adv = document.getElementById('p3-adv'), rej = document.getElementById('p3-rej');
+  adv.classList.toggle('sel', st.verdict === 'advance');
+  rej.classList.toggle('sel', st.verdict === 'reject');
+  adv.disabled = !p3Editable() || !st.result;
+  adv.title = !st.result ? 'Run the observations first' : '';
+  rej.disabled = !p3Editable();
+
+  // Reconnaissance stellar values appear once the spectra exist
+  const rc = st.result && st.result.recon;
+  document.getElementById('p3-recon').innerHTML = rc
+    ? `<b style="color:var(--accent);font-weight:normal">${rc.spt}</b> · T<sub>eff</sub> ${rc.teff.toFixed(0)} ± ${rc.eteff.toFixed(0)} K` +
+      ` · M★ ${rc.mass.toFixed(2)} ± ${rc.emass.toFixed(2)} M☉ · R★ ${rc.radius.toFixed(2)} ± ${rc.eradius.toFixed(2)} R☉`
+    : '<span class="dim">Stellar parameters: available after the reconnaissance spectra are taken</span>';
+  document.getElementById('p3-info').style.display = rc ? 'inline-block' : 'none';
+
+  const ephEl = document.getElementById('p3-ephem');
+  ephEl.innerHTML = eph
+    ? `Ephemeris (from Phase 1): P = <b>${eph.period.toFixed(5)}</b> ± ${eph.sig_p.toPrecision(2)} d · ` +
+      `T₀ = <b>${eph.t0.toFixed(4)}</b> ± ${eph.sig_t0.toPrecision(2)} d (TESS days)` +
+      (eph.capped ? ' <span style="color:var(--warn)">· uncertainty hit the search limit (weak transit?)</span>' : '')
+    : '<span class="dim">Ephemeris: no period measured in Phase 1</span>';
+
+  const dbg = document.getElementById('p3-debug');
+  if (DEBUG) {
+    let t = `DEBUG ${s.type} · ${companionText(s)}`;
+    if (st.result) {
+      const tr = st.result.debug.truth;
+      t += `\nTRUE γ=${tr.gamma.toFixed(2)} km/s K1=${(tr.K1 * 1000).toFixed(0)} m/s`;
+      if (tr.companion) t += ` · companion: ${JSON.stringify(tr.companion, (k, v) => typeof v === 'number' ? +v.toPrecision(4) : v)}`;
+      if (tr.blend) t += `\nBEB light in fiber=${tr.blend.light_in_fiber.toFixed(3)} Ka=${tr.blend.Ka.toFixed(0)} Kb=${tr.blend.Kb.toFixed(0)} km/s γ_bg=${tr.blend.gamma.toFixed(1)}`;
+      if (tr.background) t += `\nBG star light in fiber=${tr.background.light_in_fiber.toFixed(3)} γ_bg=${tr.background.gamma.toFixed(1)}`;
+      if (tr.bound) t += `\nbound companion: light in fiber=${tr.bound.light_in_fiber.toFixed(3)} P=${tr.bound.period_yr.toFixed(0)} yr K=${tr.bound.K_target.toFixed(2)} km/s`;
+    }
+    dbg.textContent = t; dbg.style.display = 'block';
+  }
+
+  const ran = !!st.result;
+  document.getElementById('p3-noeph').style.display = (!eph && !ran) ? 'block' : 'none';
+  document.getElementById('p3-plan').style.display = (eph && !ran) ? 'block' : 'none';
+  document.getElementById('p3-results').style.display = ran ? 'block' : 'none';
+  if (eph && !ran) p3RenderPlan();
+  if (ran) p3RenderResults();
+}
+
+// ── Scheduling ───────────────────────────────────────────────────────────
+function p3CanAdd(st, n) {
+  if (st.result || !p3Editable()) return 'Schedule is locked';
+  if (st.nights.length >= P3.n_obs) return `All ${P3.n_obs} observations are scheduled — remove one first`;
+  if (st.nights.filter(x => x === n).length >= P3.max_per_night) return `At most ${P3.max_per_night} observations per night`;
+  if (n < 0 || n >= P3.n_nights) return 'Outside the observing season';
+  return null;
+}
+function p3Add(n) {
+  const st = p3State(p3Cur.id), why = p3CanAdd(st, n);
+  document.getElementById('p3-sched-msg').textContent = why || '';
+  if (why) return;
+  st.nights.push(n);
+  renderPhase3();
+}
+function p3Remove(n) {
+  const st = p3State(p3Cur.id);
+  if (st.result) return;
+  const i = st.nights.indexOf(n);
+  if (i >= 0) st.nights.splice(i, 1);
+  renderPhase3();
+}
+function p3Centre(n) {
+  const st = p3State(p3Cur.id), span = +document.getElementById('p3-span').value;
+  st.viewStart = Math.max(0, Math.min(P3.n_nights - span, n - span / 2 + 0.5));
+  p3RenderPlan();
+}
+
+function p3RenderPlan() {
+  const st = p3State(p3Cur.id);
+  // chips
+  const chips = document.getElementById('p3-chips');
+  chips.innerHTML = '';
+  p3Sorted(st).forEach((n, i) => {
+    const d = document.createElement('div');
+    d.className = 'p3-chip';
+    d.innerHTML = `<span class="p3-dot" style="background:${P3_COLORS[i]}"></span>
+      <span>${nightLabel(n)} · 19:30–01:30</span>`;
+    const b = document.createElement('button');
+    b.textContent = '✕'; b.title = 'Remove';
+    b.addEventListener('click', () => p3Remove(n));
+    d.appendChild(b);
+    chips.appendChild(d);
+  });
+  const left = P3.n_obs - st.nights.length;
+  const run = document.getElementById('p3-run');
+  run.disabled = left > 0 || !p3Editable();
+  run.textContent = left > 0 ? `▶ Run observations (${left} more to schedule)` : '▶ Run observations';
+  if (!chips.children.length) chips.innerHTML =
+    '<div class="p3-note" style="opacity:.7">No observations yet. Click nights in the date view below.</div>';
+  p3RenderCalendar(st);
+  p3DrawDate(st);
+  p3DrawPhase(st);
+}
+
+function p3RenderCalendar(st) {
+  const box = document.getElementById('p3-cal');
+  box.innerHTML = '';
+  const sorted = p3Sorted(st);
+  const span = +document.getElementById('p3-span').value;
+  let n0 = 0;
+  P3.months.forEach(([name, days]) => {
+    const m = document.createElement('div');
+    m.className = 'p3-month';
+    m.innerHTML = `<div class="p3-month-name">${name}</div>`;
+    const g = document.createElement('div');
+    g.className = 'p3-grid';
+    ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].forEach(d => {
+      const e = document.createElement('div'); e.className = 'p3-dow'; e.textContent = d; g.appendChild(e);
+    });
+    for (let k = 0; k < n0 % 7; k++) g.appendChild(document.createElement('div'));   // Month 1 Day 1 is a Monday
+    for (let d = 0; d < days; d++) {
+      const n = n0 + d;
+      const e = document.createElement('div');
+      e.className = 'p3-day';
+      e.textContent = d + 1;
+      const idx = sorted.indexOf(n), cnt = sorted.filter(x => x === n).length;
+      if (n >= st.viewStart && n < st.viewStart + span) e.classList.add('inview');
+      if (idx >= 0) {
+        e.classList.add('sched'); e.style.background = P3_COLORS[idx];
+        if (cnt > 1) e.innerHTML += '<span class="two">2</span>';
+      }
+      e.title = nightLabel(n);
+      e.addEventListener('click', () => {
+        if (document.getElementById('p3-cal-sched').checked) p3Add(n);
+        else p3Centre(n);
+      });
+      g.appendChild(e);
+    }
+    m.appendChild(g);
+    box.appendChild(m);
+    n0 += days;
+  });
+}
+
+// ── Canvas helpers ───────────────────────────────────────────────────────
+function cvSetup(cv, cssH) {
+  const dpr = window.devicePixelRatio || 1, w = Math.max(cv.clientWidth, 200);
+  cv.width = Math.round(w * dpr); cv.height = Math.round(cssH * dpr); cv.style.height = cssH + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, cssH);
+  return { ctx, W: w, H: cssH };
+}
+function niceTicks(a, b, n = 6) {
+  const span = b - a, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+  const out = [];
+  for (let v = Math.ceil(a / step) * step; v <= b + 1e-9; v += step) out.push(+v.toPrecision(12));
+  return out;
+}
+// Axes box: returns coordinate maps.  Dark theme, white text, teal accents.
+function axes(ctx, W, H, o) {
+  const L = o.left ?? 56, R = W - 12, T = 10, B = H - 30;
+  const X = x => L + (x - o.x0) / (o.x1 - o.x0) * (R - L);
+  const Y = y => B - (y - o.y0) / (o.y1 - o.y0) * (B - T);
+  ctx.fillStyle = '#05080f'; ctx.fillRect(L, T, R - L, B - T);
+  ctx.font = '11px "Share Tech Mono", monospace'; ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#1a2340'; ctx.lineWidth = 1;
+  (o.xticks || niceTicks(o.x0, o.x1)).forEach(t => {
+    const v = typeof t === 'object' ? t.v : t, lab = typeof t === 'object' ? t.label : String(t);
+    if (v < o.x0 || v > o.x1) return;
+    ctx.beginPath(); ctx.moveTo(X(v), T); ctx.lineTo(X(v), B); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillText(lab, X(v), B + 13);
+  });
+  if (o.yticks !== false) niceTicks(o.y0, o.y1, 5).forEach(v => {
+    ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(R, Y(v)); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.fillText(String(v), L - 5, Y(v) + 4);
+  });
+  ctx.strokeRect(L, T, R - L, B - T);
+  ctx.textAlign = 'center';
+  if (o.xlabel) ctx.fillText(o.xlabel, (L + R) / 2, H - 3);
+  if (o.ylabel) { ctx.save(); ctx.translate(12, (T + B) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
+  return { X, Y, L, R, T, B, inv: px => o.x0 + (px - L) / (R - L) * (o.x1 - o.x0) };
+}
+function clipTo(ctx, a) { ctx.save(); ctx.beginPath(); ctx.rect(a.L, a.T, a.R - a.L, a.B - a.T); ctx.clip(); }
+// Fill a phase interval [p0, p1] on a -0.5..0.5 axis, wrapping around
+function phaseBand(ctx, a, p0, p1, fill) {
+  ctx.fillStyle = fill;
+  if (p1 - p0 >= 1) { ctx.fillRect(a.X(-0.5), a.T, a.X(0.5) - a.X(-0.5), a.B - a.T); return; }
+  const w = x => ((x + 0.5) % 1 + 1) % 1 - 0.5;
+  const s = w(p0), e = s + (p1 - p0);
+  const seg = (u, v) => ctx.fillRect(a.X(u), a.T, a.X(v) - a.X(u), a.B - a.T);
+  if (e <= 0.5) seg(s, e); else { seg(s, 0.5); seg(-0.5, e - 1); }
+}
+
+// ── Date view ────────────────────────────────────────────────────────────
+const P3D = { drag: null, a: null };
+function p3DrawDate(st) {
+  const cv = document.getElementById('p3-date'), { ctx, W, H } = cvSetup(cv, 170);
+  const eph = st.eph, span = +document.getElementById('p3-span').value;
+  st.viewStart = Math.max(0, Math.min(P3.n_nights - span, st.viewStart));
+  const x0 = P3.cal0 + st.viewStart, x1 = x0 + span;
+  const every = span <= 14 ? 1 : span <= 31 ? 3 : 7;
+  const ticks = [];
+  for (let n = Math.ceil(st.viewStart); n < st.viewStart + span; n++)
+    if (n % every === 0) ticks.push({ v: P3.cal0 + n + 0.5, label: nightLabel(n, true) });
+  const a = axes(ctx, W, H, { x0, x1, y0: -1.3, y1: 1.3, xticks: ticks, yticks: false, left: 14,
+                              xlabel: 'date (noon labels) · nights shaded' });
+  P3D.a = a;
+  clipTo(ctx, a);
+  let n0 = 0;                                        // month boundaries
+  P3.months.forEach(([, d]) => { n0 += d; ctx.strokeStyle = '#3a7ff6'; ctx.beginPath();
+    ctx.moveTo(a.X(P3.cal0 + n0), a.T); ctx.lineTo(a.X(P3.cal0 + n0), a.B); ctx.stroke(); });
+  for (let n = Math.floor(st.viewStart); n < st.viewStart + span + 1; n++) {   // night windows
+    const s0 = nightStart(n);
+    ctx.fillStyle = n === P3D.hover ? '#4af3c82e' : '#4af3c812';
+    ctx.fillRect(a.X(s0), a.T, a.X(s0 + P3.win_len) - a.X(s0), a.B - a.T);
+  }
+  p3Sorted(st).forEach((n, i) => {
+    const s0 = nightStart(n), twice = st.nights.filter(x => x === n).length > 1;
+    ctx.fillStyle = P3_COLORS[i] + (twice ? '55' : '77');
+    ctx.fillRect(a.X(s0), a.T, Math.max(a.X(s0 + P3.win_len) - a.X(s0), 2), a.B - a.T);
+  });
+  if (eph) {                                         // predicted RV shape
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.3; ctx.beginPath();
+    for (let px = a.L; px <= a.R; px += 1) {
+      const t = a.inv(px), y = -Math.sin(2 * Math.PI * (t - eph.t0) / eph.period);
+      px === a.L ? ctx.moveTo(px, a.Y(y)) : ctx.lineTo(px, a.Y(y));
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+(function p3WireDate() {
+  const cv = document.getElementById('p3-date');
+  const nightAt = px => {
+    if (!P3D.a) return null;
+    const t = P3D.a.inv(px), n = Math.round(t - P3.cal0 - P3.win_start - P3.win_len / 2);   // nearest night
+    return (n >= 0 && n < P3.n_nights) ? n : null;
+  };
+  cv.addEventListener('mousedown', e => {
+    if (!p3Cur) return;
+    P3D.drag = { x0: e.clientX, v0: p3State(p3Cur.id).viewStart, moved: false };
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    if (!p3Cur || viewPhase !== 3) return;
+    const st = p3State(p3Cur.id);
+    if (P3D.drag) {
+      const dx = e.clientX - P3D.drag.x0;
+      if (Math.abs(dx) > 4) P3D.drag.moved = true;
+      if (P3D.drag.moved && P3D.a) {
+        const perPx = (+document.getElementById('p3-span').value) / (P3D.a.R - P3D.a.L);
+        st.viewStart = P3D.drag.v0 - dx * perPx;
+        p3DrawDate(st); p3RenderCalendar(st);
+      }
+    } else if (e.target === cv) {
+      const r = cv.getBoundingClientRect(), n = nightAt(e.clientX - r.left);
+      if (n !== P3D.hover) { P3D.hover = n; p3DrawDate(st); }
+    }
+  });
+  window.addEventListener('mouseup', e => {
+    const d = P3D.drag; P3D.drag = null;
+    if (!d || !p3Cur) return;
+    if (!d.moved) {
+      const r = cv.getBoundingClientRect(), n = nightAt(e.clientX - r.left);
+      if (n !== null) p3Add(n);
+    }
+  });
+  cv.addEventListener('mouseleave', () => { if (P3D.hover != null && p3Cur) { P3D.hover = null; p3DrawDate(p3State(p3Cur.id)); } });
+  cv.addEventListener('wheel', e => {
+    if (!p3Cur) return;
+    e.preventDefault();
+    const st = p3State(p3Cur.id), span = +document.getElementById('p3-span').value;
+    st.viewStart += (e.deltaY + e.deltaX) / 100 * span / 10;
+    p3DrawDate(st); p3RenderCalendar(st);
+  }, { passive: false });
+  document.getElementById('p3-span').addEventListener('change', () => { if (p3Cur) p3RenderPlan(); });
+  document.getElementById('p3-cal-sched').addEventListener('change', e => {
+    if (e.target.checked && !confirm('Clicking calendar dates will now schedule observations directly, ' +
+        'without looking at the predicted RV curve.\n\nThis is handy for long periods or a regular cadence, ' +
+        'but usually you should choose nights from the date view. Turn it on?')) e.target.checked = false;
+  });
+})();
+
+// ── Phase view ───────────────────────────────────────────────────────────
+function p3DrawPhase(st) {
+  const cv = document.getElementById('p3-phase'), { ctx, W, H } = cvSetup(cv, 170);
+  const eph = st.eph;
+  const a = axes(ctx, W, H, { x0: -0.5, x1: 0.5, y0: -1.3, y1: 1.3, yticks: false, left: 14,
+                              xticks: [-0.5, -0.25, 0, 0.25, 0.5], xlabel: 'orbital phase (0 = transit)' });
+  clipTo(ctx, a);
+  p3Sorted(st).forEach((n, i) => {
+    const s0 = nightStart(n), mid = s0 + P3.win_len / 2;
+    const p0 = phaseOf(s0, eph.period, eph.t0), w = P3.win_len / eph.period;
+    const h = 2 * phaseSigma(mid, eph);
+    phaseBand(ctx, a, p0 - h, p0 + w + h, P3_COLORS[i] + '30');    // ±2σ halo
+    phaseBand(ctx, a, p0, p0 + w, P3_COLORS[i] + '90');            // window
+  });
+  ctx.strokeStyle = '#f3c84a'; ctx.setLineDash([4, 3]); ctx.beginPath();
+  ctx.moveTo(a.X(0), a.T); ctx.lineTo(a.X(0), a.B); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath();
+  for (let px = a.L; px <= a.R; px++) {
+    const ph = a.inv(px), y = -Math.sin(2 * Math.PI * ph);
+    px === a.L ? ctx.moveTo(px, a.Y(y)) : ctx.lineTo(px, a.Y(y));
+  }
+  ctx.stroke();
+  ctx.fillStyle = '#f3c84a'; ctx.textAlign = 'left'; ctx.fillText('transit', a.X(0) + 4, a.T + 12);
+  ctx.restore();
+}
+
+// ── Run ──────────────────────────────────────────────────────────────────
+document.getElementById('p3-run').addEventListener('click', async () => {
+  if (!p3Cur || !p3Editable()) return;
+  const st = p3State(p3Cur.id);
+  if (st.nights.length !== P3.n_obs || st.result) return;
+  const lines = p3Sorted(st).map(n => '  • ' + nightLabel(n)).join('\n');
+  if (!confirm(`Run these ${P3.n_obs} observations?\n\n${lines}\n\nThe schedule is locked once the observations are taken.`)) return;
+  const btn = document.getElementById('p3-run');
+  btn.disabled = true; btn.textContent = 'observing…';
+  await new Promise(r => setTimeout(r, 20));
+  try {
+    st.result = JSON.parse(pyodide.runPython(
+      `p3_observe(${p3Cur.id}, ${SEED}, '${JSON.stringify(p3Sorted(st))}')`));
+  } catch (e) { console.error(e); alert('Observation failed: ' + e.message); }
+  renderPhase3();
+});
+
+// ── Results ──────────────────────────────────────────────────────────────
+function p3DoFit(st, fold) {
+  const r = st.result;
+  const payload = JSON.stringify({ t: r.times, rv: r.rv, err: r.err, period: fold.P, t0: fold.t0, mass: r.recon.mass });
+  return JSON.parse(pyodide.runPython(`p3_fit('${payload}')`));
+}
+
+function p3RenderResults() {
+  const st = p3State(p3Cur.id), r = st.result;
+  if (!st.eph && !st.unlock) {            // results exist but Phase 1 period was cleared
+    document.getElementById('p3-fit').innerHTML =
+      '<span style="color:var(--warn)">No Phase 1 period at the moment — re-measure it (✎ Edit transit fit) or unlock the fold below.</span>';
+  }
+  p3SyncUnlock(st);
+  const fold = p3Fold(st);
+  const fit = fold ? p3DoFit(st, fold) : null;
+  p3DrawRV(st, fold, fit);
+  if (fit) {
+    const ms = fit.msini_mjup;
+    const mtxt = ms < 80 ? `${ms.toFixed(ms < 1 ? 2 : 1)} ± ${fit.emsini_mjup.toFixed(ms < 1 ? 2 : 1)} M<sub>Jup</sub>`
+                         : `${fit.msini_sun.toFixed(2)} M☉ (${ms.toFixed(0)} M<sub>Jup</sub>)`;
+    const c = starCache.get(p3Cur.id);
+    const depth = c && c.depthVal && c.depthVal.endsWith('%') ? parseFloat(c.depthVal) / 100 : null;
+    const rp = depth ? r.recon.radius * Math.sqrt(depth) * 6.957e8 / 7.1492e7 : null;
+    document.getElementById('p3-fit').innerHTML =
+      `Fit at ${st.unlock ? '<span style="color:var(--warn)">unlocked</span>' : 'Phase 1'} ephemeris: ` +
+      `γ = <b>${fit.gamma.toFixed(2)}</b> ± ${fit.egamma.toFixed(2)} km/s · ` +
+      (Math.abs(fit.K) >= 2 ? `K = <b>${fit.K.toFixed(2)}</b> ± ${fit.eK.toFixed(2)} km/s · `
+                            : `K = <b>${(fit.K * 1000).toFixed(0)}</b> ± ${(fit.eK * 1000).toFixed(0)} m/s · `) +
+      `χ²ᵣ = <b>${fit.chi2r.toFixed(2)}</b> (${fit.dof} dof)<br>` +
+      `Minimum companion mass m sin i = <b>${mtxt}</b> (using M★ = ${r.recon.mass.toFixed(2)} M☉)` +
+      (fit.K < 0 ? '<br><span style="color:var(--warn)">K &lt; 0: the velocities vary opposite to what a companion transiting at T₀ would cause.</span>' : '') +
+      (rp ? `<br>Companion radius from the Phase 1 depth: R = R★ √depth ≈ <b>${rp.toFixed(2)}</b> R<sub>Jup</sub>` : '');
+  }
+  // observation table
+  const tb = document.getElementById('p3-obs-table');
+  tb.innerHTML = '<tr><th></th><th>night</th><th>time</th><th>RV (km/s)</th></tr>' +
+    r.times.map((t, i) => `<tr><td><span class="p3-dot" style="display:inline-block;background:${P3_COLORS[i]}"></span></td>` +
+      `<td>${r.labels[i]}</td><td>${r.clocks[i]}</td><td>${r.rv[i].toFixed(3)} ± ${r.err[i].toFixed(3)}</td></tr>`).join('');
+  p3DrawCCF(st);
+}
+
+function p3DrawRV(st, fold, fit) {
+  const cv = document.getElementById('p3-rv'), { ctx, W, H } = cvSetup(cv, 230), r = st.result;
+  const lo = Math.min(...r.rv.map((v, i) => v - r.err[i])), hi = Math.max(...r.rv.map((v, i) => v + r.err[i]));
+  let y0 = lo, y1 = hi;
+  if (fit) { y0 = Math.min(y0, fit.gamma - Math.abs(fit.K)); y1 = Math.max(y1, fit.gamma + Math.abs(fit.K)); }
+  const pad = Math.max((y1 - y0) * 0.15, 0.3);
+  y0 -= pad; y1 += pad;
+  const a = axes(ctx, W, H, { x0: -0.5, x1: 0.5, y0, y1, xticks: [-0.5, -0.25, 0, 0.25, 0.5],
+                              xlabel: fold ? `orbital phase (P = ${fold.P.toFixed(5)} d)` : 'no ephemeris', ylabel: 'RV (km/s)', left: 62 });
+  if (!fold) return;
+  clipTo(ctx, a);
+  r.times.forEach((t, i) => {                       // faint planning stripes at this fold
+    const n = r.nights[i], s0 = nightStart(n);
+    phaseBand(ctx, a, phaseOf(s0, fold.P, fold.t0), phaseOf(s0, fold.P, fold.t0) + P3.win_len / fold.P, P3_COLORS[i] + '1c');
+  });
+  if (fit) {
+    ctx.strokeStyle = '#f3c84a'; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (let px = a.L; px <= a.R; px++) {
+      const ph = a.inv(px), v = fit.gamma - fit.K * Math.sin(2 * Math.PI * ph);
+      px === a.L ? ctx.moveTo(px, a.Y(v)) : ctx.lineTo(px, a.Y(v));
+    }
+    ctx.stroke();
+  }
+  r.times.forEach((t, i) => {
+    const x = a.X(phaseOf(t, fold.P, fold.t0));
+    ctx.strokeStyle = P3_COLORS[i]; ctx.fillStyle = P3_COLORS[i]; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, a.Y(r.rv[i] - r.err[i])); ctx.lineTo(x, a.Y(r.rv[i] + r.err[i])); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, a.Y(r.rv[i]), 4, 0, 2 * Math.PI); ctx.fill();
+  });
+  ctx.restore();
+}
+
+function p3DrawCCF(st) {
+  const cv = document.getElementById('p3-ccf'), { ctx, W, H } = cvSetup(cv, 230), r = st.result;
+  let lo = Infinity, hi = -Infinity;
+  r.ccfs.forEach(c => c.forEach(v => { lo = Math.min(lo, v); hi = Math.max(hi, v); }));
+  const pad = (hi - lo) * 0.08;
+  const a = axes(ctx, W, H, { x0: r.v[0], x1: r.v[r.v.length - 1], y0: lo - pad, y1: hi + pad,
+                              xlabel: 'velocity (km/s)', ylabel: 'CCF', left: 62 });
+  clipTo(ctx, a);
+  r.ccfs.forEach((c, i) => {
+    ctx.strokeStyle = P3_COLORS[i]; ctx.globalAlpha = 0.85; ctx.lineWidth = 1.2; ctx.beginPath();
+    c.forEach((y, k) => { const X = a.X(r.v[k]), Y = a.Y(y); k ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+    ctx.stroke();
+    ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.beginPath();               // measured RV tick
+    ctx.moveTo(a.X(r.rv[i]), a.T); ctx.lineTo(a.X(r.rv[i]), a.T + 10); ctx.stroke();
+  });
+  ctx.restore();
+}
+
+// ── Unlocked fold (exploration only) ─────────────────────────────────────
+function p3SyncUnlock(st) {
+  const box = document.getElementById('p3-unlock'), ctr = document.getElementById('p3-unlock-ctrls');
+  box.checked = st.unlock;
+  ctr.style.display = st.unlock ? 'flex' : 'none';
+  if (!st.unlock) return;
+  const sP = document.getElementById('p3-uP'), sT = document.getElementById('p3-uT');
+  const P = st.uP, base = st.eph ? st.eph.period : P;
+  sP.min = base * 0.5; sP.max = base * 2.0; sP.step = 0.0001; sP.value = P;
+  const t0b = st.eph ? st.eph.t0 : st.uT0;
+  sT.min = t0b - base / 2; sT.max = t0b + base / 2; sT.step = 0.001; sT.value = st.uT0;
+  document.getElementById('p3-uP-val').textContent = `${P.toFixed(4)} d`;
+  document.getElementById('p3-uT-val').textContent = `${st.uT0.toFixed(3)} d`;
+}
+function p3Refold() { if (p3Cur && p3State(p3Cur.id).result) p3RenderResults(); }
+document.getElementById('p3-unlock').addEventListener('change', e => {
+  if (!p3Cur) return;
+  const st = p3State(p3Cur.id);
+  st.unlock = e.target.checked;
+  if (st.unlock && st.uP == null) {
+    st.uP = st.eph ? st.eph.period : 5.0; st.uT0 = st.eph ? st.eph.t0 : P3.cal0;
+  }
+  p3RenderResults();
+});
+document.getElementById('p3-uP').addEventListener('input', e => { const st = p3State(p3Cur.id); st.uP = +e.target.value; p3Refold(); });
+document.getElementById('p3-uT').addEventListener('input', e => { const st = p3State(p3Cur.id); st.uT0 = +e.target.value; p3Refold(); });
+document.querySelectorAll('#p3-unlock-ctrls .nudge').forEach(b => b.addEventListener('click', () => {
+  const st = p3State(p3Cur.id);
+  if (b.dataset.p) st.uP = Math.max(0.05, +(st.uP + +b.dataset.p).toFixed(5));
+  if (b.dataset.t) st.uT0 = +(st.uT0 + +b.dataset.t).toFixed(4);
+  p3Refold();
+}));
+document.getElementById('p3-ureset').addEventListener('click', () => {
+  const st = p3State(p3Cur.id);
+  if (st.eph) { st.uP = st.eph.period; st.uT0 = st.eph.t0; }
+  p3Refold();
+});
+
+// ── Verdicts, navigation, info popup ─────────────────────────────────────
+function p3Mark(v) {
+  if (!p3Cur || !p3Editable()) return;
+  const st = p3State(p3Cur.id);
+  if (v === 'advance' && !st.result) return;
+  st.verdict = st.verdict === v ? null : v;
+  renderPhase3();
+}
+document.getElementById('p3-adv').addEventListener('click', () => p3Mark('advance'));
+document.getElementById('p3-rej').addEventListener('click', () => p3Mark('reject'));
+
+document.getElementById('p3-edit').addEventListener('click', async () => {
+  if (!p3Cur) return;
+  p3ReturnId = p3Cur.id;
+  const star = stars.find(s => s.id === p3Cur.id);
+  setViewPhase(1);
+  if (!currentStar || currentStar.id !== star.id) await selectStar(star);
+  document.getElementById('back-rv-btn').style.display = 'inline-block';
+});
+document.getElementById('back-rv-btn').addEventListener('click', () => {
+  const id = p3ReturnId;
+  p3ReturnId = null;
+  if (currentStar) saveStarCache(currentStar.id);
+  p3Cur = stars.find(s => s.id === id) || p3Cur;
+  setViewPhase(3);
+});
+
+document.getElementById('p3-info').addEventListener('click', () => {
+  const st = p3State(p3Cur.id), rc = st.result && st.result.recon;
+  if (!rc) return;
+  const f = (x, d = 2) => x.toFixed(d);
+  document.getElementById('p3-popup-box').innerHTML = `
+    <h3>How the stellar parameters are derived</h3>
+    <p>A reconnaissance spectrum (R ≈ 44,000, ${P3.fiber}″ fiber) is compared with model spectra:</p>
+    <ol>
+      <li>Spectroscopic fit: T<sub>eff</sub> = ${f(rc.teff, 0)} ± ${f(rc.eteff, 0)} K, log g = ${f(rc.logg)} ± ${f(rc.elogg)},
+          [Fe/H] = ${f(rc.feh)} ± ${f(rc.efeh)}, v sin i = ${f(rc.vsini, 1)} km/s.
+          Surface gravity sets the luminosity class: log g ≳ 3.9 → dwarf (V), ≲ 3.4 → giant (III).
+          So this star is <b>${rc.spt}</b>.</li>
+      <li>Distance from the Gaia parallax: <span class="eq">d = 1 / ϖ</span> = 1 / (${f(rc.parallax)} ± ${f(rc.eparallax)} mas)
+          = ${f(rc.distance, 0)} pc.</li>
+      <li>Absolute magnitude from the TESS magnitude T = ${f(rc.tmag)}:
+          <span class="eq">M<sub>T</sub> = T − 5 log₁₀(d / 10 pc)</span> = ${f(rc.abs_tmag)}.</li>
+      <li>Luminosity: add the bolometric correction for this T<sub>eff</sub>,
+          <span class="eq">M<sub>bol</sub> = M<sub>T</sub> + BC</span> = ${f(rc.mbol)}, then
+          <span class="eq">L = 10<sup>−0.4 (M<sub>bol</sub> − 4.74)</sup> L☉</span> = ${f(rc.lum)} L☉.</li>
+      <li>Radius from the Stefan–Boltzmann law, <span class="eq">L = 4πR²σT<sub>eff</sub>⁴</span>:
+          <span class="eq">R = √L / (T<sub>eff</sub> / 5772 K)²</span> = ${f(rc.radius)} ± ${f(rc.eradius)} R☉.</li>
+      <li>Mass from ${rc.mass_method}: M = ${f(rc.mass)} ± ${f(rc.emass)} M☉.</li>
+    </ol>
+    <p><b>Caveat:</b> light from an unresolved companion makes the star look brighter (so L and R come out too big),
+       and blends its spectrum into the target’s.</p>
+    <p style="text-align:right"><button class="hdr-btn" id="p3-popup-close">Close</button></p>`;
+  document.getElementById('p3-popup').style.display = 'flex';
+  document.getElementById('p3-popup-close').addEventListener('click', () =>
+    document.getElementById('p3-popup').style.display = 'none');
+});
+document.getElementById('p3-popup').addEventListener('click', e => {
+  if (e.target.id === 'p3-popup') e.target.style.display = 'none';
+});
+
+new ResizeObserver(() => { if (viewPhase === 3 && p3Cur) p3Render(); })
+  .observe(document.getElementById('p3-right'));
+
+// ═══════════════════════════════════════════════════════════════════════
+//  PHASE 4 — placeholder until precision RV is built
+// ═══════════════════════════════════════════════════════════════════════
+function renderPhase4() {
+  const list = document.getElementById('p4-list');
   list.innerHTML = '';
   const hdr = document.createElement('div');
   hdr.className = 'cp-section-label';
-  hdr.textContent = 'Candidates';
+  hdr.textContent = 'Advanced candidates';
   list.appendChild(hdr);
-  p2Cands().forEach(s => {
-    const v = p2State(s.id).verdict;
-    const row = document.createElement('div');
-    row.className = 'cp-row' + (v === 'contaminated' ? ' greyed' : '');
-    row.innerHTML = `<span class="cp-name-block"><span class="cp-name">Star ${s.id}</span></span>
-      <span class="p2-badge ${v || ''}">${v || 'unmarked'}</span>`;
+  p3Cands().filter(s => p3State(s.id).verdict === 'advance').forEach(s => {
+    const st = p3State(s.id), row = document.createElement('div');
+    row.className = 'cp-row';
+    row.innerHTML = `<span class="cp-name-block"><span class="cp-name">Star ${s.id}</span>
+      <span class="cp-meta">${st.result.recon.spt} · last recon RV ${nightLabel(Math.max(...st.result.nights))}</span></span>`;
     row.insertBefore(makeStarThumb(s), row.firstChild);
     list.appendChild(row);
   });
@@ -2437,4 +4090,4 @@ document.getElementById('stars-toggle').addEventListener('click', () => {
 boot();
 </script>
 </body>
-</html>
+</html>

@@ -10,10 +10,12 @@ import generate
 import analysis
 import plots
 import imaging
+import rv
 from plot_utils import to_b64
 
 __all__ = ['generate_starfield', 'make_lightcurve', 'find_best_period',
-           'make_folded_plot', 'make_oddeven_plot', 'make_psf_image']
+           'make_folded_plot', 'make_oddeven_plot', 'make_psf_image',
+           'p3_calendar', 'p3_ephemeris', 'p3_observe', 'p3_fit']
 
 # Per-star light-curve cache: filled by make_lightcurve, read by the others.
 _star_data = {}
@@ -23,8 +25,8 @@ LABELS = dict(boring='Quiet Star', pulsating='Pulsating Star',
               blend_eb='Blended Background EB')
 
 
-def generate_starfield(seed=42, n_stars=25):
-    return generate.generate_starfield(seed, n_stars)
+def generate_starfield(seed=42, n_stars=25, debug=False):
+    return generate.generate_starfield(seed, n_stars, debug)
 
 
 def make_lightcurve(star_id, star_type, brightness, seed):
@@ -127,3 +129,60 @@ def make_psf_image(star_id, seed):
         img=enc(r['img']), ref=enc(r['ref']),
         debug=r['truth'],
     ))
+
+
+# ── Phase 3: reconnaissance radial velocities ──────────────────────────────
+def _lc(star_id, seed):
+    """Cached light curve for a star (regenerated if Phase 1 never loaded it)."""
+    d = _star_data.get(star_id)
+    if d is None:
+        s = generate._stars[star_id]
+        t, flux, sigma, params = generate.gen_flux(star_id, s['type'], s['brightness'], seed)
+        d = _star_data[star_id] = dict(t=t, flux=flux, sigma=sigma, params=params)
+    return d
+
+
+def p3_calendar():
+    """Observing constants, so the page never duplicates them."""
+    return json.dumps(dict(months=rv.MONTHS, n_nights=rv.N_NIGHTS, cal0=rv.CAL0,
+                           win_start=rv.WIN_START, win_len=rv.WIN_LEN, n_obs=rv.N_OBS,
+                           max_per_night=rv.MAX_PER_NIGHT, sigma_rv=rv.SIGMA_RV,
+                           fiber=rv.FIBER_ARCSEC, seeing=rv.SEEING_ARCSEC))
+
+
+def p3_ephemeris(star_id, seed, period, t0):
+    """Student's ephemeris (P from Phase 1, T0 = box-fit centre) with
+    Delta-chi^2 = 1 uncertainties.  JSON: {period, t0, sig_t0, sig_p, ...}"""
+    d = _lc(star_id, seed)
+    return json.dumps(rv.ephemeris(d['t'], d['flux'], d['sigma'], float(period), float(t0)))
+
+
+def p3_observe(star_id, seed, nights_json):
+    """Run a 5-night schedule.  Returns times, RVs, per-observation CCFs and
+    the reconnaissance stellar parameters.  `debug` holds the truth."""
+    s = generate._stars[star_id]
+    r = rv.observe(s, seed, json.loads(nights_json))
+    rc = rv.recon(s, seed, r['system']['comps'])
+    comps = [dict(name=c['name'], light=c['light'], fwhm=c['fwhm'])
+             for c in r['system']['comps']]
+    return json.dumps(dict(
+        times=[float(x) for x in r['times']],
+        rv=[round(float(x), 4) for x in r['rv']],
+        err=[float(x) for x in r['err']],
+        nights=r['nights'],
+        labels=[rv.night_label(n) for n in r['nights']],
+        clocks=[rv.clock(t) for t in r['times']],
+        v=[round(float(x), 3) for x in r['v']],
+        ccfs=[[round(float(x), 4) for x in row] for row in r['ccfs']],
+        recon=rc,
+        debug=dict(truth=r['system']['truth'], comps=comps),
+    ), default=float)
+
+
+def p3_fit(payload_json):
+    """Sinusoid fit at a given ephemeris + minimum companion mass.
+    payload: {t, rv, err, period, t0, mass}."""
+    p = json.loads(payload_json)
+    f = rv.fit_sine(p['t'], p['rv'], p['err'], p['period'], p['t0'])
+    f.update(rv.mass_summary(f['K'], f['eK'], p['period'], p['mass']))
+    return json.dumps(f)

@@ -11,7 +11,7 @@ import os, re, sys
 
 HERE    = os.path.dirname(os.path.abspath(__file__))
 HTML    = os.path.join(HERE, '..', 'tess.html')
-MODULES = ['plot_utils', 'generate', 'analysis', 'plots', 'imaging', 'bridge']
+MODULES = ['plot_utils', 'stars', 'generate', 'analysis', 'plots', 'imaging', 'rv', 'bridge']
 
 BEGIN = '// >>> PY_BUNDLE'
 END   = '// <<< PY_BUNDLE'
