@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import generate as g
+import stars as st
 
 
 def field(seed=0, n=25):
@@ -24,7 +25,7 @@ def test_first_blend_is_detectable_for_debugging():
 
 def test_companion_fields_and_ranges():
     for s in field(1, 400):
-        assert 25 <= s['distance_pc'] <= 800
+        assert 5 <= s['distance_pc'] <= 3000
         assert s['parallax_err_mas'] > 0
         c = s['companion']
         if c:
@@ -78,3 +79,51 @@ def test_dilution_does_not_touch_noise():
     _, f2, _, _ = g.gen_flux(s['id'], 'boring', s['brightness'], 0)
     assert np.array_equal(f1, f2)       # boring star has no signal to dilute
     g._truth.pop(s['id'])
+
+
+def test_debug_field_has_every_scenario():
+    S = json.loads(g.generate_starfield(0, 25, debug=True))
+    roles = {s.get('scenario'): s for s in S if s.get('scenario')}
+    assert set(roles) == set(g.SCENARIOS)
+    assert roles['giant_transit']['lum_class'] == 'III' and roles['giant_transit']['type'] == 'transit'
+    assert roles['planet_bound']['companion']['bound']
+    bg = roles['planet_bg']['companion']
+    assert not bg['bound'] and not bg['is_eb']
+    assert roles['beb_bright']['type'] == roles['beb_faint']['type'] == 'blend_eb'
+    assert roles['beb_bright']['companion']['sep_arcsec'] < 1.0 < roles['beb_faint']['companion']['sep_arcsec']
+    assert roles['quiet']['companion'] is None and roles['quiet']['type'] == 'boring'
+
+
+def test_spectral_mix_is_fgk_heavy_with_a_few_giants():
+    S = field(3, 400)
+    letters = [s['spt'][0] for s in S]
+    fgk = sum(l in 'FGK' for l in letters) / len(S)
+    giants = sum(s['lum_class'] == 'III' for s in S) / len(S)
+    assert fgk > 0.6
+    assert 0.01 < giants < 0.2
+
+
+def test_pulsators_are_hot_and_ebs_are_dwarfs():
+    for s in field(4, 300):
+        if s['type'] == 'pulsating':
+            assert s['spt'] in g.PULSATOR_TYPES
+        if s['type'] == 'eb':
+            assert s['lum_class'] == 'V'
+
+
+def test_distance_follows_from_primary_magnitude():
+    """The primary's own magnitude (total minus companion light) and its
+    absolute magnitude give back the stored distance."""
+    for s in field(5, 200):
+        if not 5 < s['distance_pc'] < 3000:
+            continue                                   # clipped extremes
+        c = s['companion']
+        T1 = s['tmag'] + (2.5 * np.log10(1 + 10 ** (-0.4 * c['dmag'])) if c else 0.0)
+        assert abs(st.distance_pc(T1, s['radius'], s['teff']) - s['distance_pc']) < 1e-6 * s['distance_pc']
+
+
+def test_bound_separation_matches_orbit_and_distance():
+    for s in field(6, 400):
+        c = s['companion']
+        if c and c['bound']:
+            assert abs(c['a_au'] * c['proj'] / s['distance_pc'] - c['sep_arcsec']) < 1e-9
